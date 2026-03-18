@@ -540,6 +540,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       </div>
       <div class="sidebar-list" id="sidebar-list"></div>
       <div class="sidebar-footer">
+        <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap" id="export-btns">
+          <button class="btn" style="font-size:10px;padding:4px 7px;flex:1" onclick="exportJSON()">↓ Resp</button>
+          <button class="btn" style="font-size:10px;padding:4px 7px;flex:1" onclick="importJSON()">↑ Car</button>
+          <button class="btn btn-green" style="font-size:10px;padding:4px 7px;flex:1" onclick="exportXLSX()">↓ Excel</button>
+          <button class="btn btn-blue" style="font-size:10px;padding:4px 7px;flex:1" onclick="abrirImportExcel()">↑ Import</button>
+          <button class="btn btn-purple" style="font-size:10px;padding:4px 7px;flex:1" onclick="abrirReportes()">📊</button>
+        </div>
         <button class="btn-new" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>
         <button class="btn-new-sm" title="Capital" onclick="abrirCapital()">💰</button>
         <button class="btn-new-sm" title="Inicio" onclick="goTo('home')">⌂</button>
@@ -555,15 +562,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
         </div>
       </div>
       <div id="main-content"></div>
-      <div class="export-bar">
-        <span class="export-info" id="export-info" style="font-size:10px;flex-shrink:0">— clientes</span>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;flex:1;justify-content:flex-end" id="export-btns">
-          <button class="btn" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="exportJSON()">↓ Resp</button>
-          <button class="btn" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="importJSON()">↑ Car</button>
-          <button class="btn btn-green" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="exportXLSX()">↓ Excel</button>
-          <button class="btn btn-blue" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="abrirImportExcel()">↑ Import</button>
-          <button class="btn btn-purple" style="font-size:10px;padding:4px 8px;white-space:nowrap" onclick="abrirReportes()">📊</button>
-        </div> <div style="display:none">
+      <div style="display:none">
           <input type="file" id="import-file" accept=".json" onchange="handleImport(event)">
           <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" onchange="handleImportExcel(event)">
         </div>
