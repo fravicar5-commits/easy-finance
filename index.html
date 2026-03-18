@@ -199,7 +199,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* Export bar */
-.export-bar{padding:6px 10px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;min-height:44px;gap:6px;flex-wrap:wrap}
+.export-bar{display:none}
+.gear-btn{background:var(--surface2);border:1px solid var(--border);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;flex-shrink:0;transition:all .2s}
+.gear-btn:hover{border-color:var(--ef-pink);background:rgba(194,24,91,.1)}
+.gear-menu{position:fixed;bottom:60px;right:12px;background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:8px;z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,.4);min-width:180px;display:none;flex-direction:column;gap:4px}
+.gear-menu.open{display:flex}
+.gear-menu-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;color:var(--text);font-family:'Nunito',sans-serif;border:none;background:none;width:100%;text-align:left;transition:background .15s}
+.gear-menu-item:hover{background:var(--surface2)}
+.gear-menu-item .gmi-icon{font-size:16px;width:24px;text-align:center}
+.gear-menu-overlay{position:fixed;inset:0;z-index:9998;display:none}
+.gear-menu-overlay.open{display:block}
+.export-bar{padding:6px 10px;border-top:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;min-height:44px;position:relative;z-index:10;gap:6px;flex-wrap:wrap}
 .export-info{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace}
 
 /* Empty */
@@ -540,15 +550,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       </div>
       <div class="sidebar-list" id="sidebar-list"></div>
       <div class="sidebar-footer">
-        <div style="display:flex;gap:3px;margin-bottom:6px;flex-wrap:wrap" id="export-btns">
-          <button class="btn" style="font-size:10px;padding:4px 7px;flex:1" onclick="exportJSON()">↓ Resp</button>
-          <button class="btn" style="font-size:10px;padding:4px 7px;flex:1" onclick="importJSON()">↑ Car</button>
-          <button class="btn btn-green" style="font-size:10px;padding:4px 7px;flex:1" onclick="exportXLSX()">↓ Excel</button>
-          <button class="btn btn-blue" style="font-size:10px;padding:4px 7px;flex:1" onclick="abrirImportExcel()">↑ Import</button>
-          <button class="btn btn-purple" style="font-size:10px;padding:4px 7px;flex:1" onclick="abrirReportes()">📊</button>
-        </div>
         <button class="btn-new" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>
         <button class="btn-new-sm" title="Capital" onclick="abrirCapital()">💰</button>
+        <button class="btn-new-sm" title="Opciones" onclick="toggleGearMenu(true)">⚙️</button>
         <button class="btn-new-sm" title="Inicio" onclick="goTo('home')">⌂</button>
       </div>
     </aside>
@@ -566,6 +570,22 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
           <input type="file" id="import-file" accept=".json" onchange="handleImport(event)">
           <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" onchange="handleImportExcel(event)">
         </div>
+      </div>
+      <!-- Hidden file inputs -->
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+      <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportExcel(event)">
+      <span class="export-info" id="export-info" style="display:none"></span>
+      <!-- Gear overlay -->
+      <div class="gear-menu-overlay" id="gear-overlay" onclick="toggleGearMenu(false)"></div>
+      <!-- Gear floating menu -->
+      <div class="gear-menu" id="gear-menu">
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportJSON()"><span class="gmi-icon">💾</span>Guardar respaldo</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);importJSON()"><span class="gmi-icon">📂</span>Cargar respaldo</button>
+        <div style="height:1px;background:var(--border);margin:2px 0"></div>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportXLSX()"><span class="gmi-icon">📊</span>Exportar Excel</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirImportExcel()"><span class="gmi-icon">📥</span>Importar Excel</button>
+        <div style="height:1px;background:var(--border);margin:2px 0"></div>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirReportes()"><span class="gmi-icon">📈</span>Ver reportes</button>
       </div>
     </main>
   </div>
@@ -3642,6 +3662,17 @@ function formatNombrePropio(id){
   const val=el.value.replace(/\b\w/g,c=>c.toUpperCase());
   el.value=val;
   el.setSelectionRange(pos,pos);
+}
+
+// ══ GEAR MENU ════════════════════════════════════════════════════════════════
+function toggleGearMenu(force){
+  const menu=document.getElementById('gear-menu');
+  const overlay=document.getElementById('gear-overlay');
+  if(!menu||!overlay) return;
+  const isOpen=menu.classList.contains('open');
+  const shouldOpen=force!==undefined?force:!isOpen;
+  menu.classList.toggle('open',shouldOpen);
+  overlay.classList.toggle('open',shouldOpen);
 }
 
 // ══ USURA VALIDATION ═════════════════════════════════════════════════════════
