@@ -335,6 +335,25 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .recovery-result{background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.25);border-radius:var(--radius);padding:12px;margin-bottom:12px}
 .recovery-result-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px}
 .recovery-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
+.login-logo{text-align:center;margin-bottom:32px}
+.login-logo-text{font-size:42px;font-weight:900;color:white}
+.login-logo-text span{color:#E91E8C}
+.login-logo-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
+.login-card{background:#16162a;border:1px solid #2a2a45;border-radius:20px;padding:24px;width:100%;max-width:380px}
+.login-card-title{font-size:16px;font-weight:800;color:#e0e0f0;margin-bottom:4px}
+.login-card-sub{font-size:12px;color:#8888aa;margin-bottom:20px}
+.login-fr{margin-bottom:14px}
+.login-fr label{font-size:11px;color:#8888aa;font-weight:700;display:block;margin-bottom:5px;letter-spacing:.5px}
+.login-fr input{width:100%;background:#0e0e1a;border:1px solid #2a2a45;border-radius:10px;padding:11px 14px;color:#e0e0f0;font-size:14px;font-family:'Nunito',sans-serif;outline:none}
+.login-fr input:focus{border-color:#E91E8C}
+.login-btn{width:100%;background:linear-gradient(135deg,#C2185B,#2D0060);color:white;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:4px}
+.login-error{background:rgba(239,83,80,.1);border:1px solid rgba(239,83,80,.3);border-radius:8px;padding:8px 12px;font-size:12px;color:#ef5350;margin-bottom:12px;display:none}
+.login-role-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:800;margin-top:8px}
+.rb-admin{background:rgba(233,30,140,.15);color:#E91E8C;border:1px solid rgba(233,30,140,.3)}
+.rb-cobrador{background:rgba(255,179,0,.15);color:#FFB300;border:1px solid rgba(255,179,0,.3)}
+.rb-lectura{background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3)}
+.login-footer{text-align:center;font-size:10px;color:#444;margin-top:16px}
 .tc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-family:'Nunito',sans-serif}
 .tc-modal{background:#16162a;border:1px solid #2a2a45;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column}
 .tc-header{padding:20px 20px 12px;border-bottom:1px solid #2a2a45;flex-shrink:0}
@@ -1776,6 +1795,7 @@ function openPago(cid,midx,payKey){
 }
 
 function guardarPago(){
+  if(!canDo('registrarPago')){toast('Sin permisos para registrar pagos','error');return;}
   const{cid,midx,quinc,slot,payKey,isEdit}=pagoCtx;
   const valor=parseFloat(document.getElementById('p-monto').value);
   const fecha=document.getElementById('p-fecha').value;
@@ -2204,6 +2224,7 @@ function openNewModal(){
   openModal('modal-new');
 }
 function crearCliente(){
+  if(!canDo('crearPrestamo')){toast('Sin permisos para crear préstamos','error');return;}
   const nombre=document.getElementById('n-name').value.trim();
   const fecha=document.getElementById('n-fecha').value;
   const monto=parseFloat(document.getElementById('n-monto').value);
@@ -2274,6 +2295,7 @@ function prev(p){
 
 // ══ ELIMINAR ══════════════════════════════════════════════════════════════════
 function eliminarCliente(id){
+  if(!canDo('eliminarCliente')){toast('Sin permisos para eliminar clientes','error');return;}
   if(!confirm('¿Eliminar este cliente y todos sus datos?'))return;
   clients=clients.filter(c=>c.id!==id);
   save();activeId=null;renderDashboard();toast('Cliente eliminado');
@@ -2440,10 +2462,24 @@ function pushToDrive(silent){
 }
 
 function loadFromDriveURL(){
-  // With JSONBin, URL field not needed — connect directly
   document.getElementById('drive-dot').className='drive-dot syncing';
-  jbinRead()
-  .then(data=>{
+  updateDriveStatus('Conectando...');
+  // Try direct fetch to JSONBin
+  fetch(JBIN_URL+'/latest',{
+    method:'GET',
+    headers:{
+      'X-Master-Key':JBIN_KEY,
+      'X-Access-Key':JBIN_KEY,
+      'X-Bin-Meta':'false',
+      'Content-Type':'application/json'
+    }
+  })
+  .then(r=>{
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.json();
+  })
+  .then(json=>{
+    const data=json.record||json;
     const rc=data.clients||[];
     const rcj=data.caja||[];
     jsonbinEnabled=true;
@@ -2459,18 +2495,19 @@ function loadFromDriveURL(){
       localStorage.setItem(NK,JSON.stringify(notes));
       localStorage.setItem(PK,JSON.stringify(pockets));
       activeId=null;renderDashboard();
-    } else if(clients.length>0&&confirm('¿Subir todos los datos locales a la nube?')){
+    } else if(clients.length>0&&confirm('¿Subir datos locales a la nube?')){
       pushToDrive(true);
     }
     closeModal('modal-drive');
-    updateDriveStatus();
+    updateDriveStatus('Nube conectada ✓');
     renderSidebar();
-    toast('Nube conectada ✓','info');
+    toast('Nube conectada ✓','success');
   })
   .catch(err=>{
-    console.log('Connect error:',err);
-    toast('No se pudo conectar','error');
+    console.log('JSONBin error:',err.message);
     document.getElementById('drive-dot').className='drive-dot';
+    updateDriveStatus();
+    toast('Error: '+err.message,'error');
   });
 }
 
@@ -3394,6 +3431,118 @@ function confirmarImportExcel(){
   importedClients=[];
 }
 
+// ══ AUTH / LOGIN ══════════════════════════════════════════════════════════════
+// Users config — edit here to add/change users
+const EF_USERS = [
+  {
+    user: 'admin',
+    pass: 'easy2026',
+    nombre: 'Administrador',
+    rol: 'admin',
+    // Admin: full access to everything
+    permisos: {
+      crearPrestamo: true, editarPrestamo: true, eliminarCliente: true,
+      registrarPago: true, eliminarPago: true, verCaja: true,
+      exportar: true, importar: true, negociarCartera: true,
+      verReportes: true, configurarNube: true, gestionarNotas: true,
+      presupuesto: true, bolsillos: true, whatsapp: true
+    }
+  },
+  {
+    user: 'cobrador',
+    pass: 'cobro2026',
+    nombre: 'Cobrador',
+    rol: 'cobrador',
+    // Cobrador: can register payments and view clients, cannot create or delete
+    permisos: {
+      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
+      registrarPago: true, eliminarPago: false, verCaja: false,
+      exportar: false, importar: false, negociarCartera: false,
+      verReportes: false, configurarNube: false, gestionarNotas: false,
+      presupuesto: false, bolsillos: false, whatsapp: true
+    }
+  },
+  {
+    user: 'socio',
+    pass: 'socio2026',
+    nombre: 'Socio/Lectura',
+    rol: 'lectura',
+    // Read only: can view dashboard and reports, cannot modify anything
+    permisos: {
+      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
+      registrarPago: false, eliminarPago: false, verCaja: true,
+      exportar: true, importar: false, negociarCartera: false,
+      verReportes: true, configurarNube: false, gestionarNotas: false,
+      presupuesto: false, bolsillos: false, whatsapp: false
+    }
+  }
+];
+
+let currentUser = null;
+
+function checkLogin(){
+  const saved = localStorage.getItem('ef_session');
+  if(saved){
+    try{
+      const s = JSON.parse(saved);
+      const u = EF_USERS.find(x=>x.user===s.user);
+      if(u){ currentUser=u; applyRoleRestrictions(); return; }
+    }catch(e){}
+  }
+  // Show login screen
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function doLogin(){
+  const user = document.getElementById('login-user').value.trim().toLowerCase();
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+  const found = EF_USERS.find(u=>u.user===user&&u.pass===pass);
+  if(!found){
+    errEl.style.display='block';
+    document.getElementById('login-pass').value='';
+    return;
+  }
+  currentUser = found;
+  localStorage.setItem('ef_session', JSON.stringify({user:found.user}));
+  document.getElementById('login-screen').style.display='none';
+  applyRoleRestrictions();
+  // Show welcome and then TC if needed
+  setTimeout(checkTC, 300);
+}
+
+function doLogout(){
+  localStorage.removeItem('ef_session');
+  currentUser = null;
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+}
+
+function canDo(permiso){
+  if(!currentUser) return false;
+  return currentUser.permisos[permiso]===true;
+}
+
+function applyRoleRestrictions(){
+  if(!currentUser) return;
+  // Add user badge to topbar if exists
+  const topbar = document.querySelector('.topbar');
+  if(topbar && !document.getElementById('user-badge')){
+    const badge = document.createElement('div');
+    badge.id = 'user-badge';
+    badge.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer';
+    const roleColors = {admin:'#E91E8C', cobrador:'#FFB300', lectura:'#00BCD4'};
+    const roleLabels = {admin:'Admin', cobrador:'Cobrador', lectura:'Lectura'};
+    badge.innerHTML = '<span style="font-weight:700;color:'+roleColors[currentUser.rol]+'">'+currentUser.nombre+'</span>'
+      +'<span style="background:'+roleColors[currentUser.rol]+'22;color:'+roleColors[currentUser.rol]+';border:1px solid '+roleColors[currentUser.rol]+'44;border-radius:10px;padding:1px 7px;font-size:9px;font-weight:800">'+roleLabels[currentUser.rol]+'</span>'
+      +'<span style="color:#8888aa;font-size:10px" onclick="doLogout()" title="Cerrar sesión">⏻</span>';
+    topbar.insertBefore(badge, topbar.firstChild);
+  }
+}
+
 // ══ TERMS & CONDITIONS ══════════════════════════════════════════════════════
 function checkTC(){
   const accepted=localStorage.getItem('ef_tc_accepted');
@@ -4089,10 +4238,34 @@ autoSync=!!driveUrl;
 if(driveUrl==='jsonbin'){jsonbinEnabled=true;autoSync=true;}
 updateDriveStatus();
 renderSidebar();
-// Check T&C LAST — after app is fully loaded
-setTimeout(checkTC, 300);
+// Check login FIRST, then T&C inside doLogin
+setTimeout(checkLogin, 100);
 
 </script>
+<!-- Login Screen -->
+<div class="login-screen" id="login-screen" style="display:none">
+  <div class="login-logo">
+    <div class="login-logo-text">Easy<span>Finance</span></div>
+    <div class="login-logo-sub">Tu solución financiera personal</div>
+  </div>
+  <div class="login-card">
+    <div class="login-card-title">Iniciar sesión</div>
+    <div class="login-card-sub">Ingrese sus credenciales para continuar</div>
+    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
+    <div class="login-fr">
+      <label>USUARIO</label>
+      <input type="text" id="login-user" placeholder="su usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    </div>
+    <div class="login-fr">
+      <label>CONTRASEÑA</label>
+      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+    <div style="text-align:center;margin-top:12px" id="login-role-wrap" style="display:none"></div>
+  </div>
+  <div class="login-footer">Easy Finance v2.0 · Colombia 2026</div>
+</div>
+
 <!-- Terms & Conditions Modal -->
 <div class="tc-overlay" id="tc-overlay" style="display:none">
   <div class="tc-modal">
