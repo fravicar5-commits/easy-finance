@@ -563,16 +563,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
           <button class="btn btn-green" style="font-size:10px;padding:5px 8px" onclick="exportXLSX()">↓ Excel</button>
           <button class="btn btn-blue" style="font-size:10px;padding:5px 8px" onclick="abrirImportExcel()">↑ Import</button>
           <button class="btn btn-purple" style="font-size:10px;padding:5px 8px" onclick="abrirReportes()">📊 Rep.</button>
-        </div> <div class="export-bar">
-        <span class="export-info" id="export-info">— clientes</span>
-        <div style="display:flex;gap:5px">
-          <button class="btn" style="font-size:11px" onclick="exportJSON()">↓ Respaldo</button>
-          <button class="btn" style="font-size:11px" onclick="importJSON()">↑ Cargar</button>
-          <button class="btn btn-green" style="font-size:11px" onclick="exportXLSX()">↓ Excel</button>
-          <button class="btn btn-blue" style="font-size:11px" onclick="abrirImportExcel()" data-tip="Importar clientes desde Excel">↑ Importar Excel</button>
-          <button class="btn btn-purple" style="font-size:11px" onclick="abrirReportes()" data-tip="Reportes y análisis del negocio">📊 Reportes</button>
-          <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
-          <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportExcel(event)">
+        </div> <div style="display:none">
+          <input type="file" id="import-file" accept=".json" onchange="handleImport(event)">
+          <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" onchange="handleImportExcel(event)">
         </div>
       </div>
     </main>
