@@ -696,6 +696,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     <div style="display:flex;gap:8px;align-items:center" id="cliente-topbar-actions">
       <button onclick="abrirNuevaDeuda()" style="background:#006064;color:#00E5D1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">+ Nueva</button>
       <button onclick="syncDeudasNube()" id="btn-sync-deudas" style="background:none;border:1px solid rgba(0,188,212,.4);color:#00BCD4;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif" title="Sincronizar con nube">☁ Sync</button>
+      <button onclick="recuperarDeudasNube()" id="btn-recuperar-deudas" style="background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.4);color:#f5a623;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif" title="Recuperar deudas de la nube">↓ Recuperar</button>
       <button onclick="activarRecordatorios()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer" title="Activar recordatorios de pago">🔔</button>
       <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer">⌂</button>
     </div>
@@ -4137,6 +4138,47 @@ function syncDeudasSilent(){
     data['deudas_'+user] = deudas;
     return data;
   })()).catch(()=>{});
+}
+
+function recuperarDeudasNube(){
+  if(!jsonbinEnabled){
+    toast('Conecte primero la nube','error');
+    return;
+  }
+  const dot=document.getElementById('btn-sync-deudas');
+  if(dot){dot.textContent='⏳';dot.style.opacity='0.6';}
+  jbinRead().then(data=>{
+    // Try all possible keys where deudas could be stored
+    const posibleClaves = ['deudas', 'deudas_admin', 'deudas_default'];
+    let encontradas = null;
+    for(const clave of posibleClaves){
+      if(data[clave] && data[clave].length > 0){
+        encontradas = data[clave];
+        console.log('Deudas encontradas en clave:', clave, 'cantidad:', encontradas.length);
+        break;
+      }
+    }
+    if(encontradas && encontradas.length > 0){
+      deudas = encontradas;
+      localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
+      // Also save as deudas_admin in cloud for future
+      const dataActualizado = Object.assign({}, data);
+      dataActualizado['deudas_admin'] = deudas;
+      delete dataActualizado.deudas;
+      jbinWrite(dataActualizado).catch(()=>{});
+      renderClienteTab();
+      if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+      toast('✓ ' + deudas.length + ' deuda(s) recuperada(s) de la nube', 'success', 4000);
+    } else {
+      if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+      // Show what keys exist in cloud for debugging
+      const claves = Object.keys(data).join(', ');
+      toast('No se encontraron deudas. Claves en nube: ' + claves, 'error', 6000);
+    }
+  }).catch(()=>{
+    if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+    toast('Error conectando con la nube','error');
+  });
 }
 
 function syncDeudasNube(){
