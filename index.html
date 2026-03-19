@@ -4086,7 +4086,24 @@ let pagoDeudaCtx={did:null};
 let clienteTabActual='dashboard';
 
 function loadDeudas(){
-  try{deudas=JSON.parse(localStorage.getItem(getDKDeudas()))||[];}catch{deudas=[];}
+  try{
+    const userKey = getDKDeudas();
+    let saved = JSON.parse(localStorage.getItem(userKey));
+    // Migration: if no data for this user yet, check the old shared key
+    if((!saved || saved.length === 0) && currentUser){
+      const oldData = JSON.parse(localStorage.getItem('ef_deudas'));
+      if(oldData && oldData.length > 0){
+        // Migrate old data to user-specific key
+        localStorage.setItem(userKey, JSON.stringify(oldData));
+        // Only clear old key if it was admin (to avoid giving invitado admin's data)
+        if(currentUser.rol === 'admin'){
+          localStorage.removeItem('ef_deudas');
+        }
+        saved = oldData;
+      }
+    }
+    deudas = saved || [];
+  }catch{deudas=[];}
 }
 function saveDeudas(){
   localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
