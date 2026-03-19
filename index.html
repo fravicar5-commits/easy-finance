@@ -1611,9 +1611,10 @@ function goTo(id){
     // Pull deudas from cloud if connected
     if(jsonbinEnabled && autoSync){
       jbinRead().then(data=>{
-        if(data.deudas&&JSON.stringify(data.deudas)!==JSON.stringify(deudas)){
-          deudas=data.deudas;
-          localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+        const userKeyC = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
+        if(data[userKeyC]&&JSON.stringify(data[userKeyC])!==JSON.stringify(deudas)){
+          deudas=data[userKeyC];
+          localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
           toast('Deudas actualizadas desde nube ☁','info');
         }
@@ -2748,7 +2749,12 @@ function pushToDrive(silent){
   if(!jsonbinEnabled) return;
   document.getElementById('drive-dot').className='drive-dot syncing';
   const budgets=loadBudgets();
-  jbinWrite({clients,caja,notes,pockets,budgets,deudas})
+  jbinWrite((()=>{
+    const user = currentUser ? currentUser.user : 'default';
+    const data = {clients,caja,notes,pockets,budgets};
+    data['deudas_'+user] = deudas;
+    return data;
+  })())
   .then(()=>{
     const ts=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     updateDriveStatus('Sincronizado '+ts);
@@ -2789,7 +2795,8 @@ function loadFromDriveURL(){
       if(data.notes) notes=data.notes;
       if(data.pockets) pockets=data.pockets;
       if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
-      if(data.deudas) {deudas=data.deudas;localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));}
+      const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
+      if(data[userKey]) {deudas=data[userKey];localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));}
       localStorage.setItem(SK,JSON.stringify(clients));
       localStorage.setItem(CK,JSON.stringify(caja));
       localStorage.setItem(NK,JSON.stringify(notes));
@@ -2820,7 +2827,8 @@ function syncFromDrive(){
     notes=data.notes||[];
     pockets=data.pockets||[];
     if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
-    if(data.deudas) {deudas=data.deudas;localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));}
+    const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
+      if(data[userKey]) {deudas=data[userKey];localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));}
     localStorage.setItem(SK,JSON.stringify(clients));
     localStorage.setItem(CK,JSON.stringify(caja));
     localStorage.setItem(NK,JSON.stringify(notes));
@@ -3796,15 +3804,9 @@ const EF_USERS = [
 let currentUser = null;
 
 function checkLogin(){
-  const saved = localStorage.getItem('ef_session');
-  if(saved){
-    try{
-      const s = JSON.parse(saved);
-      const u = EF_USERS.find(x=>x.user===s.user);
-      if(u){ currentUser=u; applyRoleRestrictions(); return; }
-    }catch(e){}
-  }
-  // Show login screen
+  // Always clear session and show login on app open
+  localStorage.removeItem('ef_session');
+  currentUser = null;
   document.getElementById('login-screen').style.display='flex';
 }
 
@@ -3834,10 +3836,16 @@ function doLogin(){
 function doLogout(){
   localStorage.removeItem('ef_session');
   currentUser = null;
+  activeId = null;
+  // Reset all screens to home
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('home').classList.add('active');
+  // Clear login form
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
   document.getElementById('login-screen').style.display='flex';
+  toast('Sesión cerrada','info');
 }
 
 function canDo(permiso){
@@ -4068,16 +4076,20 @@ function initReminderCheck(){
 
 // ══ MODO CLIENTE ════════════════════════════════════════════════════════════
 // Storage
-const DK_DEUDAS='ef_deudas';
+const DK_DEUDAS_BASE='ef_deudas';
+function getDKDeudas(){
+  const user = currentUser ? currentUser.user : 'default';
+  return DK_DEUDAS_BASE + '_' + user;
+}
 let deudas=[];
 let pagoDeudaCtx={did:null};
 let clienteTabActual='dashboard';
 
 function loadDeudas(){
-  try{deudas=JSON.parse(localStorage.getItem(DK_DEUDAS))||[];}catch{deudas=[];}
+  try{deudas=JSON.parse(localStorage.getItem(getDKDeudas()))||[];}catch{deudas=[];}
 }
 function saveDeudas(){
-  localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+  localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
   // Auto-sync to cloud if connected
   if(jsonbinEnabled && autoSync) setTimeout(syncDeudasSilent, 500);
 }
@@ -4085,7 +4097,12 @@ function saveDeudas(){
 function syncDeudasSilent(){
   if(!jsonbinEnabled) return;
   const budgets=loadBudgets();
-  jbinWrite({clients,caja,notes,pockets,budgets,deudas}).catch(()=>{});
+  jbinWrite((()=>{
+    const user = currentUser ? currentUser.user : 'default';
+    const data = {clients,caja,notes,pockets,budgets};
+    data['deudas_'+user] = deudas;
+    return data;
+  })()).catch(()=>{});
 }
 
 function syncDeudasNube(){
@@ -4096,7 +4113,12 @@ function syncDeudasNube(){
   const dot=document.getElementById('btn-sync-deudas');
   if(dot) {dot.textContent='⏳';dot.style.opacity='0.6';}
   const budgets=loadBudgets();
-  jbinWrite({clients,caja,notes,pockets,budgets,deudas})
+  jbinWrite((()=>{
+    const user = currentUser ? currentUser.user : 'default';
+    const data = {clients,caja,notes,pockets,budgets};
+    data['deudas_'+user] = deudas;
+    return data;
+  })())
   .then(()=>{
     toast('Deudas sincronizadas ✓','info');
     if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
@@ -4106,7 +4128,7 @@ function syncDeudasNube(){
     jbinRead().then(data=>{
       if(data.deudas){
         deudas=data.deudas;
-        localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+        localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
         renderClienteTab();
         toast('Datos cargados desde nube ✓','info');
       }
