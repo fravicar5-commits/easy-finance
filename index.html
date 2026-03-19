@@ -232,6 +232,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .socio-dist-table td{padding:6px 8px;border-bottom:1px solid var(--border2);text-align:right;font-family:monospace;font-weight:700;font-size:11px}
 .socio-dist-table td:first-child{text-align:left;font-family:'Nunito',sans-serif;color:var(--text3);font-weight:400;font-size:11px}
 .socio-dist-table tr.mes-paid td{opacity:.5}
+/* ── DEUDA FORM EXTRAS ── */
+.tasa-box-form{background:rgba(0,96,100,.1);border:1px solid rgba(0,188,212,.25);border-left:3px solid #00BCD4;border-radius:var(--radius-xs);padding:12px;margin-bottom:10px}
+.tasa-toggle-form{display:flex;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden;margin-bottom:10px}
+.tasa-opt-form{flex:1;padding:7px 4px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;color:var(--text3);transition:all .15s;border:none;background:none;font-family:'Nunito',sans-serif}
+.tasa-opt-form.active{background:#006064;color:#00E5D1}
+.tasa-result-form{background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 12px;margin-top:6px;font-size:11px}
+.seguro-box-form{background:rgba(27,94,32,.1);border:1px solid rgba(76,175,80,.25);border-left:3px solid #4CAF50;border-radius:var(--radius-xs);padding:12px;margin-bottom:10px}
+.seg-toggle-form{display:flex;background:var(--surface3);border:1px solid var(--border);border-radius:var(--radius-xs);overflow:hidden;margin-bottom:8px}
+.seg-opt-form{flex:1;padding:7px 4px;text-align:center;font-size:10px;font-weight:700;cursor:pointer;color:var(--text3);transition:all .15s;border:none;background:none;font-family:'Nunito',sans-serif}
+.seg-opt-form.active{background:#1b5e20;color:#4CAF50}
+.hist-box-form{background:rgba(230,81,0,.08);border:1px solid rgba(255,179,0,.25);border-left:3px solid #FFB300;border-radius:var(--radius-xs);padding:12px;margin-bottom:10px}
+.hist-pago-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,179,0,.1);font-size:12px}
+.hist-pago-row:last-child{border-bottom:none}
+.btn-add-hist{background:none;border:1px dashed rgba(255,179,0,.4);border-radius:var(--radius-xs);color:#FFB300;padding:7px;font-size:11px;font-weight:700;width:100%;cursor:pointer;font-family:'Nunito',sans-serif;margin-top:8px}
 /* ── MODO CLIENTE ── */
 .cliente-screen{display:none;height:100vh;flex-direction:column;background:var(--bg);overflow:hidden}
 .cliente-screen.active{display:flex}
@@ -695,14 +709,64 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <select id="nd-tipo"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="otro">Otro</option></select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fr"><label>Monto recibido</label><input type="number" id="nd-monto" min="0" placeholder="0"></div>
-      <div class="fr"><label>Tasa mensual (%)</label><input type="number" id="nd-tasa" min="0" max="100" step="0.1" placeholder="0"></div>
+      <div class="fr"><label>Monto recibido</label><input type="number" id="nd-monto" min="0" placeholder="0" oninput="ndCalcTodo()"></div>
+      <div class="fr"><label>Cuotas</label><input type="number" id="nd-cuotas" min="1" placeholder="12" oninput="ndCalcTodo()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fr"><label>Cuotas</label><input type="number" id="nd-cuotas" min="1" placeholder="12"></div>
-      <div class="fr"><label>Tipo</label><select id="nd-tipocuota"><option value="variable">Variable</option><option value="fija">Fija</option><option value="libre">Sin plazo fijo</option></select></div>
+      <div class="fr"><label>Tipo de cuota</label><select id="nd-tipocuota"><option value="fija">Fija</option><option value="variable">Variable</option><option value="libre">Sin plazo fijo</option></select></div>
+      <div class="fr"><label>Fecha del préstamo</label><input type="date" id="nd-fecha" onchange="ndCheckFechaAnterior()"></div>
     </div>
-    <div class="fr"><label>Fecha del préstamo</label><input type="date" id="nd-fecha"></div>
+    <!-- Tasa -->
+    <div class="tasa-box-form">
+      <div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:8px;letter-spacing:.5px">📊 TASA DE INTERÉS</div>
+      <div class="tasa-toggle-form">
+        <button class="tasa-opt-form" id="ndtopt-mensual" onclick="ndSetTasaTipo('mensual')">% Mensual</button>
+        <button class="tasa-opt-form active" id="ndtopt-ea" onclick="ndSetTasaTipo('ea')">% E.A.</button>
+        <button class="tasa-opt-form" id="ndtopt-nm" onclick="ndSetTasaTipo('nm')">% N.M.V.</button>
+      </div>
+      <div class="fr" style="margin-bottom:6px">
+        <label style="font-size:10px;color:#8888aa" id="nd-tasa-lbl">Tasa Efectiva Anual (E.A.)</label>
+        <input type="number" id="nd-tasa" min="0" step="0.01" placeholder="Ej: 24" oninput="ndCalcTodo()">
+      </div>
+      <div class="tasa-result-form" id="nd-tasa-result" style="display:none">
+        <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--text3)">Equivalente mensual</span><span class="c-blue" style="font-family:monospace;font-weight:700" id="nd-tr-mensual">0%</span></div>
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Costo Efectivo Anual</span><span class="c-blue" style="font-family:monospace;font-weight:700" id="nd-tr-ea">0% E.A.</span></div>
+      </div>
+    </div>
+    <!-- Seguro -->
+    <div class="seguro-box-form">
+      <div style="font-size:11px;font-weight:800;color:#4CAF50;margin-bottom:8px;letter-spacing:.5px">🛡️ SEGURO (OPCIONAL)</div>
+      <div class="seg-toggle-form">
+        <button class="seg-opt-form active" id="ndsopt-no" onclick="ndSetSeguro('no')">Sin seguro</button>
+        <button class="seg-opt-form" id="ndsopt-pct" onclick="ndSetSeguro('pct')">% del saldo</button>
+        <button class="seg-opt-form" id="ndsopt-fijo" onclick="ndSetSeguro('fijo')">Valor fijo</button>
+      </div>
+      <div id="nd-seguro-fields" style="display:none">
+        <div class="fr" style="margin-bottom:4px">
+          <label id="nd-seg-lbl" style="font-size:10px;color:#8888aa">% mensual sobre saldo</label>
+          <input type="number" id="nd-seguro-val" min="0" step="0.01" placeholder="Ej: 0.3" oninput="ndCalcTodo()">
+        </div>
+        <div style="font-size:10px;color:#4CAF50;margin-top:4px" id="nd-seg-result"></div>
+      </div>
+    </div>
+    <!-- Historial previo -->
+    <div class="hist-box-form" id="nd-hist-box" style="display:none">
+      <div style="font-size:11px;font-weight:800;color:#FFB300;margin-bottom:6px;letter-spacing:.5px">📋 PAGOS YA REALIZADOS</div>
+      <div style="font-size:11px;color:#FFB300;margin-bottom:8px;line-height:1.5">El préstamo es anterior a hoy. Agregue los pagos ya realizados para partir del saldo real.</div>
+      <div id="nd-hist-list"></div>
+      <div id="nd-hist-total" style="display:none;display:flex;justify-content:space-between;padding:6px 0;font-size:12px;border-top:1px solid rgba(255,179,0,.2);margin-top:4px">
+        <span style="color:#8888aa">Total pagado registrado</span>
+        <span style="color:#4CAF50;font-family:monospace;font-weight:700" id="nd-hist-total-val">$0</span>
+      </div>
+      <!-- Mini form para agregar pago histórico -->
+      <div id="nd-hist-form" style="background:var(--surface3);border-radius:var(--radius-xs);padding:10px;margin-top:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <input type="number" id="nd-hp-valor" placeholder="Valor pagado" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text);font-size:12px;outline:none">
+          <input type="date" id="nd-hp-fecha" style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:7px 8px;color:var(--text);font-size:12px;outline:none">
+        </div>
+        <button class="btn-add-hist" onclick="ndAgregarHistPago()">+ Agregar pago histórico</button>
+      </div>
+    </div>
     <div class="fr"><label>Notas (opcional)</label><textarea id="nd-notas" rows="2" placeholder="Condiciones acordadas..."></textarea></div>
     <div class="form-actions">
       <button class="btn" onclick="closeModal('modal-nueva-deuda')">Cancelar</button>
@@ -3916,7 +3980,10 @@ function renderClienteDeudas(){
     const pct=d.monto>0?Math.round((tp/d.monto)*100):0;
     const mora=enMoraDeuda(d);
     const color=colors[d.tipo]||'#00BCD4';
-    const cuotasInfo=d.tipocuota==='libre'?'Sin plazo fijo':(d.cuotas+' cuotas · '+(d.tipocuota==='fija'?'Fija':'Variable'));
+    const tm=d.tasa||0;
+    const eaStr=tm>0?((Math.pow(1+tm/100,12)-1)*100).toFixed(1)+'% E.A.':'0% E.A.';
+    const segStr=d.seguroTipo&&d.seguroTipo!=='no'?' · Seguro incl.':'';
+    const cuotasInfo=d.tipocuota==='libre'?'Sin plazo fijo':(d.cuotas+' cuotas · '+(d.tipocuota==='fija'?'Fija':'Variable')+' · '+eaStr+segStr);
     return'<div class="deuda-card-item">'
       +'<div class="deuda-accent" style="background:'+color+'"></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
@@ -3961,16 +4028,53 @@ function renderClienteCalendario(){
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function saldoDeuda(d){
-  const tp=totalPagadoDeuda(d);
-  if(d.tipocuota==='libre') return Math.max(d.monto-tp,0);
-  const t=d.tasa/100;
+  if(d.tipocuota==='libre'){
+    const tp=totalPagadoDeuda(d);
+    return Math.max(d.monto-tp,0);
+  }
+  const t=(d.tasa||0)/100;
+  const segMes=calcSeguroDeuda(d);
+  // Amortización francesa (cuota fija)
+  if(d.tipocuota==='fija'&&t>0){
+    const cuota=Math.round(d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1));
+    let saldo=d.monto;
+    for(const p of (d.pagos||[])){
+      if(saldo<=0) break;
+      const intMes=Math.round(saldo*t);
+      const amort=cuota-intMes;
+      const pagadoCapital=Math.max((p.valor||0)-segMes,0);
+      saldo=Math.max(saldo-pagadoCapital,0);
+    }
+    return saldo;
+  }
+  // Variable
   let s=Math.round(d.monto*(1+t));
-  for(let i=0;i<(d.pagos||[]).length;i++){
-    s=Math.max(s-(d.pagos[i].valor||0),0);
-    if(s===0) break;
-    s=Math.round(s*(1+t));
+  for(const p of (d.pagos||[])){
+    if(s<=0) break;
+    const pagadoCapital=Math.max((p.valor||0)-segMes,0);
+    s=Math.max(s-pagadoCapital,0);
+    if(s>0) s=Math.round(s*(1+t));
   }
   return s;
+}
+
+function calcSeguroDeuda(d){
+  if(!d.seguroTipo||d.seguroTipo==='no') return 0;
+  if(d.seguroTipo==='fijo') return d.seguroVal||0;
+  if(d.seguroTipo==='pct') return Math.round(d.monto*(d.seguroVal||0)/100);
+  return 0;
+}
+
+function getCuotaDeuda(d){
+  const t=(d.tasa||0)/100;
+  const seg=calcSeguroDeuda(d);
+  if(d.tipocuota==='libre') return saldoDeuda(d);
+  if(d.tipocuota==='fija'&&t>0){
+    const cuota=Math.round(d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1));
+    return cuota+seg;
+  }
+  // Variable — cuota sobre saldo actual
+  return Math.round(saldoDeuda(d)*t)+seg;
 }
 
 function totalPagadoDeuda(d){
@@ -3995,7 +4099,7 @@ function proximosPagosDeuda(){
     if(saldoDeuda(d)===0) return;
     const sp=saldoDeuda(d);
     const t=d.tasa/100;
-    const cuota=d.tipocuota==='fija'?Math.round(calcCuotaFija(d.monto,t,d.cuotas)):Math.round(sp*(1+t));
+    const cuota=getCuotaDeuda(d);
     // Next payment date - end of current/next month
     const nextDate=new Date(hoy.getFullYear(),hoy.getMonth()+1,0); // last day of month
     proximos.push({acreedor:d.acreedor,fecha:nextDate.toISOString().slice(0,10),monto:Math.min(cuota,sp),did:d.id});
@@ -4004,6 +4108,106 @@ function proximosPagosDeuda(){
 }
 
 // ── CRUD ──────────────────────────────────────────────────────────────────────
+// ── Deuda form helpers ───────────────────────────────────────────────────────
+let ndTasaTipo='ea';
+let ndSeguroTipo='no';
+let ndHistPagos=[];
+
+function ndSetTasaTipo(tipo){
+  ndTasaTipo=tipo;
+  ['mensual','ea','nm'].forEach(t=>{
+    document.getElementById('ndtopt-'+t)?.classList.toggle('active',t===tipo);
+  });
+  const lbls={mensual:'Tasa mensual',ea:'Tasa Efectiva Anual (E.A.)',nm:'Tasa Nominal Mensual Vencida'};
+  const el=document.getElementById('nd-tasa-lbl');
+  if(el) el.textContent=lbls[tipo];
+  ndCalcTodo();
+}
+
+function ndSetSeguro(tipo){
+  ndSeguroTipo=tipo;
+  ['no','pct','fijo'].forEach(t=>{
+    document.getElementById('ndsopt-'+t)?.classList.toggle('active',t===tipo);
+  });
+  const sf=document.getElementById('nd-seguro-fields');
+  if(sf) sf.style.display=tipo==='no'?'none':'block';
+  const lbl=document.getElementById('nd-seg-lbl');
+  if(lbl) lbl.textContent=tipo==='pct'?'% mensual sobre saldo inicial':'Valor fijo mensual ($)';
+  ndCalcTodo();
+}
+
+function ndGetTasaMensual(){
+  const v=parseFloat(document.getElementById('nd-tasa')?.value)||0;
+  if(ndTasaTipo==='mensual') return v/100;
+  if(ndTasaTipo==='ea') return Math.pow(1+v/100,1/12)-1;
+  if(ndTasaTipo==='nm') return v/12/100;
+  return 0;
+}
+
+function ndCalcTodo(){
+  const monto=parseFloat(document.getElementById('nd-monto')?.value)||0;
+  const cuotas=parseInt(document.getElementById('nd-cuotas')?.value)||12;
+  const tm=ndGetTasaMensual();
+  const ea=(Math.pow(1+tm,12)-1)*100;
+
+  const resultEl=document.getElementById('nd-tasa-result');
+  if(resultEl&&tm>0){
+    resultEl.style.display='block';
+    const mensualEl=document.getElementById('nd-tr-mensual');
+    const eaEl=document.getElementById('nd-tr-ea');
+    if(mensualEl) mensualEl.textContent=(tm*100).toFixed(4)+'%';
+    if(eaEl) eaEl.textContent=ea.toFixed(2)+'% E.A.';
+  } else if(resultEl){
+    resultEl.style.display='none';
+  }
+
+  // Seguro
+  if(ndSeguroTipo!=='no'&&monto>0){
+    const sv=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
+    const segMes=ndSeguroTipo==='pct'?Math.round(monto*sv/100):sv;
+    const sr=document.getElementById('nd-seg-result');
+    if(sr) sr.textContent='Seguro estimado: $'+segMes.toLocaleString('es-CO')+'/mes';
+  }
+}
+
+function ndCheckFechaAnterior(){
+  const fecha=document.getElementById('nd-fecha')?.value;
+  const hoy=today();
+  const box=document.getElementById('nd-hist-box');
+  if(box) box.style.display=(fecha&&fecha<hoy)?'block':'none';
+}
+
+function ndAgregarHistPago(){
+  const valor=parseFloat(document.getElementById('nd-hp-valor')?.value)||0;
+  const fecha=document.getElementById('nd-hp-fecha')?.value;
+  if(!valor||!fecha){toast('Ingrese valor y fecha del pago','error');return;}
+  ndHistPagos.push({valor,fecha,metodo:'Histórico'});
+  document.getElementById('nd-hp-valor').value='';
+  document.getElementById('nd-hp-fecha').value='';
+  ndRenderHistPagos();
+  toast('Pago histórico agregado');
+}
+
+function ndRenderHistPagos(){
+  const list=document.getElementById('nd-hist-list');
+  const totalEl=document.getElementById('nd-hist-total');
+  const totalVal=document.getElementById('nd-hist-total-val');
+  if(!list) return;
+  list.innerHTML=ndHistPagos.map((p,i)=>'<div class="hist-pago-row">'
+    +'<div><div style="font-weight:700;font-size:12px">$'+p.valor.toLocaleString('es-CO')+'</div>'
+    +'<div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+'</div></div>'
+    +'<button onclick="ndElimHistPago('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>'
+    +'</div>').join('');
+  const total=ndHistPagos.reduce((s,p)=>s+p.valor,0);
+  if(totalEl) totalEl.style.display=ndHistPagos.length>0?'flex':'none';
+  if(totalVal) totalVal.textContent='$'+total.toLocaleString('es-CO')+' ('+ndHistPagos.length+' pagos)';
+}
+
+function ndElimHistPago(i){
+  ndHistPagos.splice(i,1);
+  ndRenderHistPagos();
+}
+
 function abrirNuevaDeuda(){
   document.getElementById('nd-acreedor').value='';
   document.getElementById('nd-monto').value='';
@@ -4011,6 +4215,18 @@ function abrirNuevaDeuda(){
   document.getElementById('nd-cuotas').value='';
   document.getElementById('nd-notas').value='';
   document.getElementById('nd-fecha').value=today();
+  ndHistPagos=[];
+  ndTasaTipo='ea';
+  ndSeguroTipo='no';
+  // Reset toggles
+  ndSetTasaTipo('ea');
+  ndSetSeguro('no');
+  const histBox=document.getElementById('nd-hist-box');
+  if(histBox) histBox.style.display='none';
+  const histList=document.getElementById('nd-hist-list');
+  if(histList) histList.innerHTML='';
+  const trEl=document.getElementById('nd-tasa-result');
+  if(trEl) trEl.style.display='none';
   openModal('modal-nueva-deuda');
 }
 
@@ -4018,15 +4234,22 @@ function guardarDeuda(){
   const acreedor=document.getElementById('nd-acreedor').value.trim();
   const tipo=document.getElementById('nd-tipo').value;
   const monto=parseFloat(document.getElementById('nd-monto').value)||0;
-  const tasa=parseFloat(document.getElementById('nd-tasa').value)||0;
   const cuotas=parseInt(document.getElementById('nd-cuotas').value)||12;
   const tipocuota=document.getElementById('nd-tipocuota').value;
   const fecha=document.getElementById('nd-fecha').value;
   const notas=document.getElementById('nd-notas').value.trim();
   if(!acreedor||!monto){toast('Complete los campos requeridos','error');return;}
+  // Get tasa mensual (always store as monthly)
+  const tasaMensual=ndGetTasaMensual()*100;
+  // Get seguro
+  let seguroTipo=ndSeguroTipo;
+  let seguroVal=0;
+  if(ndSeguroTipo!=='no') seguroVal=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
+  // Historical payments
+  const pagosHistoricos=ndHistPagos.map(p=>({...p,esHistorico:true}));
   loadDeudas();
   const id=deudas.length?Math.max(...deudas.map(d=>d.id))+1:1;
-  deudas.push({id,acreedor,tipo,monto,tasa,cuotas,tipocuota,fecha,notas,pagos:[]});
+  deudas.push({id,acreedor,tipo,monto,tasa:tasaMensual,tasaOriginal:parseFloat(document.getElementById('nd-tasa')?.value)||0,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,pagos:pagosHistoricos});
   saveDeudas();
   closeModal('modal-nueva-deuda');
   renderClienteDeudas();
@@ -4043,9 +4266,12 @@ function abrirPagoDeuda(did){
   const sp=saldoDeuda(d);
   const tp=totalPagadoDeuda(d);
   document.getElementById('pago-deuda-title').innerHTML='💳 Pago — '+d.acreedor+' <button class="modal-close" onclick="closeModal(&quot;modal-pago-deuda&quot;)">✕</button>';
+  const cuota=getCuotaDeuda(d);
+  const seg=calcSeguroDeuda(d);
   document.getElementById('pago-deuda-saldo').innerHTML=
     '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Saldo pendiente</span><span class="c-red" style="font-family:monospace;font-weight:700">'+fmt(sp)+'</span></div>'
-    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Total pagado hasta hoy</span><span class="c-green" style="font-family:monospace;font-weight:700">'+fmt(tp)+'</span></div>';
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Total pagado</span><span class="c-green" style="font-family:monospace;font-weight:700">'+fmt(tp)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Cuota estimada'+(seg>0?' (incl. seguro $'+seg.toLocaleString('es-CO')+')':'')+'</span><span class="c-amber" style="font-family:monospace;font-weight:700">'+fmt(cuota)+'</span></div>';
   document.getElementById('pd-valor').value='';
   document.getElementById('pd-fecha').value=today();
   document.getElementById('pd-nota').value='';
