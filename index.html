@@ -578,7 +578,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
   </div>
   <div class="home-tagline">Tu solución financiera personal</div>
   <div class="home-cards">
-    <div class="home-card" onclick="goTo('loans')">
+    <div class="home-card" id="card-prestamista" onclick="goTo('loans')">
       <div class="hc-icon">🏦</div>
       <div class="hc-title">Modo Prestamista</div>
       <div class="hc-sub">Clientes, pagos, caja y reportes</div>
@@ -693,7 +693,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <span style="font-size:20px">👤</span>
       <span class="cliente-title">Mis Deudas</span>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
+    <div style="display:flex;gap:8px;align-items:center" id="cliente-topbar-actions">
       <button onclick="abrirNuevaDeuda()" style="background:#006064;color:#00E5D1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">+ Nueva</button>
       <button onclick="syncDeudasNube()" id="btn-sync-deudas" style="background:none;border:1px solid rgba(0,188,212,.4);color:#00BCD4;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif" title="Sincronizar con nube">☁ Sync</button>
       <button onclick="activarRecordatorios()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer" title="Activar recordatorios de pago">🔔</button>
@@ -1598,6 +1598,11 @@ load();
 
 // ══ NAVIGATION ════════════════════════════════════════════════════════════════
 function goTo(id){
+  // Block invitado from accessing loans/prestamista
+  if(currentUser&&currentUser.rol==='invitado'&&id==='loans'){
+    toast('No tienes acceso al Modo Prestamista','error');
+    return;
+  }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   if(id==='cliente'){
@@ -3763,13 +3768,27 @@ const EF_USERS = [
     pass: 'socio2026',
     nombre: 'Socio/Lectura',
     rol: 'lectura',
-    // Read only: can view dashboard and reports, cannot modify anything
     permisos: {
       crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
       registrarPago: false, eliminarPago: false, verCaja: true,
       exportar: true, importar: false, negociarCartera: false,
       verReportes: true, configurarNube: false, gestionarNotas: false,
       presupuesto: false, bolsillos: false, whatsapp: false
+    }
+  },
+  {
+    user: 'invitado',
+    pass: 'invitado12026',
+    nombre: 'Alba',
+    rol: 'invitado',
+    // Invitado: solo Modo Cliente y Easy Day to Day
+    permisos: {
+      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
+      registrarPago: false, eliminarPago: false, verCaja: false,
+      exportar: false, importar: false, negociarCartera: false,
+      verReportes: false, configurarNube: false, gestionarNotas: false,
+      presupuesto: true, bolsillos: true, whatsapp: false,
+      modoCliente: true, dayToDay: true
     }
   }
 ];
@@ -3804,8 +3823,12 @@ function doLogin(){
   localStorage.setItem('ef_session', JSON.stringify({user:found.user}));
   document.getElementById('login-screen').style.display='none';
   applyRoleRestrictions();
-  // Show welcome and then TC if needed
-  setTimeout(checkTC, 300);
+  // Invitado goes directly to Modo Cliente
+  if(found.rol==='invitado'){
+    setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
+  } else {
+    setTimeout(checkTC, 300);
+  }
 }
 
 function doLogout(){
@@ -3824,8 +3847,8 @@ function canDo(permiso){
 
 function applyRoleRestrictions(){
   if(!currentUser) return;
-  const roleColors={admin:'#E91E8C',cobrador:'#FFB300',lectura:'#00BCD4'};
-  const roleLabels={admin:'Admin',cobrador:'Cobrador',lectura:'Lectura'};
+  const roleColors={admin:'#E91E8C',cobrador:'#FFB300',lectura:'#00BCD4',invitado:'#4CAF50'};
+  const roleLabels={admin:'Admin',cobrador:'Cobrador',lectura:'Lectura',invitado:'Invitado'};
 
   // ── User badge in topbar ──────────────────────────────────────────────────
   const topbar=document.querySelector('.topbar');
@@ -3842,6 +3865,12 @@ function applyRoleRestrictions(){
     badge.innerHTML='<span style="font-weight:700;color:'+c+';font-size:11px">'+currentUser.nombre+'</span>'
       +'<span style="background:'+c+'22;color:'+c+';border:1px solid '+c+'44;border-radius:10px;padding:1px 7px;font-size:9px;font-weight:800">'+l+'</span>'
       +'<button onclick="doLogout()" style="background:none;border:1px solid #2a2a45;border-radius:6px;color:#8888aa;font-size:10px;padding:2px 7px;cursor:pointer;font-family:Nunito,sans-serif" title="Cerrar sesión">⏻ Salir</button>';
+  }
+
+  // ── Hide Prestamista card for invitado ──────────────────────────────────────
+  const cardPrestamista = document.getElementById('card-prestamista');
+  if(cardPrestamista){
+    cardPrestamista.style.display = currentUser.rol==='invitado' ? 'none' : '';
   }
 
   // ── Hide/show export bar buttons by role ─────────────────────────────────
