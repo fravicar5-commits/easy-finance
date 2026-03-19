@@ -4064,6 +4064,7 @@ function renderClienteDeudas(){
       +'<div style="display:flex;gap:6px;margin-top:10px">'
       +'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
       +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="verDetalleDeuda(parseInt(this.dataset.did))">📋 Detalle</button>'
+      +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="editarDeuda(parseInt(this.dataset.did))" style="background:rgba(255,179,0,.1);color:#FFB300;border-color:rgba(255,179,0,.4)">✏ Editar</button>'
       +(sp===0?'<span style="font-size:11px;font-weight:700;color:var(--green);padding:7px 8px">✓ Pagada</span>':'')
       +'</div>'
       +'</div>';
@@ -4321,6 +4322,75 @@ function guardarDeuda(){
   clienteTabActual='deudas';
   document.querySelectorAll('.cliente-tab').forEach((t,i)=>{t.classList.toggle('active',i===1);});
   toast('Deuda registrada');
+}
+
+function editarDeuda(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  // Pre-fill the form with existing data
+  document.getElementById('nd-acreedor').value=d.acreedor||'';
+  document.getElementById('nd-tipo').value=d.tipo||'banco';
+  document.getElementById('nd-monto').value=d.monto||'';
+  document.getElementById('nd-cuotas').value=d.cuotas||'';
+  document.getElementById('nd-tipocuota').value=d.tipocuota||'variable';
+  document.getElementById('nd-fecha').value=d.fecha||today();
+  document.getElementById('nd-notas').value=d.notas||'';
+  // Set tasa type and value
+  ndTasaTipo=d.tasaTipo||'mensual';
+  ndSetTasaTipo(ndTasaTipo);
+  // Convert stored monthly rate back to original input format
+  const tasaOriginal=d.tasaOriginal||d.tasa||0;
+  document.getElementById('nd-tasa').value=tasaOriginal;
+  // Set seguro
+  ndSeguroTipo=d.seguroTipo||'no';
+  ndSetSeguro(ndSeguroTipo);
+  if(ndSeguroTipo!=='no') document.getElementById('nd-seguro-val').value=d.seguroVal||0;
+  // Load existing payments into hist
+  ndHistPagos=[...(d.pagos||[])];
+  ndRenderHistPagos();
+  // Show hist box always in edit mode
+  const histBox=document.getElementById('nd-hist-box');
+  if(histBox) histBox.style.display='block';
+  ndCalcTodo();
+  // Change modal title and save button to indicate edit mode
+  const title=document.querySelector('#modal-nueva-deuda .modal-title');
+  if(title) title.innerHTML='✏ Editar deuda <button class="modal-close" onclick="closeModal(\'modal-nueva-deuda\')">✕</button>';
+  const saveBtn=document.querySelector('#modal-nueva-deuda .form-actions .btn:last-child');
+  if(saveBtn){
+    saveBtn.textContent='Guardar cambios';
+    saveBtn.onclick=()=>guardarEdicionDeuda(did);
+  }
+  openModal('modal-nueva-deuda');
+}
+
+function guardarEdicionDeuda(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  const acreedor=document.getElementById('nd-acreedor').value.trim();
+  const tipo=document.getElementById('nd-tipo').value;
+  const monto=parseFloat(document.getElementById('nd-monto').value)||0;
+  const cuotas=parseInt(document.getElementById('nd-cuotas').value)||12;
+  const tipocuota=document.getElementById('nd-tipocuota').value;
+  const fecha=document.getElementById('nd-fecha').value;
+  const notas=document.getElementById('nd-notas').value.trim();
+  if(!acreedor||!monto){toast('Complete los campos requeridos','error');return;}
+  const tasaMensual=ndGetTasaMensual()*100;
+  const tasaOriginal=parseFloat(document.getElementById('nd-tasa')?.value)||0;
+  let seguroTipo=ndSeguroTipo;
+  let seguroVal=0;
+  if(ndSeguroTipo!=='no') seguroVal=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
+  // Update deuda keeping existing payments
+  Object.assign(d,{acreedor,tipo,monto,tasa:tasaMensual,tasaOriginal,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,pagos:ndHistPagos});
+  saveDeudas();
+  closeModal('modal-nueva-deuda');
+  // Reset modal for future new entries
+  const title=document.querySelector('#modal-nueva-deuda .modal-title');
+  if(title) title.innerHTML='➕ Registrar deuda <button class="modal-close" onclick="closeModal(\'modal-nueva-deuda\')">✕</button>';
+  const saveBtn=document.querySelector('#modal-nueva-deuda .form-actions .btn:last-child');
+  if(saveBtn){saveBtn.textContent='Registrar deuda';saveBtn.onclick=guardarDeuda;}
+  renderClienteDeudas();
+  clienteTabActual='deudas';
+  toast('Deuda actualizada ✓');
 }
 
 function abrirPagoDeuda(did){
