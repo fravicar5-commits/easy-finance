@@ -1612,8 +1612,11 @@ function goTo(id){
     if(jsonbinEnabled && autoSync){
       jbinRead().then(data=>{
         const userKeyC = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-        if(data[userKeyC]&&JSON.stringify(data[userKeyC])!==JSON.stringify(deudas)){
-          deudas=data[userKeyC];
+        const cloudDeudas = data[userKeyC] && data[userKeyC].length > 0
+          ? data[userKeyC]
+          : (data.deudas && data.deudas.length > 0 && currentUser && currentUser.rol==='admin' ? data.deudas : null);
+        if(cloudDeudas && JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
+          deudas=cloudDeudas;
           localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
           toast('Deudas actualizadas desde nube ☁','info');
@@ -2796,7 +2799,14 @@ function loadFromDriveURL(){
       if(data.pockets) pockets=data.pockets;
       if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
       const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-      if(data[userKey]) {deudas=data[userKey];localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));}
+      if(data[userKey] && data[userKey].length > 0){
+        deudas=data[userKey];
+        localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+      } else if(data.deudas && data.deudas.length > 0 && currentUser && currentUser.rol==='admin'){
+        // Migration: old cloud data under 'deudas' key -> move to user-specific
+        deudas=data.deudas;
+        localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+      }
       localStorage.setItem(SK,JSON.stringify(clients));
       localStorage.setItem(CK,JSON.stringify(caja));
       localStorage.setItem(NK,JSON.stringify(notes));
@@ -2828,7 +2838,14 @@ function syncFromDrive(){
     pockets=data.pockets||[];
     if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
     const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-      if(data[userKey]) {deudas=data[userKey];localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));}
+      if(data[userKey] && data[userKey].length > 0){
+        deudas=data[userKey];
+        localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+      } else if(data.deudas && data.deudas.length > 0 && currentUser && currentUser.rol==='admin'){
+        // Migration: old cloud data under 'deudas' key -> move to user-specific
+        deudas=data.deudas;
+        localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+      }
     localStorage.setItem(SK,JSON.stringify(clients));
     localStorage.setItem(CK,JSON.stringify(caja));
     localStorage.setItem(NK,JSON.stringify(notes));
@@ -4130,12 +4147,15 @@ function syncDeudasNube(){
   const dot=document.getElementById('btn-sync-deudas');
   if(dot) {dot.textContent='⏳';dot.style.opacity='0.6';}
   const budgets=loadBudgets();
-  jbinWrite((()=>{
+  // First read current cloud data to preserve other users' deudas
+  jbinRead().then(cloudData=>{
     const user = currentUser ? currentUser.user : 'default';
-    const data = {clients,caja,notes,pockets,budgets};
+    const data = Object.assign({}, cloudData, {clients,caja,notes,pockets,budgets});
     data['deudas_'+user] = deudas;
-    return data;
-  })())
+    // Remove old shared key if migrating
+    if(data.deudas && user==='admin') delete data.deudas;
+    return jbinWrite(data);
+  })
   .then(()=>{
     toast('Deudas sincronizadas ✓','info');
     if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
