@@ -689,6 +689,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button onclick="abrirNuevaDeuda()" style="background:#006064;color:#00E5D1;border:none;border-radius:8px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">+ Nueva</button>
+      <button onclick="syncDeudasNube()" id="btn-sync-deudas" style="background:none;border:1px solid rgba(0,188,212,.4);color:#00BCD4;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif" title="Sincronizar con nube">☁ Sync</button>
       <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer">⌂</button>
     </div>
   </div>
@@ -792,6 +793,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <button class="btn" style="background:#006064;color:#00E5D1;border:none;flex:1" onclick="guardarPagoDeuda()">Registrar pago</button>
     </div>
     <div id="pd-historial" style="margin-top:14px"></div>
+  </div>
+</div>
+
+<!-- Modal detalle deuda -->
+<div class="overlay" id="modal-detalle-deuda">
+  <div class="modal" style="max-width:500px">
+    <div class="modal-title">📋 Detalle de deuda <button class="modal-close" onclick="closeModal('modal-detalle-deuda')">✕</button></div>
+    <div id="detalle-deuda-content"></div>
   </div>
 </div>
 
@@ -1584,7 +1593,21 @@ load();
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id==='cliente'){loadDeudas();renderClienteDashboard();}
+  if(id==='cliente'){
+    loadDeudas();
+    renderClienteDashboard();
+    // Pull deudas from cloud if connected
+    if(jsonbinEnabled && autoSync){
+      jbinRead().then(data=>{
+        if(data.deudas&&JSON.stringify(data.deudas)!==JSON.stringify(deudas)){
+          deudas=data.deudas;
+          localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+          renderClienteTab();
+          toast('Deudas actualizadas desde nube ☁','info');
+        }
+      }).catch(()=>{});
+    }
+  }
   if(id==='loans'){renderSidebar();renderDashboard();}
   if(id==='dayday'){renderDDTab(ddTab);}
 }
@@ -1943,8 +1966,8 @@ function renderDetail(){
     +'<div class="header-actions">'
     +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700">⌂ Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">📄 Estado</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
     +'<div class="content">'
-    +(c.socio?'<button class="socio-btn" data-cid="\'+c.id+\'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">\'+c.socio.nombre+\' · \'+c.socio.tasa+\'% socio / \'+c.socio.tasaMia+\'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
-    +'<div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">'    +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
+    +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
+    +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
     +'<div class="metrics" style="margin-bottom:10px">'
     +'<div class="mc"><div class="mc-label">Monto</div><div class="mc-value c-blue">'+fmtS(c.monto)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Saldo</div><div class="mc-value c-amber">'+fmtS(sp)+'</div></div>'
@@ -2713,7 +2736,7 @@ function pushToDrive(silent){
   if(!jsonbinEnabled) return;
   document.getElementById('drive-dot').className='drive-dot syncing';
   const budgets=loadBudgets();
-  jbinWrite({clients,caja,notes,pockets,budgets})
+  jbinWrite({clients,caja,notes,pockets,budgets,deudas})
   .then(()=>{
     const ts=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
     updateDriveStatus('Sincronizado '+ts);
@@ -2754,6 +2777,7 @@ function loadFromDriveURL(){
       if(data.notes) notes=data.notes;
       if(data.pockets) pockets=data.pockets;
       if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
+      if(data.deudas) {deudas=data.deudas;localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));}
       localStorage.setItem(SK,JSON.stringify(clients));
       localStorage.setItem(CK,JSON.stringify(caja));
       localStorage.setItem(NK,JSON.stringify(notes));
@@ -2784,6 +2808,7 @@ function syncFromDrive(){
     notes=data.notes||[];
     pockets=data.pockets||[];
     if(data.budgets&&data.budgets.length>0) saveBudgets(data.budgets);
+    if(data.deudas) {deudas=data.deudas;localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));}
     localStorage.setItem(SK,JSON.stringify(clients));
     localStorage.setItem(CK,JSON.stringify(caja));
     localStorage.setItem(NK,JSON.stringify(notes));
@@ -3920,6 +3945,44 @@ function loadDeudas(){
 }
 function saveDeudas(){
   localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+  // Auto-sync to cloud if connected
+  if(jsonbinEnabled && autoSync) setTimeout(syncDeudasSilent, 500);
+}
+
+function syncDeudasSilent(){
+  if(!jsonbinEnabled) return;
+  const budgets=loadBudgets();
+  jbinWrite({clients,caja,notes,pockets,budgets,deudas}).catch(()=>{});
+}
+
+function syncDeudasNube(){
+  if(!jsonbinEnabled){
+    toast('Conecte primero la nube desde Modo Prestamista → Drive','error',4000);
+    return;
+  }
+  const dot=document.getElementById('btn-sync-deudas');
+  if(dot) {dot.textContent='⏳';dot.style.opacity='0.6';}
+  const budgets=loadBudgets();
+  jbinWrite({clients,caja,notes,pockets,budgets,deudas})
+  .then(()=>{
+    toast('Deudas sincronizadas ✓','info');
+    if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+  })
+  .catch(()=>{
+    // Try to pull from cloud instead
+    jbinRead().then(data=>{
+      if(data.deudas){
+        deudas=data.deudas;
+        localStorage.setItem(DK_DEUDAS,JSON.stringify(deudas));
+        renderClienteTab();
+        toast('Datos cargados desde nube ✓','info');
+      }
+      if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+    }).catch(()=>{
+      toast('Sin conexión a nube','error');
+      if(dot){dot.textContent='☁ Sync';dot.style.opacity='1';}
+    });
+  });
 }
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
@@ -4000,6 +4063,7 @@ function renderClienteDeudas(){
       +'</div>'
       +'<div style="display:flex;gap:6px;margin-top:10px">'
       +'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
+      +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="verDetalleDeuda(parseInt(this.dataset.did))">📋 Detalle</button>'
       +(sp===0?'<span style="font-size:11px;font-weight:700;color:var(--green);padding:7px 8px">✓ Pagada</span>':'')
       +'</div>'
       +'</div>';
@@ -4311,6 +4375,79 @@ function guardarPagoDeuda(){
   toast('Pago registrado');
 }
 
+// ── DETALLE DEUDA ─────────────────────────────────────────────────────────────
+function verDetalleDeuda(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  const sp=saldoDeuda(d);
+  const tp=totalPagadoDeuda(d);
+  const seg=calcSeguroDeuda(d);
+  const cuota=getCuotaDeuda(d);
+  const tm=d.tasa||0;
+  const ea=tm>0?((Math.pow(1+tm/100,12)-1)*100).toFixed(2):'0';
+  const pct=d.monto>0?Math.round((tp/d.monto)*100):0;
+  const colors={prestamista:'#E91E8C',banco:'#00BCD4',familiar:'#42A5F5',amigo:'#4CAF50',otro:'#FFB300'};
+  const color=colors[d.tipo]||'#00BCD4';
+  const mora=enMoraDeuda(d);
+  const hist=(d.pagos||[]).slice().reverse();
+  const tipoCuotaLabel={fija:'Cuota fija (amortización francesa)',variable:'Variable',libre:'Sin plazo fijo'}[d.tipocuota]||d.tipocuota;
+  const tipoTasaLabel={mensual:'% mensual',ea:'% E.A.',nm:'% N.M.V.'}[d.tasaTipo]||'mensual';
+
+  document.getElementById('detalle-deuda-content').innerHTML=
+    // Header
+    '<div style="background:rgba(0,96,100,.2);border:1px solid rgba(0,188,212,.3);border-left:4px solid '+color+';border-radius:var(--radius);padding:14px;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+    +'<div><div style="font-size:18px;font-weight:800;color:#00BCD4">'+d.acreedor+'</div>'
+    +'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+d.tipo.charAt(0).toUpperCase()+d.tipo.slice(1)+'</div></div>'
+    +'<span style="background:'+(mora?'rgba(239,83,80,.15)':'rgba(76,175,80,.15)')+';color:'+(mora?'#ef5350':'#4CAF50')+';border:1px solid '+(mora?'rgba(239,83,80,.3)':'rgba(76,175,80,.3)')+';border-radius:20px;padding:3px 10px;font-size:10px;font-weight:700">'+(mora?'⚠ En mora':'✓ Al día')+'</span>'
+    +'</div>'
+    // Progress
+    +'<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Progreso: '+pct+'%</div>'
+    +'<div class="deuda-prog-bar"><div class="deuda-prog-fill" style="width:'+pct+'%;background:'+color+'"></div></div>'
+    +'</div>'
+    // Montos
+    +'<div class="metrics m3" style="margin-bottom:12px">'
+    +'<div class="mc"><div class="mc-label">MONTO ORIGINAL</div><div class="mc-value c-blue">'+fmtS(d.monto)+'</div></div>'
+    +'<div class="mc"><div class="mc-label">TOTAL PAGADO</div><div class="mc-value c-green">'+fmtS(tp)+'</div></div>'
+    +'<div class="mc"><div class="mc-label">SALDO PENDIENTE</div><div class="mc-value c-red">'+fmtS(sp)+'</div></div>'
+    +'</div>'
+    // Condiciones
+    +'<div class="card" style="margin-bottom:12px">'
+    +'<div class="sec-label" style="margin-bottom:10px">CONDICIONES DEL CRÉDITO</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">'
+    +'<div><span style="color:var(--text3)">Tasa pactada:</span><br><strong style="font-family:monospace">'+d.tasaOriginal+'% '+tipoTasaLabel+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Equivalente E.A.:</span><br><strong style="font-family:monospace">'+ea+'% E.A.</strong></div>'
+    +'<div><span style="color:var(--text3)">Tasa mensual:</span><br><strong style="font-family:monospace">'+(d.tasa||0).toFixed(4)+'%/mes</strong></div>'
+    +'<div><span style="color:var(--text3)">Tipo cuota:</span><br><strong>'+tipoCuotaLabel+'</strong></div>'
+    +(d.cuotas?'<div><span style="color:var(--text3)">Cuotas:</span><br><strong>'+d.cuotas+' cuotas</strong></div>':'')
+    +'<div><span style="color:var(--text3)">Fecha desembolso:</span><br><strong>'+fd(d.fecha)+'</strong></div>'
+    +(seg>0?'<div><span style="color:var(--text3)">Seguro mensual:</span><br><strong class="c-amber">'+fmt(seg)+'</strong></div>':'')
+    +'<div><span style="color:var(--text3)">Cuota estimada:</span><br><strong class="c-amber" style="font-family:monospace">'+fmt(cuota)+'</strong></div>'
+    +'</div>'
+    +(d.notas?'<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">📝 '+d.notas+'</div>':'')
+    +'</div>'
+    // Historial
+    +(hist.length>0
+      ?'<div class="sec-label" style="margin-bottom:8px">HISTORIAL DE PAGOS ('+hist.length+')</div>'
+       +'<div style="display:flex;flex-direction:column;gap:6px">'
+       +hist.map((p,i)=>{
+         return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:9px 12px">'
+           +'<div><div style="font-size:13px;font-weight:700;font-family:monospace;color:var(--green)">'+fmt(p.valor)+'</div>'
+           +'<div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+(p.metodo?' · '+p.metodo:'')+(p.esHistorico?' · Histórico':'')+'</div>'
+           +(p.nota?'<div style="font-size:10px;color:var(--text2)">'+p.nota+'</div>':'')
+           +'</div>'
+           +'<div style="font-size:10px;color:var(--text3)">#'+(hist.length-i)+'</div>'
+           +'</div>';
+       }).join('')
+       +'</div>'
+      :'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Sin pagos registrados aún</div>')
+    +'<div style="margin-top:14px">'
+    +'<button class="btn btn-cyan-solid" style="width:100%" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar nuevo pago</button>'
+    +'</div>';
+
+  openModal('modal-detalle-deuda');
+}
+
 // ══ SOCIO / PARTNER CAPITAL ══════════════════════════════════════════════════
 function toggleSocioForm(){
   const sw=document.getElementById('n-socio-switch');
@@ -4353,6 +4490,7 @@ function previewSocioRates(){
 }
 
 function verSocioDistribucion(cid){
+  cid=parseInt(cid)||cid;
   const c=clients.find(x=>x.id===cid);
   if(!c||!c.socio){toast('Este préstamo no tiene socio registrado','error');return;}
   const s=c.socio;
@@ -5245,4 +5383,5 @@ setTimeout(checkLogin, 100);
 
 
 </body>
-</html>
+</html>+(c.socio?\'<button class="socio-btn" onclick="verSocioDistribucion(\'+c.id+\')"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">\'+c.socio.nombre+\' · \'+c.socio.tasa+\'% socio / \'+c.socio.tasaMia+\'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'")
+    +(c.socio?\'<button class="socio-btn" onclick="verSocioDistribucion(\'+c.id+\')"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">\'+c.socio.nombre+\' · \'+c.socio.tasa+\'% socio / \'+c.socio.tasaMia+\'% mío</div></div><span style="color:var(--text3)">▶</span></button>\':\')
