@@ -4311,7 +4311,10 @@ function renderClienteDeudas(){
           +'</div>';
       })()
       +'<div style="display:flex;gap:6px;margin-top:10px">'
-      +'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
+      +(d.tipo==='banco'
+        ?'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
+        :'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeudaQuincenal(parseInt(this.dataset.did))">📅 Pagos quincenales</button>'
+      )
       +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="verDetalleDeuda(parseInt(this.dataset.did))">📋 Detalle</button>'
       +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="editarDeuda(parseInt(this.dataset.did))" style="background:rgba(255,179,0,.1);color:#FFB300;border-color:rgba(255,179,0,.4)">✏ Editar</button>'
       +(sp===0?'<span style="font-size:11px;font-weight:700;color:var(--green);padding:7px 8px">✓ Pagada</span>':'')
@@ -4365,13 +4368,26 @@ function saldoDeuda(d){
   }
 
   // VARIABLE: igual que Modo Prestamista
-  // Saldo inicial = monto*(1+t) — interés se acumula cada mes
-  let saldo=Math.round(d.monto*(1+t));
+  // Group payments by month (quincena), sum Q1+Q2 per month
+  const pagosPorMes={};
   for(const p of (d.pagos||[])){
+    if(p.quincena){
+      const mes=p.quincena.split('-')[0];
+      pagosPorMes[mes]=(pagosPorMes[mes]||0)+p.valor;
+    } else {
+      // Legacy single payment - add as month based on order
+      const idx=Object.keys(pagosPorMes).length;
+      pagosPorMes[idx]=(pagosPorMes[idx]||0)+p.valor;
+    }
+  }
+  const mesesPagados=Object.keys(pagosPorMes).sort((a,b)=>Number(a)-Number(b));
+  let saldo=Math.round(d.monto*(1+t));
+  for(const mes of mesesPagados){
     if(saldo<=0) break;
-    const pagoNeto=Math.max((p.valor||0)-segMes,0);
+    const pagoMes=pagosPorMes[mes]||0;
+    const pagoNeto=Math.max(pagoMes-segMes,0);
     saldo=Math.max(saldo-pagoNeto,0);
-    if(saldo>0) saldo=Math.round(saldo*(1+t)); // acumular interés para siguiente mes
+    if(saldo>0) saldo=Math.round(saldo*(1+t));
   }
   return saldo;
 }
@@ -4453,6 +4469,12 @@ function totalPagadoDeuda(d){
   return (d.pagos||[]).reduce((s,p)=>s+(p.valor||0),0);
 }
 
+function totalPagadoDeudaMes(d,mes){
+  return (d.pagos||[])
+    .filter(p=>p.quincena&&p.quincena.startsWith(mes+'-'))
+    .reduce((s,p)=>s+(p.valor||0),0);
+}
+
 function enMoraDeuda(d){
   if(saldoDeuda(d)===0) return false;
   if(!d.fecha) return false;
@@ -4460,29 +4482,25 @@ function enMoraDeuda(d){
   hoy.setHours(0,0,0,0);
   const fechaInicio=new Date(d.fecha+'T00:00:00');
 
-  // Calculate first payment due date (one month after start)
+  // First payment due = one full month after start date
   const primerVencimiento=new Date(fechaInicio);
   primerVencimiento.setMonth(primerVencimiento.getMonth()+1);
 
   // Not in mora if first payment hasn't come due yet
-  if(hoy<primerVencimiento) return false;
+  if(hoy<=primerVencimiento) return false;
 
-  // Check if there's a payment in the current month
-  const mesActual=hoy.getFullYear()+'-'+(hoy.getMonth()+1).toString().padStart(2,'0');
-  const pagoEsteMes=(d.pagos||[]).some(p=>p.fecha&&p.fecha.slice(0,7)===mesActual);
-  if(pagoEsteMes) return false;
+  // If there are payments, check if last payment is recent enough
+  const pagos=d.pagos||[];
+  if(pagos.length===0) return true; // no payments and past due
 
-  // Check last payment - if paid last month and this month not due yet, not in mora
-  const ultimoPago=d.pagos&&d.pagos.length>0?d.pagos[d.pagos.length-1].fecha:'';
-  if(!ultimoPago){
-    // No payments at all - in mora only if first payment is overdue
-    return hoy>=primerVencimiento;
-  }
-  // Last payment was this month or last month = ok
-  const mesAnterior=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
-  const mesPago=new Date(ultimoPago+'T00:00:00');
-  const mesActualDate=new Date(hoy.getFullYear(),hoy.getMonth(),1);
-  return mesPago<mesAnterior;
+  // Get last payment date
+  const ultimoPago=new Date(pagos[pagos.length-1].fecha+'T00:00:00');
+
+  // Next payment due = one month after last payment
+  const siguienteVencimiento=new Date(ultimoPago);
+  siguienteVencimiento.setMonth(siguienteVencimiento.getMonth()+1);
+
+  return hoy>siguienteVencimiento;
 }
 
 function proximosPagosDeuda(){
@@ -4740,6 +4758,156 @@ function guardarEdicionDeuda(did){
   renderClienteDeudas();
   clienteTabActual='deudas';
   toast('Deuda actualizada ✓');
+}
+
+// ── PAGOS QUINCENALES DEUDAS ─────────────────────────────────────────────────
+function calcQuincenasDeuda(d){
+  // Same logic as calcFechas() in Modo Prestamista
+  const b=new Date(d.fecha+'T12:00:00');
+  const day=b.getDate(), y=b.getFullYear(), m=b.getMonth();
+  const cuotas=d.cuotas||12;
+  const result=[];
+  for(let i=0;i<cuotas;i++){
+    let q1,q2;
+    if(day<=14){
+      // Days 1-14: Q1=day 15 same month, Q2=last day same month
+      q1=new Date(y,m+i,15);
+      q2=new Date(y,m+i+1,0);
+    } else if(day<=29){
+      // Days 15-29: Q1=last day same month, Q2=day 15 next month
+      q1=new Date(y,m+i+1,0);
+      q2=new Date(y,m+i+1,15);
+    } else {
+      // Day 30+: Q1=day 15 next month, Q2=last day next month
+      q1=new Date(y,m+i+1,15);
+      q2=new Date(y,m+i+2,0);
+    }
+    result.push({
+      mes:i+1,
+      fq1:q1.toISOString().slice(0,10),
+      fq2:q2.toISOString().slice(0,10),
+    });
+  }
+  return result;
+}
+
+function abrirPagoDeudaQuincenal(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  pagoDeudaCtx.did=did;
+
+  const sp=saldoDeuda(d);
+  const tp=totalPagadoDeuda(d);
+  const cuota=getCuotaDeuda(d);
+  const quincenas=calcQuincenasDeuda(d);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+
+  // Find current/next quincena
+  let mesActivo=0;
+  for(let i=0;i<quincenas.length;i++){
+    const fq2=new Date(quincenas[i].fq2+'T23:59:59');
+    if(fq2>=hoy){mesActivo=i;break;}
+    if(i===quincenas.length-1) mesActivo=i;
+  }
+
+  // Build quincena grid
+  let qHTML='<div class="sec-label" style="margin-bottom:8px">HISTORIAL QUINCENAL</div>';
+  qHTML+='<div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">';
+
+  // Show last 3 months + current
+  const start=Math.max(0,mesActivo-2);
+  for(let i=start;i<=Math.min(mesActivo,quincenas.length-1);i++){
+    const q=quincenas[i];
+    // Find payments for Q1 and Q2 of this month
+    const pagosQ1=(d.pagos||[]).filter(p=>p.quincena===i+'-q1');
+    const pagosQ2=(d.pagos||[]).filter(p=>p.quincena===i+'-q2');
+    const totalQ1=pagosQ1.reduce((s,p)=>s+p.valor,0);
+    const totalQ2=pagosQ2.reduce((s,p)=>s+p.valor,0);
+    const esActivo=(i===mesActivo);
+
+    qHTML+='<div style="background:'+(esActivo?'rgba(0,96,100,.2)':'var(--surface2)')+';border:1px solid '+(esActivo?'rgba(0,188,212,.4)':'var(--border)')+';border-radius:var(--radius-xs);padding:10px">';
+    qHTML+='<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:8px">MES '+(i+1)+(esActivo?' · Actual':'')+'</div>';
+    qHTML+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">';
+    // Q1
+    qHTML+='<div style="background:'+(totalQ1>0?'var(--green-bg)':'var(--surface3)')+';border:1px solid '+(totalQ1>0?'var(--green-bdr)':'var(--border)')+';border-radius:var(--radius-xs);padding:8px;cursor:pointer" onclick="registrarPagoQuincena('+did+','+i+',\'q1\')">';
+    qHTML+='<div style="font-size:9px;color:var(--text3)">Q1 · '+fd(q.fq1)+'</div>';
+    qHTML+='<div style="font-size:13px;font-weight:700;color:'+(totalQ1>0?'var(--green)':'var(--text3)')+'">'+(totalQ1>0?fmt(totalQ1):'+ Registrar')+'</div>';
+    qHTML+='</div>';
+    // Q2
+    qHTML+='<div style="background:'+(totalQ2>0?'var(--green-bg)':'var(--surface3)')+';border:1px solid '+(totalQ2>0?'var(--green-bdr)':'var(--border)')+';border-radius:var(--radius-xs);padding:8px;cursor:pointer" onclick="registrarPagoQuincena('+did+','+i+',\'q2\')">';
+    qHTML+='<div style="font-size:9px;color:var(--text3)">Q2 · '+fd(q.fq2)+'</div>';
+    qHTML+='<div style="font-size:13px;font-weight:700;color:'+(totalQ2>0?'var(--green)':'var(--text3)')+'">'+(totalQ2>0?fmt(totalQ2):'+ Registrar')+'</div>';
+    qHTML+='</div>';
+    qHTML+='</div>';
+    if(totalQ1+totalQ2>0){
+      qHTML+='<div style="font-size:10px;color:var(--green);margin-top:6px;font-weight:700">Total mes: '+fmt(totalQ1+totalQ2)+'</div>';
+    }
+    qHTML+='</div>';
+  }
+  qHTML+='</div>';
+
+  document.getElementById('pago-deuda-title').textContent='';
+  document.getElementById('pago-deuda-title').innerHTML='💳 Pagos — '+d.acreedor;
+  const _xBtn=document.createElement('button');
+  _xBtn.className='modal-close';_xBtn.textContent='✕';
+  _xBtn.onclick=()=>closeModal('modal-pago-deuda');
+  document.getElementById('pago-deuda-title').appendChild(_xBtn);
+  document.getElementById('pago-deuda-saldo').innerHTML=
+    '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Saldo pendiente</span><span class="c-red" style="font-family:monospace;font-weight:700">'+fmt(sp)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Cuota estimada</span><span class="c-amber" style="font-family:monospace;font-weight:700">'+fmt(cuota)+'</span></div>';
+  document.getElementById('pd-valor').value='';
+  document.getElementById('pd-fecha').value=today();
+  document.getElementById('pd-nota').value='';
+  document.getElementById('pd-preview').style.display='none';
+  document.getElementById('pd-historial').innerHTML=qHTML;
+  openModal('modal-pago-deuda');
+}
+
+let pagoQuincenaCtx={did:null,mes:0,quinc:''};
+
+function registrarPagoQuincena(did,mes,quinc){
+  pagoQuincenaCtx={did,mes,quinc};
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  const quincenas=calcQuincenasDeuda(d);
+  const q=quincenas[mes];
+  const fechaRef=quinc==='q1'?q.fq1:q.fq2;
+
+  // Show mini form
+  const form=document.createElement('div');
+  form.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  form.id='qpago-overlay';
+  form.innerHTML='<div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:18px;width:100%;max-width:360px">'
+    +'<div style="font-size:14px;font-weight:700;margin-bottom:12px">💳 Pago '+quinc.toUpperCase()+' — Mes '+(mes+1)+'<br><span style="font-size:11px;color:var(--text3)">'+d.acreedor+' · '+fd(fechaRef)+'</span></div>'
+    +'<div class="fr"><label>Valor del pago</label><input type="number" id="qpago-valor" placeholder="0" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:14px;outline:none" inputmode="numeric"></div>'
+    +'<div class="fr"><label>Fecha</label><input type="date" id="qpago-fecha" value="'+today()+'" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:13px;outline:none"></div>'
+    +'<div class="fr"><label>Método</label><select id="qpago-metodo" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:13px;outline:none"><option>Efectivo</option><option>Nequi</option><option>Daviplata</option><option>Transferencia</option></select></div>'
+    +'<div style="display:flex;gap:8px;margin-top:4px">'
+    +'<button onclick="document.getElementById(\'qpago-overlay\').remove()" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text);font-family:Nunito,sans-serif;font-size:13px;cursor:pointer">Cancelar</button>'
+    +'<button onclick="confirmarPagoQuincena(this)" style="flex:1;padding:10px;background:#006064;color:#00E5D1;border:none;border-radius:var(--radius-xs);font-family:Nunito,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Guardar</button>'
+    +'</div></div>';
+  document.body.appendChild(form);
+  setTimeout(()=>document.getElementById('qpago-valor')?.focus(),100);
+}
+
+function confirmarPagoQuincena(btn){
+  const valor=parseFloat(document.getElementById('qpago-valor').value)||0;
+  const fecha=document.getElementById('qpago-fecha').value||today();
+  const metodo=document.getElementById('qpago-metodo').value;
+  if(!valor||valor<=0){toast('Ingrese un valor','error');return;}
+  const {did,mes,quinc}=pagoQuincenaCtx;
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d) return;
+  if(!d.pagos) d.pagos=[];
+  // Remove existing payment for this quincena if any (replace)
+  d.pagos=d.pagos.filter(p=>p.quincena!==mes+'-'+quinc);
+  d.pagos.push({id:Date.now(),valor,fecha,metodo,quincena:mes+'-'+quinc});
+  // Sort by fecha
+  d.pagos.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  saveDeudas();
+  document.getElementById('qpago-overlay')?.remove();
+  closeModal('modal-pago-deuda');
+  renderClienteDeudas();
+  toast('Pago '+quinc.toUpperCase()+' registrado — '+fmt(valor),'success');
 }
 
 function abrirPagoDeuda(did){
