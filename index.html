@@ -1226,6 +1226,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <script>
 // ══ STORAGE ══════════════════════════════════════════════════════════════════
 const SK='ef_clients',CK='ef_caja',DK='ef_drive',NK='ef_notes',PK='ef_pockets',BK='ef_budget';
+function getBK(){
+  return currentUser ? 'ef_budget_'+currentUser.user : BK;
+}
 let clients=[],caja=[],notes=[],pockets=[];
 let activeId=null,pagoCtx={},navMode='clientes',driveUrl='',autoSync=false;
 const JBIN_URL='https://api.jsonbin.io/v3/b/69b84e1eb7ec241ddc740c01';
@@ -1243,9 +1246,22 @@ let activeBudgetQ='q1'; // current quincena view
 
 function budgetKey(m,y){return y+'-'+String(m+1).padStart(2,'0');}
 function loadBudgets(){
-  try{return JSON.parse(localStorage.getItem(BK))||[];}catch{return[];}
+  try{
+    const userKey=getBK();
+    let data=JSON.parse(localStorage.getItem(userKey));
+    // Migration: if no user-specific budget, check shared budget (only for admin)
+    if((!data||data.length===0) && currentUser && currentUser.rol==='admin'){
+      const shared=JSON.parse(localStorage.getItem(BK));
+      if(shared&&shared.length>0){
+        // Migrate to user-specific key
+        localStorage.setItem(userKey,JSON.stringify(shared));
+        data=shared;
+      }
+    }
+    return data||[];
+  }catch{return[];}
 }
-function saveBudgets(arr){localStorage.setItem(BK,JSON.stringify(arr));}
+function saveBudgets(arr){localStorage.setItem(getBK(),JSON.stringify(arr));}
 
 function getBudget(key){
   const arr=loadBudgets();
@@ -2863,9 +2879,39 @@ function syncFromDrive(){
 
 // ══ BACKUP ════════════════════════════════════════════════════════════════════
 function exportJSON(){
-  const blob=new Blob([JSON.stringify({clients,caja},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='easyfinance_'+today()+'.json';a.click();toast('Respaldo guardado');
+  const budgets=loadBudgets();
+  // Collect all user-specific deudas
+  const allDeudas={};
+  EF_USERS.forEach(u=>{
+    const k='ef_deudas_'+u.user;
+    try{const d=JSON.parse(localStorage.getItem(k));if(d&&d.length>0) allDeudas[u.user]=d;}catch{}
+  });
+  // Collect all user-specific budgets
+  const allBudgets={};
+  EF_USERS.forEach(u=>{
+    const k='ef_budget_'+u.user;
+    try{const b=JSON.parse(localStorage.getItem(k));if(b&&b.length>0) allBudgets[u.user]=b;}catch{}
+  });
+  // Also include shared budget for backwards compat
+  if(budgets.length>0) allBudgets['_shared']=budgets;
+
+  const backup={
+    version:'2.0',
+    fecha:new Date().toISOString(),
+    app:'EasyFinance',
+    clients, caja,
+    notes: JSON.parse(localStorage.getItem(NK)||'[]'),
+    pockets: JSON.parse(localStorage.getItem(PK)||'[]'),
+    deudas: allDeudas,
+    budgets: allBudgets
+  };
+  const blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  const ts=new Date().toISOString().slice(0,16).replace('T','_').replace(':','-');
+  a.download='easyfinance_backup_'+ts+'.json';
+  a.click();
+  toast('✓ Respaldo completo guardado — '+ts,'success',4000);
 }
 function importJSON(){document.getElementById('import-file').click();}
 function handleImport(e){
@@ -2874,12 +2920,54 @@ function handleImport(e){
   reader.onload=ev=>{
     try{
       const d=JSON.parse(ev.target.result);
-      if(!confirm('¿Reemplazar todos los datos?'))return;
-      if(Array.isArray(d)){clients=d;caja=[];}else{clients=d.clients||[];caja=d.caja||[];}
-      save();activeId=null;renderDashboard();toast('Datos cargados — '+clients.length+' clientes');
-    }catch{toast('Archivo inválido','error');}
+      // Show info about what's in the backup
+      const fecha=d.fecha?new Date(d.fecha).toLocaleString('es-CO'):'desconocida';
+      const version=d.version||'1.0';
+      const info='Versión: '+version+'\nFecha: '+fecha+'\nClientes: '+(d.clients||[]).length+'\n\n¿Restaurar este respaldo? Se reemplazarán los datos actuales.';
+      if(!confirm(info)) return;
+
+      // Restore all data
+      if(Array.isArray(d)){
+        clients=d; caja=[];
+      } else {
+        clients=d.clients||[];
+        caja=d.caja||[];
+        // Restore notes and pockets
+        if(d.notes) localStorage.setItem(NK,JSON.stringify(d.notes));
+        if(d.pockets) localStorage.setItem(PK,JSON.stringify(d.pockets));
+        // Restore user-specific deudas
+        if(d.deudas && typeof d.deudas==='object'){
+          Object.entries(d.deudas).forEach(([user,deudasArr])=>{
+            if(Array.isArray(deudasArr)&&deudasArr.length>0){
+              localStorage.setItem('ef_deudas_'+user,JSON.stringify(deudasArr));
+            }
+          });
+        }
+        // Restore user-specific budgets
+        if(d.budgets && typeof d.budgets==='object'){
+          Object.entries(d.budgets).forEach(([user,budArr])=>{
+            if(Array.isArray(budArr)&&budArr.length>0){
+              if(user==='_shared'){
+                saveBudgets(budArr);
+              } else {
+                localStorage.setItem('ef_budget_'+user,JSON.stringify(budArr));
+              }
+            }
+          });
+        }
+      }
+      save();
+      // Reload deudas for current user
+      loadDeudas();
+      activeId=null;
+      renderDashboard();
+      toast('✓ Respaldo restaurado — '+clients.length+' clientes','success',4000);
+    }catch(err){
+      toast('Archivo inválido o corrupto: '+err.message,'error',5000);
+    }
   };
-  reader.readAsText(file);e.target.value='';
+  reader.readAsText(file);
+  e.target.value='';
 }
 function exportXLSX(){
   if(!clients.length){toast('Sin datos','error');return;}
