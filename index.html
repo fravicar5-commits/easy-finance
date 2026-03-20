@@ -715,7 +715,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     <div class="modal-title">➕ Registrar deuda <button class="modal-close" onclick="closeModal('modal-nueva-deuda')">✕</button></div>
     <div class="fr"><label>¿A quién le debo?</label><input type="text" id="nd-acreedor" placeholder="Nombre del acreedor" oninput="formatNombrePropio('nd-acreedor')"></div>
     <div class="fr"><label>Tipo de acreedor</label>
-      <select id="nd-tipo"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="otro">Otro</option></select>
+      <select id="nd-tipo" onchange="ndToggleSeguro()"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="otro">Otro</option></select>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div class="fr"><label>Monto recibido</label><input type="number" id="nd-monto" min="0" placeholder="0" oninput="ndCalcTodo()"></div>
@@ -742,8 +742,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
         <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Costo Efectivo Anual</span><span class="c-blue" style="font-family:monospace;font-weight:700" id="nd-tr-ea">0% E.A.</span></div>
       </div>
     </div>
-    <!-- Seguro -->
-    <div class="seguro-box-form">
+    <!-- Seguro - solo para banco/entidad financiera -->
+    <div class="seguro-box-form" id="nd-seguro-box" style="display:none">
       <div style="font-size:11px;font-weight:800;color:#4CAF50;margin-bottom:8px;letter-spacing:.5px">🛡️ SEGURO (OPCIONAL)</div>
       <div class="seg-toggle-form">
         <button class="seg-opt-form active" id="ndsopt-no" onclick="ndSetSeguro('no')">Sin seguro</button>
@@ -4335,28 +4335,34 @@ function saldoDeuda(d){
   }
   const t=(d.tasa||0)/100;
   const segMes=calcSeguroDeuda(d);
-  // Amortización francesa (cuota fija)
+
+  // CUOTA FIJA: amortización francesa correcta
+  // Cada pago se divide en interés + abono capital
   if(d.tipocuota==='fija'&&t>0){
-    const cuota=Math.round(d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1));
+    const cuotaBase=d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1);
     let saldo=d.monto;
     for(const p of (d.pagos||[])){
       if(saldo<=0) break;
-      const intMes=Math.round(saldo*t);
-      const amort=cuota-intMes;
-      const pagadoCapital=Math.max((p.valor||0)-segMes,0);
-      saldo=Math.max(saldo-pagadoCapital,0);
+      const intMes=saldo*t;
+      const pagoNeto=Math.max((p.valor||0)-segMes,0);
+      const abonoCapital=Math.max(pagoNeto-intMes,0);
+      saldo=Math.max(saldo-abonoCapital,0);
     }
-    return saldo;
+    return Math.round(saldo);
   }
-  // Variable
-  let s=Math.round(d.monto*(1+t));
+
+  // VARIABLE: interés se aplica sobre saldo cada mes
+  // Igual que Modo Prestamista: saldo = (saldo_anterior - pago) * (1+t)
+  let saldo=d.monto;
   for(const p of (d.pagos||[])){
-    if(s<=0) break;
-    const pagadoCapital=Math.max((p.valor||0)-segMes,0);
-    s=Math.max(s-pagadoCapital,0);
-    if(s>0) s=Math.round(s*(1+t));
+    if(saldo<=0) break;
+    const pagoNeto=Math.max((p.valor||0)-segMes,0);
+    const intMes=saldo*t;
+    const abonoCapital=Math.max(pagoNeto-intMes,0);
+    saldo=Math.max(saldo-abonoCapital,0);
+    if(saldo>0) saldo=saldo; // saldo pendiente sin acumular interés hasta siguiente mes
   }
-  return s;
+  return Math.round(saldo);
 }
 
 function calcSeguroDeuda(d){
@@ -4386,11 +4392,32 @@ function enMoraDeuda(d){
   if(saldoDeuda(d)===0) return false;
   if(!d.fecha) return false;
   const hoy=new Date();
-  // Check if any payment was missed in current month
+  hoy.setHours(0,0,0,0);
+  const fechaInicio=new Date(d.fecha+'T00:00:00');
+
+  // Calculate first payment due date (one month after start)
+  const primerVencimiento=new Date(fechaInicio);
+  primerVencimiento.setMonth(primerVencimiento.getMonth()+1);
+
+  // Not in mora if first payment hasn't come due yet
+  if(hoy<primerVencimiento) return false;
+
+  // Check if there's a payment in the current month
   const mesActual=hoy.getFullYear()+'-'+(hoy.getMonth()+1).toString().padStart(2,'0');
+  const pagoEsteMes=(d.pagos||[]).some(p=>p.fecha&&p.fecha.slice(0,7)===mesActual);
+  if(pagoEsteMes) return false;
+
+  // Check last payment - if paid last month and this month not due yet, not in mora
   const ultimoPago=d.pagos&&d.pagos.length>0?d.pagos[d.pagos.length-1].fecha:'';
-  if(!ultimoPago) return true;
-  return ultimoPago.slice(0,7)<mesActual;
+  if(!ultimoPago){
+    // No payments at all - in mora only if first payment is overdue
+    return hoy>=primerVencimiento;
+  }
+  // Last payment was this month or last month = ok
+  const mesAnterior=new Date(hoy.getFullYear(),hoy.getMonth()-1,1);
+  const mesPago=new Date(ultimoPago+'T00:00:00');
+  const mesActualDate=new Date(hoy.getFullYear(),hoy.getMonth(),1);
+  return mesPago<mesAnterior;
 }
 
 function proximosPagosDeuda(){
@@ -4423,6 +4450,20 @@ function ndSetTasaTipo(tipo){
   const el=document.getElementById('nd-tasa-lbl');
   if(el) el.textContent=lbls[tipo];
   ndCalcTodo();
+}
+
+function ndToggleSeguro(){
+  const tipo = document.getElementById('nd-tipo')?.value;
+  const box = document.getElementById('nd-seguro-box');
+  if(!box) return;
+  if(tipo==='banco'){
+    box.style.display='block';
+  } else {
+    box.style.display='none';
+    // Reset seguro when hidden
+    ndSeguroTipo='no';
+    ndSetSeguro('no');
+  }
 }
 
 function ndSetSeguro(tipo){
@@ -4522,6 +4563,11 @@ function abrirNuevaDeuda(){
   // Reset toggles
   ndSetTasaTipo('ea');
   ndSetSeguro('no');
+  // Reset tipo and seguro visibility
+  const tipoSel=document.getElementById('nd-tipo');
+  if(tipoSel) tipoSel.value='prestamista';
+  const segBox=document.getElementById('nd-seguro-box');
+  if(segBox) segBox.style.display='none';
   const histBox=document.getElementById('nd-hist-box');
   if(histBox) histBox.style.display='none';
   const histList=document.getElementById('nd-hist-list');
@@ -4566,6 +4612,8 @@ function editarDeuda(did){
   // Pre-fill the form with existing data
   document.getElementById('nd-acreedor').value=d.acreedor||'';
   document.getElementById('nd-tipo').value=d.tipo||'banco';
+  // Show seguro section if tipo is banco
+  ndToggleSeguro();
   document.getElementById('nd-monto').value=d.monto||'';
   document.getElementById('nd-cuotas').value=d.cuotas||'';
   document.getElementById('nd-tipocuota').value=d.tipocuota||'variable';
