@@ -4005,16 +4005,31 @@ function checkPaymentReminders(){
   deudas.forEach(d => {
     if(saldoDeuda(d) === 0) return;
     const fechaBase = new Date(d.fecha + 'T00:00:00');
+
+    // First payment is due one month after disbursement
+    const primerVencimiento = new Date(fechaBase);
+    primerVencimiento.setMonth(primerVencimiento.getMonth() + 1);
+
+    // Don't alert if first payment hasn't come due yet (more than 3 days away)
+    if(primerVencimiento > new Date(hoy.getTime() + 4*24*60*60*1000)) return;
+
     const diaVence = fechaBase.getDate() || 28;
+
     // Check if already paid this month
     const pagosMes = (d.pagos||[]).filter(p => {
       const fp = new Date(p.fecha + 'T00:00:00');
       return fp.getFullYear()===hoy.getFullYear() && fp.getMonth()===hoy.getMonth();
     });
+
+    // Calculate next due date
     let fechaVence = new Date(hoy.getFullYear(), hoy.getMonth(), diaVence);
     if(fechaVence < hoy || pagosMes.length > 0){
       fechaVence = new Date(hoy.getFullYear(), hoy.getMonth()+1, diaVence);
     }
+
+    // Ensure it's not before first payment due
+    if(fechaVence < primerVencimiento) fechaVence = primerVencimiento;
+
     const diasRestantes = Math.round((fechaVence - hoy)/(1000*60*60*24));
     if(REMINDER_DAYS.includes(diasRestantes)){
       reminders.push({deuda:d, fechaVence, diasRestantes, cuota:getCuotaDeuda(d), saldo:saldoDeuda(d)});
@@ -4504,16 +4519,57 @@ function enMoraDeuda(d){
 }
 
 function proximosPagosDeuda(){
-  const hoy=new Date();
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
   const proximos=[];
   deudas.forEach(d=>{
     if(saldoDeuda(d)===0) return;
     const sp=saldoDeuda(d);
-    const t=d.tasa/100;
     const cuota=getCuotaDeuda(d);
-    // Next payment date - end of current/next month
-    const nextDate=new Date(hoy.getFullYear(),hoy.getMonth()+1,0); // last day of month
-    proximos.push({acreedor:d.acreedor,fecha:nextDate.toISOString().slice(0,10),monto:Math.min(cuota,sp),did:d.id});
+    const fechaBase=new Date(d.fecha+'T00:00:00');
+    const diaBase=fechaBase.getDate();
+
+    if(d.tipo==='banco'){
+      // BANCO: monthly payment on same day as disbursement
+      // First payment = one month after disbursement
+      let fechaVence=new Date(fechaBase);
+      fechaVence.setMonth(fechaVence.getMonth()+1);
+      // Advance to next unpaid due date
+      while(fechaVence<=hoy){
+        // Check if this month has a payment
+        const mesVence=fechaVence.getFullYear()+'-'+(fechaVence.getMonth()+1).toString().padStart(2,'0');
+        const pagado=(d.pagos||[]).some(p=>p.fecha&&p.fecha.slice(0,7)===mesVence);
+        if(!pagado) break;
+        fechaVence=new Date(fechaVence);
+        fechaVence.setMonth(fechaVence.getMonth()+1);
+      }
+      proximos.push({acreedor:d.acreedor,fecha:fechaVence.toISOString().slice(0,10),monto:Math.min(cuota,sp),did:d.id});
+
+    } else {
+      // PERSONA NATURAL: quincenal system
+      const quincenas=calcQuincenasDeuda(d);
+      // Find first quincena (Q1 or Q2) that has no payment and is upcoming
+      let found=false;
+      for(let i=0;i<quincenas.length;i++){
+        const q=quincenas[i];
+        const pagQ1=(d.pagos||[]).filter(p=>p.quincena===i+'-q1');
+        const pagQ2=(d.pagos||[]).filter(p=>p.quincena===i+'-q2');
+        const fq1=new Date(q.fq1+'T00:00:00');
+        const fq2=new Date(q.fq2+'T00:00:00');
+
+        if(pagQ1.length===0&&fq1>=hoy){
+          proximos.push({acreedor:d.acreedor,fecha:q.fq1,monto:Math.min(cuota/2,sp),did:d.id});
+          found=true; break;
+        } else if(pagQ2.length===0&&fq2>=hoy){
+          proximos.push({acreedor:d.acreedor,fecha:q.fq2,monto:Math.min(cuota/2,sp),did:d.id});
+          found=true; break;
+        }
+      }
+      if(!found&&quincenas.length>0){
+        // All paid or future - show last quincena
+        const last=quincenas[quincenas.length-1];
+        proximos.push({acreedor:d.acreedor,fecha:last.fq2,monto:Math.min(cuota/2,sp),did:d.id});
+      }
+    }
   });
   return proximos.sort((a,b)=>a.fecha.localeCompare(b.fecha));
 }
@@ -4599,7 +4655,7 @@ function ndCheckFechaAnterior(){
   const fecha=document.getElementById('nd-fecha')?.value;
   const hoy=today();
   const box=document.getElementById('nd-hist-box');
-  if(box) box.style.display=(fecha&&fecha<hoy)?'block':'none';
+  if(box) box.style.display=(fecha&&fecha<hoy&&fecha!==hoy)?'block':'none';
 }
 
 function ndAgregarHistPago(){
