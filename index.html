@@ -4297,6 +4297,19 @@ function renderClienteDeudas(){
       +'<div class="da-box"><div class="da-lbl">PAGADO</div><div class="da-val c-green">'+fmtS(tp)+'</div></div>'
       +'<div class="da-box"><div class="da-lbl">PENDIENTE</div><div class="da-val c-red">'+fmtS(sp)+'</div></div>'
       +'</div>'
+      +(()=>{
+        const proyectado=saldoProyectadoDeuda(d);
+        const esFija=d.tipocuota==='fija';
+        const esLibre=d.tipocuota==='libre';
+        if(esLibre||proyectado===0) return '';
+        const lbl=esFija?'SALDO AL FINAL DEL PLAZO':'SALDO A HOY (CON INTERESES)';
+        const sub=esFija?(d.cuotas+' cuotas · '+d.cuotas+' meses'):'Proyección variable a la fecha';
+        return '<div style="background:rgba(45,0,96,.2);border:1px solid rgba(233,30,140,.25);border-radius:var(--radius-xs);padding:10px 12px;margin-top:8px">'
+          +'<div style="font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:4px">'+lbl+'</div>'
+          +'<div style="font-size:16px;font-weight:800;font-family:monospace;color:var(--ef-pink2)">'+fmtS(proyectado)+'</div>'
+          +'<div style="font-size:10px;color:var(--text3);margin-top:2px">'+sub+'</div>'
+          +'</div>';
+      })()
       +'<div style="display:flex;gap:6px;margin-top:10px">'
       +'<button class="btn-cyan-solid" data-did="'+d.id+'" onclick="abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
       +'<button class="btn-cyan-outline" data-did="'+d.id+'" onclick="verDetalleDeuda(parseInt(this.dataset.did))">📋 Detalle</button>'
@@ -4351,18 +4364,16 @@ function saldoDeuda(d){
     return Math.round(saldo);
   }
 
-  // VARIABLE: interés se aplica sobre saldo cada mes
-  // Igual que Modo Prestamista: saldo = (saldo_anterior - pago) * (1+t)
-  let saldo=d.monto;
+  // VARIABLE: igual que Modo Prestamista
+  // Saldo inicial = monto*(1+t) — interés se acumula cada mes
+  let saldo=Math.round(d.monto*(1+t));
   for(const p of (d.pagos||[])){
     if(saldo<=0) break;
     const pagoNeto=Math.max((p.valor||0)-segMes,0);
-    const intMes=saldo*t;
-    const abonoCapital=Math.max(pagoNeto-intMes,0);
-    saldo=Math.max(saldo-abonoCapital,0);
-    if(saldo>0) saldo=saldo; // saldo pendiente sin acumular interés hasta siguiente mes
+    saldo=Math.max(saldo-pagoNeto,0);
+    if(saldo>0) saldo=Math.round(saldo*(1+t)); // acumular interés para siguiente mes
   }
-  return Math.round(saldo);
+  return saldo;
 }
 
 function calcSeguroDeuda(d){
@@ -4382,6 +4393,60 @@ function getCuotaDeuda(d){
   }
   // Variable — cuota sobre saldo actual
   return Math.round(saldoDeuda(d)*t)+seg;
+}
+
+function saldoProyectadoDeuda(d){
+  const t=(d.tasa||0)/100;
+  const segMes=calcSeguroDeuda(d);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const inicio=new Date(d.fecha+'T00:00:00');
+
+  if(d.tipocuota==='libre') return saldoDeuda(d);
+
+  if(d.tipocuota==='fija'&&t>0){
+    // Project: what will saldo be at end of all cuotas?
+    const cuotaBase=d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1);
+    let saldo=d.monto;
+    const pagos=d.pagos||[];
+    // Apply real payments first
+    for(const p of pagos){
+      if(saldo<=0) break;
+      const intMes=saldo*t;
+      const pagoNeto=Math.max((p.valor||0)-segMes,0);
+      const abonoCapital=Math.max(pagoNeto-intMes,0);
+      saldo=Math.max(saldo-abonoCapital,0);
+    }
+    // Then project remaining cuotas with cuota base
+    const cuotasRestantes=Math.max(d.cuotas-pagos.length,0);
+    for(let i=0;i<cuotasRestantes;i++){
+      if(saldo<=0) break;
+      const intMes=saldo*t;
+      const abonoCapital=Math.max(cuotaBase-intMes,0);
+      saldo=Math.max(saldo-abonoCapital,0);
+    }
+    return Math.round(saldo);
+  }
+
+  // VARIABLE: project to today based on months elapsed since start
+  const mesesTranscurridos=Math.max(
+    (hoy.getFullYear()-inicio.getFullYear())*12+(hoy.getMonth()-inicio.getMonth()),0
+  );
+  let saldo=Math.round(d.monto*(1+t));
+  const pagos=d.pagos||[];
+  // Apply real payments
+  for(const p of pagos){
+    if(saldo<=0) break;
+    const pagoNeto=Math.max((p.valor||0)-segMes,0);
+    saldo=Math.max(saldo-pagoNeto,0);
+    if(saldo>0) saldo=Math.round(saldo*(1+t));
+  }
+  // If months elapsed > payments made, accrue remaining months
+  const mesesSinPago=Math.max(mesesTranscurridos-pagos.length,0);
+  for(let i=0;i<mesesSinPago;i++){
+    if(saldo<=0) break;
+    saldo=Math.round(saldo*(1+t));
+  }
+  return saldo;
 }
 
 function totalPagadoDeuda(d){
