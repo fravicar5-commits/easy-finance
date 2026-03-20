@@ -6,20 +6,43 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Easy Finance</title>
+<title>Cuadre</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{
+:root, [data-theme="indigo"] {
+  /* ── TEMA: ÍNDIGO PROFUNDO ── */
   --ef-pink:#C2185B; --ef-pink2:#E91E8C; --ef-purple:#2D0060; --ef-purple2:#4A0080;
   --ef-cyan:#00E5D1; --ef-gray:#5A5A5A;
-  --bg:#0a0a12; --surface:#13131f; --surface2:#1a1a2e; --surface3:#22223a;
-  --border:#2a2a45; --border2:#353560;
+  --bg:#090918; --surface:#0f0f20; --surface2:#141428; --surface3:#1a1a32;
+  --border:rgba(80,80,255,.12); --border2:rgba(80,80,255,.22);
   --text:#f0edf8; --text2:#9896b0; --text3:#555570;
+  --accent:#7070ff; --accent2:#00e678;
   --green:#3ddc84; --green-bg:rgba(61,220,132,.12); --green-bdr:rgba(61,220,132,.3);
   --red:#ff6b6b; --red-bg:rgba(255,107,107,.12); --red-bdr:rgba(255,107,107,.3);
   --amber:#f5a623; --amber-bg:rgba(245,166,35,.12); --amber-bdr:rgba(245,166,35,.3);
-  --blue:#5b9bd5; --blue-bg:rgba(91,155,213,.12); --blue-bdr:rgba(91,155,213,.3);
+  --blue:#7070ff; --blue-bg:rgba(112,112,255,.12); --blue-bdr:rgba(112,112,255,.3);
+  --grad-main:linear-gradient(135deg,#5050ff,#8800cc);
+  --btn-main-bg:linear-gradient(135deg,#5050ff,#8800cc);
+  --btn-main-color:#fff;
+  --radius:12px; --radius-sm:8px; --radius-xs:5px;
+}
+
+[data-theme="verde"] {
+  /* ── TEMA: VERDE ESMERALDA ── */
+  --ef-pink:#00a855; --ef-pink2:#00c864; --ef-purple:#002a1a; --ef-purple2:#003d24;
+  --ef-cyan:#00E5D1; --ef-gray:#5A5A5A;
+  --bg:#080f0a; --surface:#0f1a12; --surface2:#162019; --surface3:#1c2820;
+  --border:rgba(0,200,100,.12); --border2:rgba(0,200,100,.22);
+  --text:#f0f7f2; --text2:#89a896; --text3:#4a6450;
+  --accent:#00e678; --accent2:#00c8ff;
+  --green:#00e678; --green-bg:rgba(0,230,120,.12); --green-bdr:rgba(0,230,120,.3);
+  --red:#ff6b6b; --red-bg:rgba(255,107,107,.12); --red-bdr:rgba(255,107,107,.3);
+  --amber:#f5a623; --amber-bg:rgba(245,166,35,.12); --amber-bdr:rgba(245,166,35,.3);
+  --blue:#00c8ff; --blue-bg:rgba(0,200,255,.12); --blue-bdr:rgba(0,200,255,.3);
+  --grad-main:linear-gradient(135deg,#00c864,#007a3d);
+  --btn-main-bg:linear-gradient(135deg,#00c864,#007a3d);
+  --btn-main-color:#fff;
   --radius:12px; --radius-sm:8px; --radius-xs:5px;
 }
 /* ── LIGHT MODE ── */
@@ -84,7 +107,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .home-version{position:absolute;bottom:14px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em}
 
 /* ════════════════════════════════
-   EASY FINANCE (LOANS) SCREEN
+   CUADRE (LOANS) SCREEN
 ════════════════════════════════ */
 #loans{flex-direction:row}
 .loans-inner{display:flex;width:100%;height:100%;overflow:hidden}
@@ -559,21 +582,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 ════════════════════════════════ -->
 <div class="screen active" id="home">
   <div class="home-logo">
-    <!-- Easy Finance SVG Logo -->
-    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/>
-      <ellipse cx="36" cy="30" rx="20" ry="18" fill="#4A0080"/>
-      <ellipse cx="22" cy="36" rx="14" ry="10" fill="#00E5D1" opacity="0.5"/>
-      <path d="M32 18 C32 18 24 22 22 32 C20 42 28 48 36 46 C44 44 46 36 44 28 C42 20 36 16 32 18Z" fill="#C2185B"/>
-      <path d="M30 20 C30 20 22 25 21 34 C20 43 28 48 36 46 C44 44 46 37 44 29 C42 21 36 17 30 20Z" fill="#E91E8C"/>
-      <path d="M33 24 Q38 26 37 33 Q36 40 30 42 Q24 44 22 38" stroke="white" stroke-width="1.5" fill="none" opacity="0.4"/>
-      <path d="M35 22 C38 24 40 29 38 35 C36 41 30 44 25 41 C28 38 31 33 30 27 C31 24 33 22 35 22Z" fill="white" opacity="0.15"/>
-      <!-- F letter stylized -->
-      <path d="M26 26 L26 42 M26 26 L36 26 M26 33 L34 33" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-    </svg>
-    <div class="home-logo-text">
-      <span class="easy">Easy</span>
-      <span class="finance">Finance</span>
+    <div class="cuadre-logo-icon" style="width:72px;height:72px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(80,80,255,.4);margin:0 auto">
+      <span style="font-family:'Nunito',sans-serif;font-size:38px;font-weight:900;color:white;line-height:1">C</span>
     </div>
   </div>
   <div class="home-tagline">Tu solución financiera personal</div>
@@ -594,7 +604,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <div class="hc-sub">Calculadora, divisas, ahorros y más</div>
     </div>
   </div>
-  <div class="home-version">v2.0 · Easy Finance</div>
+  <div class="home-version">v2.0 · Cuadre</div>
   <button id="theme-toggle-btn" onclick="toggleTheme()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px">🌙 Modo oscuro</button>
 </div>
 
@@ -672,6 +682,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <div class="gear-menu-overlay" id="gear-overlay" onclick="toggleGearMenu(false)"></div>
       <!-- Gear floating menu -->
       <div class="gear-menu" id="gear-menu">
+        <!-- Color theme selector -->
+        <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border)">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.1em;font-weight:700;margin-bottom:8px;text-transform:uppercase">Paleta de color</div>
+          <div style="display:flex;gap:8px">
+            <button id="theme-btn-indigo" onclick="setColorTheme('indigo')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#5050ff,#8800cc);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:1;transition:all .2s">🟣 Índigo</button>
+            <button id="theme-btn-verde" onclick="setColorTheme('verde')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#00c864,#007a3d);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🟢 Verde</button>
+          </div>
+        </div>
         <button class="gear-menu-item" onclick="toggleGearMenu(false);exportJSON()"><span class="gmi-icon">💾</span>Guardar respaldo</button>
         <button class="gear-menu-item" onclick="toggleGearMenu(false);importJSON()"><span class="gmi-icon">📂</span>Cargar respaldo</button>
         <div style="height:1px;background:var(--border);margin:2px 0"></div>
@@ -2252,7 +2270,7 @@ function estadoCuenta(id){
     +(c.tipocuota==='fija'?'<div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:2px;font-weight:700">Cuota fija: '+fmt(Math.round(calcCuotaFija(c.monto,c.tasa/100,c.cuotas)))+'</div>':'')
     +'</div><div style="font-size:28px;font-weight:800;color:white">'+fmt(sp)+'</div></div>'
     +'<div style="margin-top:14px;font-size:10px;color:#9e9e9e;text-align:center;border-top:1px solid #e0e0e0;padding-top:10px">'
-    +'Easy Finance · Documento generado el '+hoy+' · Solo informativo.</div></div>';
+    +'Cuadre · Documento generado el '+hoy+' · Solo informativo.</div></div>';
 
   const w=window.open('','_blank','width=760,height=720');
   w.document.write('<!DOCTYPE html><html><head><title>Estado de Cuenta — '+c.nombre+'</title>'
@@ -2262,7 +2280,7 @@ function estadoCuenta(id){
     +'<button onclick="window.print()" style="padding:9px 20px;background:#2D0060;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:Arial">🖨 Imprimir / PDF</button>'
     +'<button onclick="copyWA()" style="padding:9px 20px;background:#25d366;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:Arial">📱 Copiar para WhatsApp</button>'
     +'</div><script>function copyWA(){'
-    +'const txt="*ESTADO DE CUENTA — Easy Finance*\\n\\n*Cliente:* '+c.nombre+'\\n*Fecha:* '+hoy
+    +'const txt="*ESTADO DE CUENTA — Cuadre*\\n\\n*Cliente:* '+c.nombre+'\\n*Fecha:* '+hoy
     +'\\n\\n*Monto prestado:* '+fmt(c.monto)+'\\n*Total pagado:* '+fmt(tp)+'\\n*Intereses:* '+fmt(ti)
     +'\\n\\n*SALDO PENDIENTE: '+fmt(sp)+'*\\n'+(pp?'*Próximo pago: '+fd(pp.fecha)+'*\\n':'')
     +(mora>0?'\\n⚠ *En mora hace '+mora+' días*':'')+'";'
@@ -2301,7 +2319,7 @@ function generarRecibo(c,mesIdx,pagoKey){
     +'<div style="font-size:10px;color:#e65100;text-transform:uppercase;margin-bottom:2px">Saldo Pendiente</div>'
     +'<div style="font-size:17px;font-weight:800;color:#bf360c">'+fmt(saldoPendiente(c))+'</div></div>'
     +'<div style="text-align:center;font-size:10px;color:#9e9e9e;border-top:1px solid #e0e0e0;padding-top:8px">'
-    +'Easy Finance · Recibo #'+num+' · '+fd(today())+'</div></div>'
+    +'Cuadre · Recibo #'+num+' · '+fd(today())+'</div></div>'
     +'<div style="text-align:center;margin:14px 0">'
     +'<button onclick="window.print()" style="padding:9px 20px;background:#2D0060;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer">🖨 Imprimir</button>'
     +'</div></body></html>');
@@ -3671,7 +3689,7 @@ function descargarPlantilla(){
 
   // ── Hoja 2: Instrucciones ─────────────────────────────────────────────────
   const inst=[
-    ['INSTRUCCIONES DE USO — Easy Finance Importador'],
+    ['INSTRUCCIONES DE USO — Cuadre Importador'],
     [''],
     ['CAMPOS OBLIGATORIOS:'],
     ['Nombre','Nombre completo del cliente'],
@@ -4034,15 +4052,15 @@ function aceptarTC(){
   document.body.style.overflow='';
   // Auto-sync if JSONBin was already configured
   if(jsonbinEnabled){
-    jbinRead().then(()=>toast('¡Bienvenido a Easy Finance! Datos sincronizados ☁ 🎉')).catch(()=>toast('¡Bienvenido a Easy Finance! 🎉'));
+    jbinRead().then(()=>toast('¡Bienvenido a Cuadre! Datos sincronizados ☁ 🎉')).catch(()=>toast('¡Bienvenido a Cuadre! 🎉'));
   } else {
-    toast('¡Bienvenido a Easy Finance! 🎉');
+    toast('¡Bienvenido a Cuadre! 🎉');
   }
 }
 
 function verTCCompleto(){
   // Open full T&C in a new window
-  const tcHTML='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>T&C — Easy Finance</title>'
+  const tcHTML='<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>T&C — Cuadre</title>'
     +'<style>body{font-family:Segoe UI,sans-serif;background:#0a0a12;color:#e0e0f0;padding:20px;max-width:600px;margin:0 auto;line-height:1.7}'
     +'h1{color:#E91E8C;margin-bottom:4px;font-size:22px}h2{color:#C2185B;font-size:16px;margin-top:24px;margin-bottom:8px}'
     +'p{font-size:14px;color:#c0c0d0;margin-bottom:12px}strong{color:white}'
@@ -4052,24 +4070,24 @@ function verTCCompleto(){
     +'<div class="logo">Easy<span>Finance</span></div>'
     +'<p style="text-align:center;font-size:12px;color:#8888aa">Términos y Condiciones v1.0 · Colombia 2026</p><hr>'
     +'<h2>1. Naturaleza del servicio</h2>'
-    +'<p>Easy Finance es una herramienta de software para la gestión de préstamos personales. <strong>No es una entidad financiera, no capta dinero del público, no opera como banco ni cooperativa.</strong></p>'
+    +'<p>Cuadre es una herramienta de software para la gestión de préstamos personales. <strong>No es una entidad financiera, no capta dinero del público, no opera como banco ni cooperativa.</strong></p>'
     +'<h2>2. Aceptación</h2>'
     +'<p>El uso de la aplicación implica la aceptación plena de estos términos. Si no está de acuerdo, absténgase de usar el servicio.</p>'
     +'<h2>3. Uso permitido</h2>'
     +'<p>El usuario declara que: (a) usará la app solo para gestionar préstamos propios; (b) no la usará para actividades ilegales; (c) las tasas cumplirán la normativa colombiana; (d) es responsable de sus obligaciones tributarias.</p>'
     +'<h2>4. Tasa de usura</h2>'
-    +'<p>Easy Finance incorpora advertencia cuando las tasas superen la tasa de usura vigente certificada por la Superfinanciera. Esta función es orientativa. <strong>El usuario es el único responsable de verificar las tasas legales.</strong></p>'
+    +'<p>Cuadre incorpora advertencia cuando las tasas superen la tasa de usura vigente certificada por la Superfinanciera. Esta función es orientativa. <strong>El usuario es el único responsable de verificar las tasas legales.</strong></p>'
     +'<h2>5. Protección de datos — Ley 1581 de 2012</h2>'
-    +'<p>Los datos registrados son responsabilidad del usuario. Easy Finance no los comparte con terceros. Al registrar datos de clientes, el usuario declara contar con su autorización para el tratamiento según la ley colombiana.</p>'
+    +'<p>Los datos registrados son responsabilidad del usuario. Cuadre no los comparte con terceros. Al registrar datos de clientes, el usuario declara contar con su autorización para el tratamiento según la ley colombiana.</p>'
     +'<h2>6. Limitación de responsabilidad</h2>'
-    +'<p>Easy Finance no responde por: pérdidas de préstamos no recuperados, errores por datos incorrectos, pérdida de datos por fallas del dispositivo, ni sanciones por tasas ilegales.</p>'
+    +'<p>Cuadre no responde por: pérdidas de préstamos no recuperados, errores por datos incorrectos, pérdida de datos por fallas del dispositivo, ni sanciones por tasas ilegales.</p>'
     +'<h2>7. Propiedad intelectual</h2>'
-    +'<p>Easy Finance, su código, diseño y marca son propiedad del desarrollador. Se otorga licencia de uso no exclusiva e intransferible. Prohibida la reproducción sin autorización.</p>'
+    +'<p>Cuadre, su código, diseño y marca son propiedad del desarrollador. Se otorga licencia de uso no exclusiva e intransferible. Prohibida la reproducción sin autorización.</p>'
     +'<h2>8. Modificaciones</h2>'
     +'<p>Estos términos pueden actualizarse con 15 días de aviso previo. El uso continuado implica aceptación de los nuevos términos.</p>'
     +'<h2>9. Legislación aplicable</h2>'
     +'<p>Estos términos se rigen por la legislación colombiana. Cualquier controversia se resolverá ante los jueces competentes de Colombia.</p>'
-    +'<hr><p style="text-align:center;font-size:12px;color:#8888aa">Easy Finance · Colombia 2026</p>'
+    +'<hr><p style="text-align:center;font-size:12px;color:#8888aa">Cuadre · Colombia 2026</p>'
     +'</body></html>';
   const w=window.open('','_blank');
   w.document.write(tcHTML);
@@ -5313,7 +5331,7 @@ function estadoCuentaDeuda(did){
     </div>
 
     <div style="margin-top:14px;text-align:center;font-size:10px;color:#9e9e9e;border-top:1px solid #e0e0e0;padding-top:10px">
-      Easy Finance · Estado de cuenta generado el ${hoy} · Solo informativo
+      Cuadre · Estado de cuenta generado el ${hoy} · Solo informativo
     </div>
   </div>
   <div class="no-print" style="text-align:center;margin:16px 0;display:flex;gap:10px;justify-content:center">
@@ -5322,7 +5340,7 @@ function estadoCuentaDeuda(did){
   </div>
   <script>
   function copyWA(){
-    const txt="*ESTADO DE CUENTA — Easy Finance*\n\n*Acreedor:* ${d.acreedor}\n*Fecha corte:* ${hoy}\n\n*Monto original:* $${Number(d.monto).toLocaleString('es-CO')}\n*Total pagado:* $${Number(tp).toLocaleString('es-CO')}\n*SALDO PENDIENTE: $${Number(sp).toLocaleString('es-CO')}*\n*Próximo pago:* ${proxPago}";
+    const txt="*ESTADO DE CUENTA — Cuadre*\n\n*Acreedor:* ${d.acreedor}\n*Fecha corte:* ${hoy}\n\n*Monto original:* $${Number(d.monto).toLocaleString('es-CO')}\n*Total pagado:* $${Number(tp).toLocaleString('es-CO')}\n*SALDO PENDIENTE: $${Number(sp).toLocaleString('es-CO')}*\n*Próximo pago:* ${proxPago}";
     navigator.clipboard.writeText(txt).then(()=>alert('Copiado ✓')).catch(()=>{var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);alert('Copiado ✓');});
   }
   <\/script>
@@ -6206,31 +6224,31 @@ function abrirWhatsApp(cid){
   if(mora>0){
     templates.push({
       id:'mora1',title:'Recordatorio amable',sub:'Tono cordial · ideal para primer contacto',
-      msg:'Hola *'+c.nombre+'* 👋\n\nLe recuerda *Easy Finance* que tiene un saldo pendiente de *$'+fmt(sp)+'* con '+mora+' días de mora.\n\n📅 Le invitamos a ponerse al día o negociar un acuerdo de pago.\n\nPara más información contáctenos. ¡Gracias! 🙏'
+      msg:'Hola *'+c.nombre+'* 👋\n\nLe recuerda *Cuadre* que tiene un saldo pendiente de *$'+fmt(sp)+'* con '+mora+' días de mora.\n\n📅 Le invitamos a ponerse al día o negociar un acuerdo de pago.\n\nPara más información contáctenos. ¡Gracias! 🙏'
     });
     templates.push({
       id:'mora2',title:'Recordatorio urgente',sub:'Tono directo · para mora prolongada',
-      msg:'Estimado/a *'+c.nombre+'*,\n\nSu obligación con *Easy Finance* presenta *'+mora+' días* de mora.\n\n💰 Saldo pendiente: *$'+fmt(sp)+'*\n📌 Capital original: $'+fmt(c.monto)+'\n\nEs necesario que se comunique para acordar el pago.'
+      msg:'Estimado/a *'+c.nombre+'*,\n\nSu obligación con *Cuadre* presenta *'+mora+' días* de mora.\n\n💰 Saldo pendiente: *$'+fmt(sp)+'*\n📌 Capital original: $'+fmt(c.monto)+'\n\nEs necesario que se comunique para acordar el pago.'
     });
     templates.push({
       id:'mora3',title:'Oferta de negociación',sub:'Invitar al cliente a negociar descuento',
-      msg:'Hola *'+c.nombre+'* 👋\n\nEn *Easy Finance* queremos ayudarle a resolver su obligación.\n\n🤝 *Tenemos una propuesta especial para usted.*\n💰 Saldo actual: *$'+fmt(sp)+'*\n\nComuníquese con nosotros para conocer las opciones de pago. ¡Esta oportunidad es por tiempo limitado! ✅'
+      msg:'Hola *'+c.nombre+'* 👋\n\nEn *Cuadre* queremos ayudarle a resolver su obligación.\n\n🤝 *Tenemos una propuesta especial para usted.*\n💰 Saldo actual: *$'+fmt(sp)+'*\n\nComuníquese con nosotros para conocer las opciones de pago. ¡Esta oportunidad es por tiempo limitado! ✅'
     });
   } else if(pp){
     templates.push({
       id:'cobro1',title:'Recordatorio de cobro',sub:'Aviso anticipado del próximo pago',
-      msg:'Hola *'+c.nombre+'* 👋\n\nLe recuerda *Easy Finance* que su próxima fecha de pago es el *'+fd(pp.fecha)+'*.\n\n💰 Saldo pendiente: *$'+fmt(sp)+'*\n\nPor favor tenga listo su pago para esa fecha. ¡Gracias por su puntualidad! 🙏'
+      msg:'Hola *'+c.nombre+'* 👋\n\nLe recuerda *Cuadre* que su próxima fecha de pago es el *'+fd(pp.fecha)+'*.\n\n💰 Saldo pendiente: *$'+fmt(sp)+'*\n\nPor favor tenga listo su pago para esa fecha. ¡Gracias por su puntualidad! 🙏'
     });
     templates.push({
       id:'cobro2',title:'Solicitud de pago',sub:'Recordatorio más directo',
-      msg:'Hola *'+c.nombre+'*,\n\nLe informamos que su fecha de pago en *Easy Finance* es el *'+fd(pp.fecha)+'*.\n\n💰 Valor a pagar: *$'+fmt(sp)+'*\n\nQuedamos atentos a su pago. Gracias.'
+      msg:'Hola *'+c.nombre+'*,\n\nLe informamos que su fecha de pago en *Cuadre* es el *'+fd(pp.fecha)+'*.\n\n💰 Valor a pagar: *$'+fmt(sp)+'*\n\nQuedamos atentos a su pago. Gracias.'
     });
   }
 
   // Always add estado de cuenta template
   templates.push({
     id:'estado1',title:'Estado de cuenta',sub:'Resumen del préstamo para el cliente',
-    msg:'📊 *ESTADO DE CUENTA — Easy Finance*\n\nCliente: *'+c.nombre+'*\nFecha: '+fd(today())+'\n\n💰 Monto original: $'+fmt(c.monto)+'\n✅ Total pagado: $'+fmt(tp)+'\n⏳ Saldo pendiente: *$'+fmt(sp)+'*'+(pp?'\n📅 Próximo cobro: '+fd(pp.fecha):mora>0?'\n⚠️ Mora: '+mora+' días':'')+'\n\nPara más información contáctenos.'
+    msg:'📊 *ESTADO DE CUENTA — Cuadre*\n\nCliente: *'+c.nombre+'*\nFecha: '+fd(today())+'\n\n💰 Monto original: $'+fmt(c.monto)+'\n✅ Total pagado: $'+fmt(tp)+'\n⏳ Saldo pendiente: *$'+fmt(sp)+'*'+(pp?'\n📅 Próximo cobro: '+fd(pp.fecha):mora>0?'\n⚠️ Mora: '+mora+' días':'')+'\n\nPara más información contáctenos.'
   });
 
   waCtx.selectedMsg=templates[0].msg;
@@ -6301,8 +6319,8 @@ function abrirBroadcast(tipo){
 
   // Default message
   const msgDefault=tipo==='mora'
-    ?'Hola, le recuerda *Easy Finance* que tiene un saldo pendiente. Por favor comuníquese con nosotros para ponerse al día. 🙏'
-    :'Hola, le recuerda *Easy Finance* que tiene un pago próximo. Por favor tenga listo su pago. 🙏';
+    ?'Hola, le recuerda *Cuadre* que tiene un saldo pendiente. Por favor comuníquese con nosotros para ponerse al día. 🙏'
+    :'Hola, le recuerda *Cuadre* que tiene un pago próximo. Por favor tenga listo su pago. 🙏';
 
   document.getElementById('broadcast-msg').value=msgDefault;
   renderBroadcastList();
@@ -6542,6 +6560,46 @@ function toggleTheme(){
   localStorage.setItem('ef_theme', isLight?'light':'dark');
   updateThemeBtn();
 }
+
+// ── COLOR PALETTE SYSTEM ────────────────────────────────────────────────────
+function getColorTheme(){
+  return localStorage.getItem('ef_color_theme')||'indigo';
+}
+
+function setColorTheme(theme){
+  localStorage.setItem('ef_color_theme', theme);
+  applyColorTheme(theme);
+  updateColorThemeUI(theme);
+}
+
+function applyColorTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  // Update logo gradient
+  const logoIcon = document.querySelector('.cuadre-logo-icon');
+  if(logoIcon){
+    logoIcon.style.background = theme==='verde'
+      ? 'linear-gradient(135deg,#00c864,#007a3d)'
+      : 'linear-gradient(135deg,#5050ff,#8800cc)';
+    logoIcon.style.boxShadow = theme==='verde'
+      ? '0 8px 32px rgba(0,200,100,.4)'
+      : '0 8px 32px rgba(80,80,255,.4)';
+  }
+}
+
+function updateColorThemeUI(theme){
+  const btnI = document.getElementById('theme-btn-indigo');
+  const btnV = document.getElementById('theme-btn-verde');
+  if(btnI) btnI.style.opacity = theme==='indigo'?'1':'0.4';
+  if(btnV) btnV.style.opacity = theme==='verde'?'1':'0.4';
+  if(btnI) btnI.style.transform = theme==='indigo'?'scale(1.05)':'scale(1)';
+  if(btnV) btnV.style.transform = theme==='verde'?'scale(1.05)':'scale(1)';
+}
+
+function initColorTheme(){
+  const saved = getColorTheme();
+  applyColorTheme(saved);
+}
+
 function updateThemeBtn(){
   const btn=document.getElementById('theme-toggle-btn');
   if(!btn) return;
@@ -6580,6 +6638,8 @@ renderSidebar();
 // Check login FIRST, then T&C inside doLogin
 setTimeout(checkLogin, 100);
 initReminderCheck();
+initColorTheme();
+setTimeout(()=>updateColorThemeUI(getColorTheme()),500);
 
 </script>
 <!-- Login Screen -->
@@ -6603,7 +6663,7 @@ initReminderCheck();
     <button class="login-btn" onclick="doLogin()">Ingresar →</button>
     <div style="text-align:center;margin-top:12px" id="login-role-wrap" style="display:none"></div>
   </div>
-  <div class="login-footer">Easy Finance v2.0 · Colombia 2026</div>
+  <div class="login-footer">Cuadre v2.0 · Colombia 2026</div>
 </div>
 
 <!-- Terms & Conditions Modal -->
@@ -6616,23 +6676,23 @@ initReminderCheck();
     <div class="tc-body" id="tc-body">
 
       <div class="tc-section">
-        <div class="tc-section-title">📋 ¿Qué es Easy Finance?</div>
-        <div class="tc-section-text">Easy Finance es una herramienta de gestión de préstamos personales. <strong style="color:white">No es un banco ni una entidad financiera.</strong> Es su cuaderno de cobros inteligente — organiza sus préstamos, calcula saldos y facilita el seguimiento de sus clientes.</div>
+        <div class="tc-section-title">📋 ¿Qué es Cuadre?</div>
+        <div class="tc-section-text">Cuadre es una herramienta de gestión de préstamos personales. <strong style="color:white">No es un banco ni una entidad financiera.</strong> Es su cuaderno de cobros inteligente — organiza sus préstamos, calcula saldos y facilita el seguimiento de sus clientes.</div>
       </div>
 
       <div class="tc-section">
         <div class="tc-section-title">⚖️ Cumplimiento legal</div>
-        <div class="tc-section-text">Las tasas de interés que registre deben cumplir con la normativa colombiana. La tasa de usura vigente es certificada mensualmente por la Superintendencia Financiera. Easy Finance le advierte cuando una tasa supera el límite legal, pero <strong style="color:white">usted es el único responsable</strong> de operar dentro del marco legal.</div>
+        <div class="tc-section-text">Las tasas de interés que registre deben cumplir con la normativa colombiana. La tasa de usura vigente es certificada mensualmente por la Superintendencia Financiera. Cuadre le advierte cuando una tasa supera el límite legal, pero <strong style="color:white">usted es el único responsable</strong> de operar dentro del marco legal.</div>
       </div>
 
       <div class="tc-section">
         <div class="tc-section-title">🔒 Sus datos</div>
-        <div class="tc-section-text">Sus datos se guardan en su dispositivo y opcionalmente en la nube mediante el servicio que usted configure. Easy Finance no comparte ni vende su información. Al registrar datos de sus clientes, usted declara contar con su autorización según la <strong style="color:white">Ley 1581 de 2012</strong> de Protección de Datos Personales de Colombia.</div>
+        <div class="tc-section-text">Sus datos se guardan en su dispositivo y opcionalmente en la nube mediante el servicio que usted configure. Cuadre no comparte ni vende su información. Al registrar datos de sus clientes, usted declara contar con su autorización según la <strong style="color:white">Ley 1581 de 2012</strong> de Protección de Datos Personales de Colombia.</div>
       </div>
 
       <div class="tc-section">
         <div class="tc-section-title">⚠️ Limitación de responsabilidad</div>
-        <div class="tc-section-text">Easy Finance no se hace responsable por pérdidas derivadas de préstamos no recuperados, errores por datos incorrectos ingresados por el usuario, ni sanciones por cobro de tasas superiores a las permitidas por la ley.</div>
+        <div class="tc-section-text">Cuadre no se hace responsable por pérdidas derivadas de préstamos no recuperados, errores por datos incorrectos ingresados por el usuario, ni sanciones por cobro de tasas superiores a las permitidas por la ley.</div>
       </div>
 
       <div class="tc-section">
@@ -6648,12 +6708,12 @@ initReminderCheck();
     <div class="tc-footer">
       <label class="tc-check-row" onclick="toggleTCCheck()">
         <input type="checkbox" id="tc-checkbox">
-        <div class="tc-check-label">He leído y acepto los <span>Términos y Condiciones</span> de Easy Finance. Declaro que usaré la aplicación de acuerdo con la normativa colombiana vigente.</div>
+        <div class="tc-check-label">He leído y acepto los <span>Términos y Condiciones</span> de Cuadre. Declaro que usaré la aplicación de acuerdo con la normativa colombiana vigente.</div>
       </label>
       <button class="tc-accept-btn" id="tc-accept-btn" onclick="aceptarTC()">
         Acepto y quiero continuar →
       </button>
-      <div class="tc-version">Easy Finance · T&C v1.0 · Colombia 2026</div>
+      <div class="tc-version">Cuadre · T&C v1.0 · Colombia 2026</div>
     </div>
   </div>
 </div>
