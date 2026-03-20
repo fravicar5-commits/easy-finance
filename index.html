@@ -446,7 +446,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
 .login-logo{text-align:center;margin-bottom:32px}
 .login-logo-text{font-size:42px;font-weight:900;color:white}
-.login-logo-text span{color:#E91E8C}
+.login-logo-text{background:linear-gradient(135deg,#7070ff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .login-logo-sub{font-size:13px;color:rgba(255,255,255,.5);margin-top:4px}
 .login-card{background:#16162a;border:1px solid #2a2a45;border-radius:20px;padding:24px;width:100%;max-width:380px}
 .login-card-title{font-size:16px;font-weight:800;color:#e0e0f0;margin-bottom:4px}
@@ -614,8 +614,10 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <div class="screen" id="loans">
   <div class="topbar" id="topbar">
     <div class="topbar-logo">
-      <svg width="24" height="24" viewBox="0 0 64 64" fill="none"><ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/><ellipse cx="36" cy="30" rx="20" ry="18" fill="#4A0080"/><path d="M32 18C32 18 24 22 22 32C20 42 28 48 36 46C44 44 46 36 44 28C42 20 36 16 32 18Z" fill="#C2185B"/><path d="M26 26L26 42M26 26L36 26M26 33L34 33" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
-      <span style="font-size:13px;font-weight:800;color:white">Easy<span style="color:var(--ef-pink2)">Finance</span></span>
+      <div class="cuadre-logo-icon" style="width:28px;height:28px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        <span style="font-size:15px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span>
+      </div>
+      <span style="font-size:15px;font-weight:900;color:white;letter-spacing:-.02em">Cuadre</span>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <button id="topbar-estado-btn" style="display:none;background:rgba(194,24,91,.2);color:var(--ef-pink2);border:1px solid rgba(194,24,91,.4);padding:5px 9px;border-radius:var(--radius-xs);font-size:11px;font-weight:700;cursor:pointer" onclick="estadoCuentaActivo()" title="Estado de cuenta del cliente">📄 Estado</button>
@@ -629,7 +631,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
         <div class="ef-logo-sm" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:6px">
             <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/><path d="M32 18C32 18 24 22 22 32C20 42 28 48 36 46C44 44 46 36 44 28C42 20 36 16 32 18Z" fill="#C2185B"/><path d="M26 26L26 42M26 26L36 26M26 33L34 33" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
-            <span class="easy">Easy</span><span class="finance">Finance</span>
+            <span class="easy" style="letter-spacing:-.02em">Cuadre</span>
           </div>
           <button style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:2px 4px" onclick="closeSB()">✕</button>
         </div>
@@ -2221,7 +2223,7 @@ function estadoCuenta(id){
 
   const printHTML='<div style="max-width:700px;margin:0 auto;font-family:Arial,sans-serif;color:#212121;padding:20px">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:3px solid #C2185B;padding-bottom:14px">'
-    +'<div><div style="font-size:22px;font-weight:800;color:#2D0060">Easy<span style="color:#C2185B">Finance</span></div>'
+    +'<div><div style="font-size:22px;font-weight:800;color:#2D0060">Cuadre<span style="color:#C2185B">Finance</span></div>'
     +'<div style="font-size:20px;font-weight:700;color:#212121;margin-top:4px">ESTADO DE CUENTA</div>'
     +'<div style="font-size:12px;color:#757575">Fecha de corte: '+hoy+'</div></div>'
     +'<div style="text-align:right;font-size:12px;color:#757575"><div>ID-'+String(c.id).padStart(4,'0')+'</div><div>'+hoy+'</div></div>'
@@ -2302,7 +2304,7 @@ function generarRecibo(c,mesIdx,pagoKey){
     +'@media print{body{padding:0}}</style></head>'
     +'<body><div class="r">'
     +'<div style="text-align:center;margin-bottom:14px;border-bottom:2px solid #2D0060;padding-bottom:10px">'
-    +'<div style="font-size:18px;font-weight:800;color:#2D0060">Easy<span style="color:#C2185B">Finance</span></div>'
+    +'<div style="font-size:18px;font-weight:800;color:#2D0060">Cuadre<span style="color:#C2185B">nce</span></div>'
     +'<div style="font-size:16px;font-weight:700;color:#212121">RECIBO DE PAGO</div>'
     +'<div style="font-size:11px;color:#757575">#'+num+'</div></div>'
     +'<table style="width:100%;font-size:12px;border-collapse:collapse">'
@@ -2916,7 +2918,7 @@ function exportJSON(){
   const backup={
     version:'2.0',
     fecha:new Date().toISOString(),
-    app:'EasyFinance',
+    app:'Cuadre',
     clients, caja,
     notes: JSON.parse(localStorage.getItem(NK)||'[]'),
     pockets: JSON.parse(localStorage.getItem(PK)||'[]'),
@@ -4067,7 +4069,7 @@ function verTCCompleto(){
     +'.logo{font-size:28px;font-weight:900;text-align:center;padding:20px 0;color:white}.logo span{color:#E91E8C}'
     +'hr{border:none;border-top:1px solid #2a2a45;margin:20px 0}'
     +'</style></head><body>'
-    +'<div class="logo">Easy<span>Finance</span></div>'
+    +'<div class="logo" style="font-size:22px;font-weight:900;letter-spacing:-.02em">Cuadre</div>'
     +'<p style="text-align:center;font-size:12px;color:#8888aa">Términos y Condiciones v1.0 · Colombia 2026</p><hr>'
     +'<h2>1. Naturaleza del servicio</h2>'
     +'<p>Cuadre es una herramienta de software para la gestión de préstamos personales. <strong>No es una entidad financiera, no capta dinero del público, no opera como banco ni cooperativa.</strong></p>'
@@ -5265,7 +5267,7 @@ function estadoCuentaDeuda(did){
   <body><div class="wrap">
     <div class="header">
       <div>
-        <div class="logo">Easy<span>Finance</span></div>
+        <div class="logo" style="font-size:22px;font-weight:900;letter-spacing:-.02em">Cuadre</div>
         <div style="font-size:18px;font-weight:700;margin-top:4px">ESTADO DE CUENTA</div>
         <div style="font-size:11px;color:#757575">Fecha de corte: ${hoy}</div>
       </div>
@@ -6645,8 +6647,11 @@ setTimeout(()=>updateColorThemeUI(getColorTheme()),500);
 <!-- Login Screen -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-logo">
-    <div class="login-logo-text">Easy<span>Finance</span></div>
-    <div class="login-logo-sub">Tu solución financiera personal</div>
+    <div style="width:64px;height:64px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:20px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 8px 32px rgba(80,80,255,.5)" class="cuadre-logo-icon">
+      <span style="font-size:34px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span>
+    </div>
+    <div class="login-logo-text" style="font-size:36px;letter-spacing:-.02em">Cuadre</div>
+    <div class="login-logo-sub">Sus cuentas, bajo control</div>
   </div>
   <div class="login-card">
     <div class="login-card-title">Iniciar sesión</div>
@@ -6670,7 +6675,7 @@ setTimeout(()=>updateColorThemeUI(getColorTheme()),500);
 <div class="tc-overlay" id="tc-overlay" style="display:none">
   <div class="tc-modal">
     <div class="tc-header">
-      <div class="tc-logo">Easy<span>Finance</span></div>
+      <div class="tc-logo" style="font-size:24px;letter-spacing:-.01em">Cuadre</div>
       <div class="tc-subtitle">Antes de continuar, lea nuestros términos</div>
     </div>
     <div class="tc-body" id="tc-body">
