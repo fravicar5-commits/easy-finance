@@ -600,7 +600,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     </div>
     <div class="home-card" onclick="goTo('dayday')">
       <div class="hc-icon">⚡</div>
-      <div class="hc-title">Easy Day to Day</div>
+      <div class="hc-title">Cuadre Day to Day</div>
       <div class="hc-sub">Calculadora, divisas, ahorros y más</div>
     </div>
   </div>
@@ -630,7 +630,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <div class="sidebar-header">
         <div class="ef-logo-sm" style="justify-content:space-between">
           <div style="display:flex;align-items:center;gap:6px">
-            <svg width="22" height="22" viewBox="0 0 64 64" fill="none"><ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/><path d="M32 18C32 18 24 22 22 32C20 42 28 48 36 46C44 44 46 36 44 28C42 20 36 16 32 18Z" fill="#C2185B"/><path d="M26 26L26 42M26 26L36 26M26 33L34 33" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+            <div class="cuadre-logo-icon" style="width:24px;height:24px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><span style="font-size:13px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span></div>
             <span class="easy" style="letter-spacing:-.02em">Cuadre</span>
           </div>
           <button style="background:none;border:none;color:var(--text2);font-size:16px;cursor:pointer;padding:2px 4px" onclick="closeSB()">✕</button>
@@ -841,7 +841,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
   <div class="dd-header">
     <button class="dd-back" onclick="goTo('home')">⌂ Inicio</button>
     <div class="dd-title">Easy <span>Day to Day</span></div>
-    <svg width="28" height="28" viewBox="0 0 64 64" fill="none"><ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/><path d="M32 18C32 18 24 22 22 32C20 42 28 48 36 46C44 44 46 36 44 28C42 20 36 16 32 18Z" fill="#C2185B"/><path d="M26 26L26 42M26 26L36 26M26 33L34 33" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+    <div class="cuadre-logo-icon" style="width:28px;height:28px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-size:15px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span></div><!---->
   </div>
   <div class="dd-tabs">
     <button class="dd-tab active" onclick="setDDTab('converter',this)">💱 Divisas</button>
@@ -1916,7 +1916,7 @@ function renderDashboard(){
   const dashHTML=
     '<div class="main-header">'
     +'<div><div class="main-title" style="display:flex;align-items:center;gap:8px">'
-    +'<svg width="20" height="20" viewBox="0 0 64 64" fill="none"><ellipse cx="30" cy="34" rx="26" ry="24" fill="#2D0060"/><path d="M32 18C32 18 24 22 22 32C20 42 28 48 36 46C44 44 46 36 44 28C42 20 36 16 32 18Z" fill="#C2185B"/><path d="M26 26L26 42M26 26L36 26M26 33L34 33" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>'
+    +'<div class="cuadre-logo-icon" style="width:20px;height:20px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:6px;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:900;color:white;line-height:1">C</span></div>'
     +'Dashboard</div>'
     +'<div class="main-sub">'+fd(today())+' · '+clients.length+' clientes</div></div>'
     +'<div class="header-actions"><button class="btn btn-pink" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button></div>'
@@ -3917,7 +3917,7 @@ const EF_USERS = [
     pass: 'invitado12026',
     nombre: 'Alba',
     rol: 'invitado',
-    // Invitado: solo Modo Cliente y Easy Day to Day
+    // Invitado: solo Modo Cliente y Cuadre Day to Day
     permisos: {
       crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
       registrarPago: false, eliminarPago: false, verCaja: false,
@@ -4123,7 +4123,7 @@ function integracionPresupuesto(){
   const ingresos=budMonthIngresos(mesActual);
   if(ingresos<=0){
     return '<div style="background:rgba(255,179,0,.08);border:1px solid rgba(255,179,0,.25);border-radius:var(--radius-xs);padding:12px;font-size:12px;color:#f5a623">'
-      +'⚠ El presupuesto de <strong>'+mesActual.nombre+'</strong> no tiene ingresos registrados. Agrégalos en Easy Day to Day → Presupuesto para activar esta función.</div>';
+      +'⚠ El presupuesto de <strong>'+mesActual.nombre+'</strong> no tiene ingresos registrados. Agrégalos en Cuadre Day to Day → Presupuesto para activar esta función.</div>';
   }
 
   loadDeudas();
