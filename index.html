@@ -501,7 +501,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px}
 .chart-title{font-size:12px;font-weight:700;color:var(--text2)}
 .chart-tabs{display:flex;gap:5px}
-.ctab{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;font-weight:700;font-family:'Nunito',sans-serif;transition:all .15s}
+.ctab{font-size:10px;padding:4px 10px;border-radius:12px;border:1px solid var(--border2);background:none;color:var(--text3);cursor:pointer;flex-shrink:0;white-space:nowrap;font-weight:700;font-family:'Nunito',sans-serif;transition:all .15s}
 .ctab.active{background:var(--ef-pink);color:white;border-color:var(--ef-pink)}
 .dash-kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .dash-kpi{background:var(--surface2);border-radius:var(--radius-xs);padding:10px;text-align:center}
@@ -1082,7 +1082,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <div class="overlay" id="modal-reportes">
   <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto">
     <div class="modal-title">📊 Reportes del negocio <button class="modal-close" onclick="closeModal('modal-reportes')">✕</button></div>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px" id="report-tabs">
+    <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch" id="report-tabs">
       <button class="ctab active" data-tab="rentabilidad" onclick="switchReportTab(this)">💰 Rentabilidad</button>
       <button class="ctab" data-tab="clientes" onclick="switchReportTab(this)">👥 Clientes</button>
       <button class="ctab" data-tab="cobranza" onclick="switchReportTab(this)">📅 Cobranza</button>
@@ -1971,7 +1971,6 @@ function renderDashboard(){
     +'</div></div>';
 
   document.getElementById('main-content').innerHTML=dashHTML;
-  renderAlerts(document.getElementById('main-content'));
 }
 
 
