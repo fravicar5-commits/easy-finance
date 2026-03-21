@@ -5774,7 +5774,7 @@ function verDetalleDeuda(did){
             +'</div>'
             +'<div style="display:flex;align-items:center;gap:10px">'
               +'<div style="text-align:right">'
-                +'<div style="font-size:11px;font-weight:800;font-family:monospace;color:'+(r.newSaldo===0?'var(--green)':esFuturo?'var(--text3)':'var(--amber)')+'">'+fmt(r.newSaldo===0?r.saldoIni:r.newSaldo)+'</div>'
+                +'<div style="font-size:11px;font-weight:800;font-family:monospace;color:'+(r.cap===0?'var(--green)':esFuturo?'var(--text3)':'var(--amber)')+'">'+fmt(r.saldoIni)+'</div>'
                 +'<div style="font-size:9px;color:var(--text3)">'+fd(q.fq1)+' · '+fd(q.fq2)+'</div>'
               +'</div>'
               +'<span id="arr-'+mesId+'" style="color:var(--text3);font-size:12px;transition:transform .2s">'+(esMesActual?'▾':'▸')+'</span>'
