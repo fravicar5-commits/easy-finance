@@ -1930,31 +1930,41 @@ function renderDashboard(){
     +'<div class="mc"><div class="mc-label">Recuperado</div><div class="mc-value c-green">'+fmtS(totalRec)+'</div></div>'
     +'<div class="mc"><div class="mc-label">En mora</div><div class="mc-value c-red">'+mora.length+'</div><div class="mc-sub">clientes</div></div>'
     +'</div>'
-    +'<div class="sec-label">Intereses y utilidad</div>'
-    +'<div class="metrics m3" style="margin-bottom:12px">'
+    +'<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">'
+    +'<div onclick="toggleDashSection(\'dash-intereses\')" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;cursor:pointer">'
+    +'<div class="sec-label" style="margin-bottom:0">💹 Intereses y utilidad</div>'
+    +'<span id="arr-dash-intereses" style="color:var(--text3);font-size:12px;transition:transform .2s">▸</span>'
+    +'</div>'
+    +'<div id="dash-intereses" style="display:none;padding:0 12px 12px">'
+    +'<div class="metrics m3" style="margin-bottom:0">'
     +'<div class="mc"><div class="mc-label">Intereses este mes</div><div class="mc-value c-green">'+fmtS(intMes)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Total generados</div><div class="mc-value c-green">'+fmtS(totalInt)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Proyección futura</div><div class="mc-value c-pink">'+fmtS(proyeccion)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Ganancias disp.</div><div class="mc-value c-green">'+fmtS(gd)+'</div></div>'
+    +'</div></div></div>'
+    +'<div class="card" style="margin-bottom:10px;padding:0;overflow:hidden">'
+    +'<div onclick="toggleDashSection(\'dash-caja\')" style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;cursor:pointer">'
+    +'<div class="sec-label" style="margin-bottom:0">💰 Caja</div>'
+    +'<span id="arr-dash-caja" style="color:var(--text3);font-size:12px;transition:transform .2s">▸</span>'
     +'</div>'
-    +'<div class="sec-label">Caja</div>'
-    +'<div class="metrics" style="margin-bottom:6px">'
+    +'<div id="dash-caja" style="display:none;padding:0 12px 12px">'
+    +'<div class="metrics" style="margin-bottom:8px">'
     +'<div class="mc"><div class="mc-label">Saldo disponible</div><div class="mc-value '+(cRes.saldoDisponible>=0?'c-green':'c-red')+'">'+fmtS(cRes.saldoDisponible)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Capital ingresado</div><div class="mc-value c-blue">'+fmtS(cRes.capitalTotal)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Capital en calle</div><div class="mc-value c-amber">'+fmtS(cRes.capitalEnCalle)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Ganancias disp.</div><div class="mc-value c-green">'+fmtS(gd)+'</div></div>'
     +'</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">'
+    +'<div style="display:flex;gap:8px;flex-wrap:wrap">'
     +'<button class="btn btn-green" onclick="abrirCapital()">💰 Agregar capital</button>'
     +(gd>0?'<button class="btn btn-green" onclick="reinvertirGanancias()">🔄 Reinvertir ('+fmt(gd)+')</button>':'')
     +'<button class="btn" onclick="verCajaCompleta()">Ver movimientos</button>'
-    +'</div>'
+    +'</div></div></div>'
     +(mora.length>0?'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><div class="sec-label" style="margin-bottom:0">Alertas de mora</div>'
     +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:10px;padding:5px 10px" onclick="abrirBroadcast(&quot;mora&quot;)">📢 WA masivo</button></div>'
     +'<div class="card" style="margin-bottom:14px;max-height:200px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--ef-pink) var(--surface2)">'
       +mora.map(c=>{const d=diasMora(c),sp=saldoPendiente(c);
         return'<div class="caja-row"><div><div style="font-weight:600">'+c.nombre+'</div>'
-          +'<div style="font-size:11px;color:var(--red)">'+d+' día'+(d!==1?'s':'')+' en mora</div></div>'
+          +'<div style="font-size:11px;color:var(--red)">'+d+' día'+(d!==1?'s':'')+'en mora</div></div>'
           +'<div style="text-align:right"><div style="color:var(--amber);font-family:monospace;font-weight:700">'+fmt(sp)+'</div>'
           +'<button class="btn btn-pink" style="font-size:10px;padding:2px 8px;margin-top:3px" data-cid="'+c.id+'" onclick="openClient(parseInt(this.dataset.cid))">Ver</button></div>'
           +'</div>';}).join('')+'</div>':'')
@@ -5105,6 +5115,15 @@ function graficaEvolucionDeuda(did){
     +'<button class="btn btn-cyan-solid" style="width:100%;margin-top:10px" onclick="verDetalleDeuda('+did+')">← Volver al detalle</button>';
 
   openModal('modal-detalle-deuda');
+}
+
+function toggleDashSection(id){
+  const el = document.getElementById(id);
+  const arr = document.getElementById('arr-'+id);
+  if(!el) return;
+  const open = el.style.display === 'block';
+  el.style.display = open ? 'none' : 'block';
+  if(arr) arr.textContent = open ? '▸' : '▾';
 }
 
 function toggleMesDeuda(id){
