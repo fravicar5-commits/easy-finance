@@ -692,6 +692,18 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
             <button id="theme-btn-verde" onclick="setColorTheme('verde')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#00c864,#007a3d);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🟢 Verde</button>
           </div>
         </div>
+        <!-- Storage indicator -->
+        <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border)" id="storage-indicator-wrap">
+          <div style="font-size:9px;color:var(--text3);letter-spacing:.1em;font-weight:700;margin-bottom:6px;text-transform:uppercase">Almacenamiento local</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+            <span id="storage-used-label" style="font-size:11px;font-weight:700;color:white">Calculando...</span>
+            <span id="storage-pct-label" style="font-size:10px;color:var(--text3)">/ 5MB</span>
+          </div>
+          <div style="height:6px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+            <div id="storage-bar" style="height:100%;width:0%;border-radius:3px;transition:width .4s ease"></div>
+          </div>
+          <div id="storage-status" style="font-size:10px;margin-top:4px;color:var(--text3)"></div>
+        </div>
         <button class="gear-menu-item" onclick="toggleGearMenu(false);exportJSON()"><span class="gmi-icon">💾</span>Guardar respaldo</button>
         <button class="gear-menu-item" onclick="toggleGearMenu(false);importJSON()"><span class="gmi-icon">📂</span>Cargar respaldo</button>
         <div style="height:1px;background:var(--border);margin:2px 0"></div>
@@ -6205,6 +6217,45 @@ function verSocioDistribucion(cid){
 const _origBuildReportCobranza=buildReportCobranza;
 
 // ══ GEAR MENU ════════════════════════════════════════════════════════════════
+function calcStorageUsage(){
+  try{
+    let totalBytes=0;
+    const breakdown={};
+    for(let key in localStorage){
+      if(!localStorage.hasOwnProperty(key)) continue;
+      const bytes=(localStorage[key].length+key.length)*2;
+      totalBytes+=bytes;
+      if(key.startsWith('ef_client')) breakdown['Clientes']=(breakdown['Clientes']||0)+bytes;
+      else if(key.startsWith('ef_deuda')) breakdown['Deudas']=(breakdown['Deudas']||0)+bytes;
+      else if(key.startsWith('ef_budget')) breakdown['Presupuesto']=(breakdown['Presupuesto']||0)+bytes;
+      else if(key.startsWith('ef_notes')) breakdown['Notas']=(breakdown['Notas']||0)+bytes;
+      else if(key.startsWith('ef_caja')) breakdown['Caja']=(breakdown['Caja']||0)+bytes;
+      else breakdown['Otros']=(breakdown['Otros']||0)+bytes;
+    }
+    const maxBytes=5*1024*1024;
+    const pct=Math.min(Math.round((totalBytes/maxBytes)*100),100);
+    const display=totalBytes>=1024*1024?(totalBytes/1024/1024).toFixed(2)+'MB':(totalBytes/1024).toFixed(1)+'KB';
+    const bar=document.getElementById('storage-bar');
+    const label=document.getElementById('storage-used-label');
+    const pctLabel=document.getElementById('storage-pct-label');
+    const status=document.getElementById('storage-status');
+    if(!label) return;
+    label.textContent=display;
+    pctLabel.textContent=pct+'% de 5MB';
+    let barColor,statusText,statusColor;
+    if(pct<50){barColor='linear-gradient(90deg,#00c864,#007a3d)';statusColor='var(--green)';statusText='✓ Espacio suficiente';}
+    else if(pct<75){barColor='linear-gradient(90deg,#ffb300,#cc6600)';statusColor='var(--amber)';statusText='⚠ Considere hacer respaldo';}
+    else if(pct<90){barColor='linear-gradient(90deg,#ff6b6b,#cc0000)';statusColor='var(--red)';statusText='⚠ Espacio limitado — respalde ya';}
+    else{barColor='#ff0000';statusColor='var(--red)';statusText='🔴 Almacenamiento casi lleno';}
+    bar.style.width=pct+'%';
+    bar.style.background=barColor;
+    status.style.color=statusColor;
+    const parts=Object.entries(breakdown).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>k+': '+(v>=1024*1024?(v/1024/1024).toFixed(1)+'MB':(v/1024).toFixed(0)+'KB')).join(' · ');
+    status.textContent=statusText+(parts?' | '+parts:'');
+  }catch(e){console.warn('Storage:',e);}
+}
+
 function toggleGearMenu(force){
   const menu=document.getElementById('gear-menu');
   const overlay=document.getElementById('gear-overlay');
@@ -6213,6 +6264,7 @@ function toggleGearMenu(force){
   const shouldOpen=force!==undefined?force:!isOpen;
   menu.classList.toggle('open',shouldOpen);
   overlay.classList.toggle('open',shouldOpen);
+  if(shouldOpen) setTimeout(calcStorageUsage,50);
 }
 
 // ══ USURA VALIDATION ═════════════════════════════════════════════════════════
@@ -6283,20 +6335,43 @@ function buildReportDiagnostico(){
   let penalizacion = 0;
   const alertas = [];
 
-  // 1. % en mora (peso 35%)
+  // 1. % en mora (peso 35%) — contextual según número de clientes
   const pctMora = total > 0 ? Math.round((clientesEnMora.length/total)*100) : 0;
-  if(pctMora >= 50){ penalizacion += 35; alertas.push({tipo:'red', txt: pctMora+'% de clientes en mora — cartera en situación crítica'}); }
-  else if(pctMora >= 25){ penalizacion += 20; alertas.push({tipo:'amber', txt: pctMora+'% de clientes en mora — revisar política de cobro'}); }
-  else if(pctMora > 0){ penalizacion += 8; alertas.push({tipo:'amber', txt: pctMora+'% de clientes en mora — nivel manejable'}); }
-  else{ alertas.push({tipo:'green', txt: 'Todos los clientes al día ✓'}); }
+  if(total === 1 && clientesEnMora.length === 1){
+    // Solo 1 cliente y está en mora — mensaje específico, penalización moderada
+    penalizacion += 20;
+    alertas.push({tipo:'amber', txt: 'Su único cliente activo está en mora — gestione el cobro pronto'});
+  } else if(total === 1 && clientesEnMora.length === 0){
+    alertas.push({tipo:'green', txt: 'Su único cliente activo está al día ✓'});
+  } else if(pctMora >= 50){
+    penalizacion += 35;
+    alertas.push({tipo:'red', txt: clientesEnMora.length+' de '+total+' clientes en mora ('+pctMora+'%) — revisar política de cobro'});
+  } else if(pctMora >= 25){
+    penalizacion += 20;
+    alertas.push({tipo:'amber', txt: clientesEnMora.length+' de '+total+' clientes en mora ('+pctMora+'%) — nivel de alerta'});
+  } else if(pctMora > 0){
+    penalizacion += 8;
+    alertas.push({tipo:'amber', txt: clientesEnMora.length+' de '+total+' clientes en mora — nivel manejable'});
+  } else {
+    alertas.push({tipo:'green', txt: 'Todos los clientes al día ✓'});
+  }
 
-  // 2. Concentración de riesgo (peso 25%)
+  // 2. Concentración de riesgo (peso 25%) — solo relevante con 3+ clientes
   const saldosPorCliente = activos.map(c=>({nombre:c.nombre, saldo:saldoPendiente(c)})).sort((a,b)=>b.saldo-a.saldo);
   const top2Saldo = saldosPorCliente.slice(0,2).reduce((s,c)=>s+c.saldo, 0);
   const pctConc = totalCartera > 0 ? Math.round((top2Saldo/totalCartera)*100) : 0;
-  if(pctConc >= 70){ penalizacion += 25; alertas.push({tipo:'red', txt: 'El '+pctConc+'% de la cartera está en 2 clientes — riesgo alto'}); }
-  else if(pctConc >= 50){ penalizacion += 12; alertas.push({tipo:'amber', txt: 'El '+pctConc+'% de la cartera en 2 clientes — diversificar'}); }
-  else if(saldosPorCliente.length > 0){ alertas.push({tipo:'green', txt: 'Cartera bien diversificada ✓'}); }
+  if(total <= 2){
+    // Con 1-2 clientes la concentración es inevitable — no penalizar, solo informar
+    alertas.push({tipo:'text3', txt: 'Con '+total+' cliente'+(total>1?'s':'')+' activo'+(total>1?'s':'')+' la concentración es normal — crezca su cartera para diversificar'});
+  } else if(pctConc >= 70){
+    penalizacion += 25;
+    alertas.push({tipo:'red', txt: 'El '+pctConc+'% de la cartera está en 2 clientes — riesgo de concentración alto'});
+  } else if(pctConc >= 50){
+    penalizacion += 12;
+    alertas.push({tipo:'amber', txt: 'El '+pctConc+'% de la cartera en 2 clientes — considere diversificar'});
+  } else {
+    alertas.push({tipo:'green', txt: 'Cartera bien diversificada entre '+total+' clientes ✓'});
+  }
 
   // 3. Tasas ilegales (peso 20%)
   const usura = 2.13;
@@ -6322,15 +6397,24 @@ function buildReportDiagnostico(){
     }
   });
   const tasaRecup = esperadoMes > 0 ? Math.round((cobradoMes/esperadoMes)*100) : 100;
-  if(tasaRecup < 50){ penalizacion += 20; alertas.push({tipo:'red', txt: 'Recuperación este mes: '+tasaRecup+'% — por debajo del 50%'}); }
-  else if(tasaRecup < 80){ penalizacion += 10; alertas.push({tipo:'amber', txt: 'Recuperación este mes: '+tasaRecup+'% — mejorable'}); }
-  else{ alertas.push({tipo:'green', txt: 'Tasa de recuperación del mes: '+tasaRecup+'% ✓'}); }
+  if(esperadoMes === 0){
+    // No hay cuotas programadas este mes — no penalizar
+    alertas.push({tipo:'text3', txt: 'Sin cuotas programadas para este mes'});
+  } else if(tasaRecup < 50){
+    penalizacion += 20;
+    alertas.push({tipo:'red', txt: 'Recuperación este mes: '+tasaRecup+'% ('+fmtS(Math.round(cobradoMes))+' de '+fmtS(Math.round(esperadoMes))+' esperado)'});
+  } else if(tasaRecup < 80){
+    penalizacion += 10;
+    alertas.push({tipo:'amber', txt: 'Recuperación este mes: '+tasaRecup+'% — mejorable'});
+  } else {
+    alertas.push({tipo:'green', txt: 'Recuperación del mes: '+tasaRecup+'% ✓'});
+  }
 
   const score = Math.max(0, 100 - penalizacion);
   const nivel = score>=80?'Excelente':score>=60?'Bueno':score>=40?'Regular':'Crítico';
   const scoreColor = score>=80?'#00e678':score>=60?'#00c8ff':score>=40?'#ffb300':'#ff5252';
-  const colorMap = {red:'var(--red)', amber:'var(--amber)', green:'var(--green)'};
-  const emojiMap = {red:'❌', amber:'⚠️', green:'✅'};
+  const colorMap = {red:'var(--red)', amber:'var(--amber)', green:'var(--green)', text3:'var(--text3)'};
+  const emojiMap = {red:'❌', amber:'⚠️', green:'✅', text3:'ℹ️'};
 
   // ── Rentabilidad ──
   const interesesGanados = clients.reduce((s,c) => {
