@@ -6248,37 +6248,36 @@ function buildReportDiagnostico(){
   if(!clients.length) return '<div class="empty-state"><div class="empty-icon">🏥</div><div>Sin datos para diagnosticar</div></div>';
 
   const hoy = new Date(); hoy.setHours(0,0,0,0);
-  const t = c => c.tasa/100;
   const activos = clients.filter(c => !isLiquidado(c));
-  const total = activos.length;
-  const enMora = activos.filter(c => diasMora(c) > 0);
-  const alDia = activos.filter(c => diasMora(c) === 0);
   const liquidados = clients.filter(c => isLiquidado(c));
+  const total = activos.length;
+  const clientesEnMora = activos.filter(c => diasMora(c) > 0);
+  const clientesAlDia = activos.filter(c => diasMora(c) === 0);
 
-  // ── Saldos y cartera ──
+  // ── Cartera ──
   const totalCartera = activos.reduce((s,c) => s + saldoPendiente(c), 0);
-  const totalIntereses = activos.reduce((s,c) => s + totalIntereses(c), 0);
+  const totalIntGanados = activos.reduce((s,c) => s + totalIntereses(c), 0);
   const totalPrestado = activos.reduce((s,c) => s + c.monto, 0);
   const totalRecuperado = clients.reduce((s,c) => s + totalPagado(c), 0);
 
-  // ── Score de salud de cartera (0-100) ──
+  // ── Score (0-100) ──
   let penalizacion = 0;
   const alertas = [];
 
   // 1. % en mora (peso 35%)
-  const pctMora = total > 0 ? Math.round((enMora.length/total)*100) : 0;
+  const pctMora = total > 0 ? Math.round((clientesEnMora.length/total)*100) : 0;
   if(pctMora >= 50){ penalizacion += 35; alertas.push({tipo:'red', txt: pctMora+'% de clientes en mora — cartera en situación crítica'}); }
   else if(pctMora >= 25){ penalizacion += 20; alertas.push({tipo:'amber', txt: pctMora+'% de clientes en mora — revisar política de cobro'}); }
   else if(pctMora > 0){ penalizacion += 8; alertas.push({tipo:'amber', txt: pctMora+'% de clientes en mora — nivel manejable'}); }
   else{ alertas.push({tipo:'green', txt: 'Todos los clientes al día ✓'}); }
 
   // 2. Concentración de riesgo (peso 25%)
-  const saldosPorCliente = activos.map(c=>({nombre:c.nombre,saldo:saldoPendiente(c)})).sort((a,b)=>b.saldo-a.saldo);
-  const top2Saldo = saldosPorCliente.slice(0,2).reduce((s,c)=>s+c.saldo,0);
-  const pctConc = totalCartera>0 ? Math.round((top2Saldo/totalCartera)*100) : 0;
-  if(pctConc >= 70){ penalizacion += 25; alertas.push({tipo:'red', txt: 'El '+pctConc+'% de la cartera está en 2 clientes — riesgo de concentración alto'}); }
-  else if(pctConc >= 50){ penalizacion += 12; alertas.push({tipo:'amber', txt: 'El '+pctConc+'% de la cartera está en 2 clientes — diversificar'}); }
-  else{ alertas.push({tipo:'green', txt: 'Cartera bien diversificada entre clientes ✓'}); }
+  const saldosPorCliente = activos.map(c=>({nombre:c.nombre, saldo:saldoPendiente(c)})).sort((a,b)=>b.saldo-a.saldo);
+  const top2Saldo = saldosPorCliente.slice(0,2).reduce((s,c)=>s+c.saldo, 0);
+  const pctConc = totalCartera > 0 ? Math.round((top2Saldo/totalCartera)*100) : 0;
+  if(pctConc >= 70){ penalizacion += 25; alertas.push({tipo:'red', txt: 'El '+pctConc+'% de la cartera está en 2 clientes — riesgo alto'}); }
+  else if(pctConc >= 50){ penalizacion += 12; alertas.push({tipo:'amber', txt: 'El '+pctConc+'% de la cartera en 2 clientes — diversificar'}); }
+  else if(saldosPorCliente.length > 0){ alertas.push({tipo:'green', txt: 'Cartera bien diversificada ✓'}); }
 
   // 3. Tasas ilegales (peso 20%)
   const usura = 2.13;
@@ -6290,56 +6289,64 @@ function buildReportDiagnostico(){
   const mesKey = hoy.getFullYear()+'-'+(hoy.getMonth()+1).toString().padStart(2,'0');
   let esperadoMes = 0, cobradoMes = 0;
   activos.forEach(c => {
-    const mes = c.meses ? c.meses.find(m => {
-      const fq1 = m.fq1||''; const fq2 = m.fq2||'';
-      return fq1.slice(0,7)===mesKey || fq2.slice(0,7)===mesKey;
-    }) : null;
-    if(mes){
-      const cuota = calcCuotaFija ? calcCuotaFija(c.monto, t(c), c.cuotas) : 0;
-      esperadoMes += cuota;
-      cobradoMes += (mes.pq1a||0)+(mes.pq1b||0)+(mes.pq2a||0)+(mes.pq2b||0);
+    const r = calcMes(c, 0);
+    if(!r) return;
+    const cuotaMes = r.cuotaFija || Math.round(saldoPendiente(c) * (c.tasa/100));
+    // Check if this client has a quincena in current month
+    if(c.meses && c.meses.length > 0){
+      const mesIdx = c.meses.findIndex(m => (m.fq1||'').slice(0,7)===mesKey || (m.fq2||'').slice(0,7)===mesKey);
+      if(mesIdx >= 0){
+        const m = c.meses[mesIdx];
+        esperadoMes += cuotaMes;
+        cobradoMes += (m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0);
+      }
     }
   });
   const tasaRecup = esperadoMes > 0 ? Math.round((cobradoMes/esperadoMes)*100) : 100;
-  if(tasaRecup < 50){ penalizacion += 20; alertas.push({tipo:'red', txt: 'Recuperación del mes: '+tasaRecup+'% — por debajo del 50%'}); }
-  else if(tasaRecup < 80){ penalizacion += 10; alertas.push({tipo:'amber', txt: 'Recuperación del mes: '+tasaRecup+'% — mejorable'}); }
+  if(tasaRecup < 50){ penalizacion += 20; alertas.push({tipo:'red', txt: 'Recuperación este mes: '+tasaRecup+'% — por debajo del 50%'}); }
+  else if(tasaRecup < 80){ penalizacion += 10; alertas.push({tipo:'amber', txt: 'Recuperación este mes: '+tasaRecup+'% — mejorable'}); }
   else{ alertas.push({tipo:'green', txt: 'Tasa de recuperación del mes: '+tasaRecup+'% ✓'}); }
 
-  const score = Math.max(0, 100-penalizacion);
+  const score = Math.max(0, 100 - penalizacion);
   const nivel = score>=80?'Excelente':score>=60?'Bueno':score>=40?'Regular':'Crítico';
   const scoreColor = score>=80?'#00e678':score>=60?'#00c8ff':score>=40?'#ffb300':'#ff5252';
-  const colorMap = {red:'var(--red)',amber:'var(--amber)',green:'var(--green)'};
-  const emojiMap = {red:'❌',amber:'⚠️',green:'✅'};
+  const colorMap = {red:'var(--red)', amber:'var(--amber)', green:'var(--green)'};
+  const emojiMap = {red:'❌', amber:'⚠️', green:'✅'};
 
-  // ── Proyección próximos 30 días ──
+  // ── Rentabilidad ──
+  const interesesGanados = clients.reduce((s,c) => {
+    const tp = totalPagado(c);
+    const exceso = tp - Math.min(tp, c.monto);
+    return s + exceso;
+  }, 0);
+  const roiPct = totalPrestado > 0 ? ((interesesGanados/totalPrestado)*100).toFixed(1) : 0;
+
+  // ── Proyección 30 días ──
   const en30dias = new Date(hoy); en30dias.setDate(en30dias.getDate()+30);
   let proyeccion30 = 0;
   activos.forEach(c => {
     if(!c.meses) return;
+    const sp = saldoPendiente(c);
+    if(sp <= 0) return;
+    const cuotaQ = Math.round(sp * (c.tasa/100));
     c.meses.forEach(m => {
-      const fq1 = new Date((m.fq1||'2099')+'T00:00:00');
-      const fq2 = new Date((m.fq2||'2099')+'T00:00:00');
-      const sp = saldoPendiente(c);
-      const cuota = sp > 0 ? Math.round(sp*t(c)+sp*t(c)) : 0;
-      if(fq1>=hoy && fq1<=en30dias) proyeccion30 += Math.round(cuota/2);
-      if(fq2>=hoy && fq2<=en30dias) proyeccion30 += Math.round(cuota/2);
+      const fq1 = new Date((m.fq1||'2099-12-31')+'T00:00:00');
+      const fq2 = new Date((m.fq2||'2099-12-31')+'T00:00:00');
+      if(fq1 >= hoy && fq1 <= en30dias) proyeccion30 += cuotaQ/2;
+      if(fq2 >= hoy && fq2 <= en30dias) proyeccion30 += cuotaQ/2;
     });
   });
 
-  // ── Rentabilidad real ──
-  const interesesGanados = clients.reduce((s,c) => s+(totalPagado(c)-Math.min(totalPagado(c),c.monto)),0);
-  const roiPct = totalPrestado>0 ? ((interesesGanados/totalPrestado)*100).toFixed(1) : 0;
-
-  // SVG ring
+  // ── SVG ring ──
   const circ = 2*Math.PI*36;
   const offset = circ*(1-score/100);
 
   return '<div style="padding:4px">'
 
-    // ── Score cartera ──
-    +'<div class="card" style="margin-bottom:12px">'
+    // Score
+    +'<div class="card" style="margin-bottom:10px">'
     +'<div class="sec-label" style="margin-bottom:12px">🏥 SALUD DE LA CARTERA</div>'
-    +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">'
+    +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px">'
     +'<div style="position:relative;flex-shrink:0;width:84px;height:84px">'
     +'<svg width="84" height="84" viewBox="0 0 84 84">'
     +'<circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>'
@@ -6352,41 +6359,39 @@ function buildReportDiagnostico(){
     +'</div></div>'
     +'<div style="flex:1">'
     +'<div style="font-size:18px;font-weight:900;color:'+scoreColor+'">'+nivel+'</div>'
-    +'<div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">'
-    +(score>=80?'Su cartera está bien gestionada.':score>=60?'Hay áreas de mejora. Revise las alertas.':score>=40?'Su cartera requiere atención inmediata.':'Cartera en situación de riesgo alto.')
-    +'</div></div></div>'
+    +'<div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">'+(score>=80?'Cartera bien gestionada.':score>=60?'Hay áreas de mejora.':score>=40?'Requiere atención inmediata.':'Riesgo alto — actúe ya.')+'</div>'
+    +'</div></div>'
     +alertas.map(a=>'<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--border)">'
       +'<span style="font-size:13px;flex-shrink:0">'+emojiMap[a.tipo]+'</span>'
-      +'<span style="font-size:11px;color:'+colorMap[a.tipo]+';line-height:1.5">'+a.txt+'</span>'
-      +'</div>').join('')
+      +'<span style="font-size:11px;color:'+colorMap[a.tipo]+';line-height:1.5">'+a.txt+'</span></div>').join('')
     +'</div>'
 
-    // ── Métricas rápidas ──
-    +'<div class="metrics m3" style="margin-bottom:12px">'
+    // Métricas
+    +'<div class="metrics m3" style="margin-bottom:10px">'
     +'<div class="mc"><div class="mc-label">CARTERA TOTAL</div><div class="mc-value c-blue">'+fmtS(totalCartera)+'</div></div>'
-    +'<div class="mc"><div class="mc-label">EN MORA</div><div class="mc-value c-red">'+enMora.length+'</div></div>'
-    +'<div class="mc"><div class="mc-label">AL DÍA</div><div class="mc-value c-green">'+alDia.length+'</div></div>'
+    +'<div class="mc"><div class="mc-label">EN MORA</div><div class="mc-value c-red">'+clientesEnMora.length+'</div></div>'
+    +'<div class="mc"><div class="mc-label">AL DÍA</div><div class="mc-value c-green">'+clientesAlDia.length+'</div></div>'
     +'</div>'
 
-    // ── Concentración de riesgo ──
-    +'<div class="card" style="margin-bottom:12px">'
-    +'<div class="sec-label" style="margin-bottom:10px">🎯 CONCENTRACIÓN DE RIESGO</div>'
-    +saldosPorCliente.slice(0,5).map((c,i)=>{
-      const pct = totalCartera>0?Math.round((c.saldo/totalCartera)*100):0;
-      const barColor = i===0?'var(--red)':i===1?'var(--amber)':'var(--accent,#7070ff)';
-      return '<div style="margin-bottom:8px">'
-        +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
-        +'<span style="font-weight:700">'+c.nombre+'</span>'
-        +'<span style="color:var(--text2);font-family:monospace">'+fmtS(c.saldo)+' · '+pct+'%</span>'
-        +'</div>'
-        +'<div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">'
-        +'<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:3px"></div>'
-        +'</div></div>';
-    }).join('')
-    +'</div>'
+    // Concentración
+    +(saldosPorCliente.length>0?
+      '<div class="card" style="margin-bottom:10px">'
+      +'<div class="sec-label" style="margin-bottom:10px">🎯 CONCENTRACIÓN DE RIESGO</div>'
+      +saldosPorCliente.slice(0,5).map((c,i)=>{
+        const pct = totalCartera>0?Math.round((c.saldo/totalCartera)*100):0;
+        const barColor = i===0?'var(--red)':i===1?'var(--amber)':'var(--blue)';
+        return '<div style="margin-bottom:8px">'
+          +'<div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">'
+          +'<span style="font-weight:700">'+c.nombre+'</span>'
+          +'<span style="color:var(--text2);font-family:monospace">'+fmtS(c.saldo)+' · '+pct+'%</span></div>'
+          +'<div style="height:6px;background:var(--surface3);border-radius:3px;overflow:hidden">'
+          +'<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:3px"></div></div></div>';
+      }).join('')
+      +'</div>'
+    :'')
 
-    // ── Rentabilidad y recuperación ──
-    +'<div class="card" style="margin-bottom:12px">'
+    // Rentabilidad
+    +'<div class="card" style="margin-bottom:10px">'
     +'<div class="sec-label" style="margin-bottom:10px">💰 RENTABILIDAD REAL</div>'
     +'<div class="metrics m3" style="margin-bottom:10px">'
     +'<div class="mc"><div class="mc-label">TOTAL PRESTADO</div><div class="mc-value c-blue">'+fmtS(totalPrestado)+'</div></div>'
@@ -6397,76 +6402,91 @@ function buildReportDiagnostico(){
     +'Por cada $100 prestados ha ganado <strong style="color:var(--green)">$'+Math.round(interesesGanados/Math.max(totalPrestado,1)*100)+'</strong> en intereses'
     +'</div></div>'
 
-    // ── Tasa de recuperación ──
-    +'<div class="card" style="margin-bottom:12px">'
+    // Tasa recuperación
+    +'<div class="card" style="margin-bottom:10px">'
     +'<div class="sec-label" style="margin-bottom:10px">📥 TASA DE RECUPERACIÓN — MES ACTUAL</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-    +'<div style="font-size:32px;font-weight:900;font-family:monospace;color:'+(tasaRecup>=80?'var(--green)':tasaRecup>=50?'var(--amber)':'var(--red)')+'">'+tasaRecup+'%</div>'
+    +'<div style="font-size:36px;font-weight:900;font-family:monospace;color:'+(tasaRecup>=80?'var(--green)':tasaRecup>=50?'var(--amber)':'var(--red)')+'">'+tasaRecup+'%</div>'
     +'<div style="text-align:right;font-size:11px;color:var(--text2)">'
     +'<div>Esperado: <strong>'+fmtS(Math.round(esperadoMes))+'</strong></div>'
     +'<div>Cobrado: <strong style="color:var(--green)">'+fmtS(Math.round(cobradoMes))+'</strong></div>'
     +'</div></div>'
     +'<div style="height:10px;background:var(--surface3);border-radius:5px;overflow:hidden">'
-    +'<div style="height:100%;width:'+Math.min(tasaRecup,100)+'%;background:'+(tasaRecup>=80?'var(--green)':tasaRecup>=50?'var(--amber)':'var(--red)')+';border-radius:5px;transition:width .6s ease"></div>'
+    +'<div style="height:100%;width:'+Math.min(tasaRecup,100)+'%;background:'+(tasaRecup>=80?'var(--green)':tasaRecup>=50?'var(--amber)':'var(--red)')+';border-radius:5px"></div>'
     +'</div></div>'
 
-    // ── Proyección 30 días ──
-    +'<div class="card" style="margin-bottom:4px">'
+    // Proyección 30 días
+    +'<div class="card" style="margin-bottom:10px">'
     +'<div class="sec-label" style="margin-bottom:10px">🔮 PROYECCIÓN PRÓXIMOS 30 DÍAS</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center">'
-    +'<div>'
-    +'<div style="font-size:11px;color:var(--text3);margin-bottom:4px">Ingresos esperados</div>'
-    +'<div style="font-size:24px;font-weight:900;color:var(--green);font-family:monospace">'+fmtS(proyeccion30)+'</div>'
-    +'</div>'
+    +'<div><div style="font-size:11px;color:var(--text3);margin-bottom:4px">Ingresos esperados</div>'
+    +'<div style="font-size:28px;font-weight:900;color:var(--green);font-family:monospace">'+fmtS(Math.round(proyeccion30))+'</div></div>'
     +'<div style="text-align:right;font-size:11px;color:var(--text2)">'
     +'<div>'+activos.length+' clientes activos</div>'
-    +'<div style="color:var(--red)">'+enMora.length+' en mora</div>'
+    +'<div style="color:var(--red)">'+clientesEnMora.length+' en mora</div>'
     +'</div></div>'
     +'<div style="margin-top:10px;background:rgba(80,80,255,.08);border:1px solid rgba(80,80,255,.2);border-radius:var(--radius-xs);padding:8px 12px;font-size:11px;color:var(--text2)">'
     +'💡 '+liquidados.length+' préstamos liquidados · '+fmtS(totalRecuperado)+' recuperado en total'
     +'</div></div>'
 
-    // ── Capital de socios / inversionistas ──
+    // Capital socios
     +(()=>{
       const deudasSocio=(()=>{
         try{
           const user=currentUser?currentUser.user:'admin';
           const d=JSON.parse(localStorage.getItem('ef_deudas_'+user)||'[]');
-          return d.filter(x=>x.tipo==='socio_inv'&&saldoDeuda(x)>0);
-        }catch{return[];}
+          if(!Array.isArray(d)) return [];
+          // Need to calculate saldo for each deuda
+          // Use simple remaining balance: monto - totalPagado
+          return d.filter(x=>x.tipo==='socio_inv').filter(x=>{
+            const tp=(x.pagos||[]).reduce((s,p)=>s+(p.valor||0),0);
+            return (x.monto-tp)>0;
+          });
+        }catch(e){return[];}
       })();
-      if(deudasSocio.length===0) return '<div class="card" style="margin-bottom:4px">'
-        +'<div class="sec-label" style="margin-bottom:8px">💼 CAPITAL DE SOCIOS / INVERSIONISTAS</div>'
-        +'<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">'
-        +'Sin capital de socios registrado.<br>'
-        +'<span style="font-size:10px">Registre en Modo Cliente → tipo "Socio / Inversionista"</span>'
+
+      if(deudasSocio.length===0) return '<div class="card">'
+        +'<div class="sec-label" style="margin-bottom:8px">💼 CAPITAL DE SOCIOS</div>'
+        +'<div style="text-align:center;padding:14px;color:var(--text3);font-size:12px">'
+        +'Sin capital de socios registrado.<br><span style="font-size:10px">Registre en Modo Cliente → Tipo "Socio / Inversionista"</span>'
         +'</div></div>';
 
-      const totalCapitalSocio=deudasSocio.reduce((s,d)=>s+saldoDeuda(d),0);
-      const costoCap=deudasSocio.reduce((s,d)=>s+getCuotaDeuda(d),0);
-      const interesesCartera=activos.reduce((s,c)=>{
-        const r=c.meses&&c.meses.length>0?calcMes(c,c.meses.length-1):null;
-        return s+(r?r.interes:0);
-      },0);
-      const gananciaNeta=interesesCartera-costoCap;
-      const margenNeto=totalCapitalSocio>0?((gananciaNeta/totalCapitalSocio)*100).toFixed(1):0;
+      const interesesMes = activos.reduce((s,c) => {
+        const r = calcMes(c, Math.max((c.meses||[]).length-1, 0));
+        return s + (r?r.interes:0);
+      }, 0);
+      const costoCap = deudasSocio.reduce((s,d) => {
+        const tp=(d.pagos||[]).reduce((acc,p)=>acc+(p.valor||0),0);
+        const saldo=Math.max(d.monto-tp,0);
+        return s + Math.round(saldo*(d.tasa||0)/100);
+      }, 0);
+      const totalCapSocio = deudasSocio.reduce((s,d) => {
+        const tp=(d.pagos||[]).reduce((acc,p)=>acc+(p.valor||0),0);
+        return s + Math.max(d.monto-tp, 0);
+      }, 0);
+      const gananciaNeta = interesesMes - costoCap;
+      const margenNeto = totalCapSocio>0?((gananciaNeta/totalCapSocio)*100).toFixed(1):0;
 
-      return '<div class="card" style="margin-bottom:4px">'
+      return '<div class="card">'
         +'<div class="sec-label" style="margin-bottom:10px">💼 CAPITAL DE SOCIOS / INVERSIONISTAS</div>'
-        +deudasSocio.map(d=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border2)">'
-          +'<div><div style="font-size:12px;font-weight:700">'+d.acreedor+'</div>'
-          +'<div style="font-size:10px;color:var(--text3)">'+d.tasa+'%/mes · Costo: '+fmt(getCuotaDeuda(d))+'/mes</div></div>'
-          +'<div style="text-align:right"><div style="font-size:12px;font-weight:700;font-family:monospace;color:var(--red)">'+fmtS(saldoDeuda(d))+'</div>'
-          +'<div style="font-size:9px;color:var(--text3)">saldo</div></div>'
-          +'</div>').join('')
+        +deudasSocio.map(d=>{
+          const tp=(d.pagos||[]).reduce((s,p)=>s+(p.valor||0),0);
+          const saldo=Math.max(d.monto-tp,0);
+          const costoMes=Math.round(saldo*(d.tasa||0)/100);
+          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border2)">'
+            +'<div><div style="font-size:12px;font-weight:700;color:#9C27B0">'+d.acreedor+'</div>'
+            +'<div style="font-size:10px;color:var(--text3)">'+d.tasa+'%/mes · Costo: '+fmt(costoMes)+'/mes</div></div>'
+            +'<div style="text-align:right"><div style="font-size:12px;font-weight:700;font-family:monospace;color:var(--red)">'+fmtS(saldo)+'</div>'
+            +'<div style="font-size:9px;color:var(--text3)">saldo</div></div></div>';
+        }).join('')
         +'<div class="metrics m3" style="margin-top:10px;margin-bottom:10px">'
-        +'<div class="mc"><div class="mc-label">CAPITAL RECIBIDO</div><div class="mc-value c-red">'+fmtS(totalCapitalSocio)+'</div></div>'
-        +'<div class="mc"><div class="mc-label">COSTO MES</div><div class="mc-value c-amber">'+fmtS(Math.round(costoCap))+'</div></div>'
+        +'<div class="mc"><div class="mc-label">CAPITAL RECIBIDO</div><div class="mc-value c-red">'+fmtS(totalCapSocio)+'</div></div>'
+        +'<div class="mc"><div class="mc-label">COSTO MES</div><div class="mc-value c-amber">'+fmtS(costoCap)+'</div></div>'
         +'<div class="mc"><div class="mc-label">GANANCIA NETA</div><div class="mc-value '+(gananciaNeta>0?'c-green':'c-red')+'">'+fmtS(Math.round(gananciaNeta))+'</div></div>'
         +'</div>'
         +'<div style="background:'+(gananciaNeta>0?'rgba(61,220,132,.08)':'rgba(255,107,107,.08)')+';border:1px solid '+(gananciaNeta>0?'var(--green-bdr)':'var(--red-bdr)')+';border-radius:var(--radius-xs);padding:10px 12px;font-size:11px">'
         +'<div style="font-weight:800;color:'+(gananciaNeta>0?'var(--green)':'var(--red)')+';margin-bottom:3px">'+(gananciaNeta>0?'✓ Negocio rentable':'⚠ Negocio en pérdida')+'</div>'
-        +'<div style="color:var(--text2)">Los intereses de su cartera generan <strong style="color:white">'+fmt(Math.round(interesesCartera))+'</strong>/mes y el capital de socios le cuesta <strong style="color:white">'+fmt(Math.round(costoCap))+'</strong>/mes. Margen neto: <strong style="color:'+(gananciaNeta>0?'var(--green)':'var(--red)')+'">'+margenNeto+'%</strong></div>'
+        +'<div style="color:var(--text2)">Intereses cartera: <strong style="color:white">'+fmt(Math.round(interesesMes))+'</strong>/mes · Costo capital socios: <strong style="color:white">'+fmt(costoCap)+'</strong>/mes · Margen: <strong style="color:'+(gananciaNeta>0?'var(--green)':'var(--red)')+'">'+margenNeto+'%</strong></div>'
         +'</div></div>';
     })()
 
