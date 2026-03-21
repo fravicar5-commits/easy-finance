@@ -4883,6 +4883,35 @@ function graficaEvolucionDeuda(did){
   openModal('modal-detalle-deuda');
 }
 
+function calcMesDeuda(d, idx){
+  // Mirrors calcMes() from Modo Prestamista exactly
+  const t=(d.tasa||0)/100;
+  const seg=calcSeguroDeuda(d);
+  let saldo=Math.round(d.monto*(1+t)); // saldo inicio mes 1 = monto + primer interés
+
+  for(let i=0;i<=idx;i++){
+    // Sum all payments for this month (by quincena key i-q1 and i-q2)
+    const pagosQ1=(d.pagos||[]).filter(p=>p.quincena===i+'-q1').reduce((s,p)=>s+(p.valor||0),0);
+    const pagosQ2=(d.pagos||[]).filter(p=>p.quincena===i+'-q2').reduce((s,p)=>s+(p.valor||0),0);
+    // Legacy payments without quincena key (ordered by date)
+    const pagosLegacy=(d.pagos||[]).filter(p=>!p.quincena);
+    const legacyPago=pagosLegacy[i]?pagosLegacy[i].valor:0;
+    const paid=pagosQ1+pagosQ2+legacyPago;
+
+    const cap=Math.max(saldo-paid,0);           // saldo capital after payments
+    const interes=Math.round(cap*t);             // new interest on remaining capital
+    const newSaldo=cap===0?0:Math.round(cap*(1+t)); // new saldo next month
+
+    if(i===idx) return{
+      saldoIni:saldo, paid, cap, interes,
+      newSaldo, paidQ1:pagosQ1, paidQ2:pagosQ2,
+      mes:i
+    };
+    saldo=cap===0?0:newSaldo;
+    if(saldo===0) return null;
+  }
+}
+
 function saldoProyectadoDeuda(d){
   const t=(d.tasa||0)/100;
   const segMes=calcSeguroDeuda(d);
@@ -5689,21 +5718,63 @@ function verDetalleDeuda(did){
     +'</div>'
     +(d.notas?'<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">📝 '+d.notas+'</div>':'')
     +'</div>'
-    // Historial
-    +(hist.length>0
-      ?'<div class="sec-label" style="margin-bottom:8px">HISTORIAL DE PAGOS ('+hist.length+')</div>'
-       +'<div style="display:flex;flex-direction:column;gap:6px">'
-       +hist.map((p,i)=>{
-         return '<div style="display:flex;justify-content:space-between;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:9px 12px">'
-           +'<div><div style="font-size:13px;font-weight:700;font-family:monospace;color:var(--green)">'+fmt(p.valor)+'</div>'
-           +'<div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+(p.metodo?' · '+p.metodo:'')+(p.esHistorico?' · Histórico':'')+'</div>'
-           +(p.nota?'<div style="font-size:10px;color:var(--text2)">'+p.nota+'</div>':'')
-           +'</div>'
-           +'<div style="font-size:10px;color:var(--text3)">#'+(hist.length-i)+'</div>'
-           +'</div>';
-       }).join('')
-       +'</div>'
-      :'<div style="text-align:center;padding:20px;color:var(--text3);font-size:12px">Sin pagos registrados aún</div>')
+    // Historial mes a mes — igual al detalle de cliente en Modo Prestamista
+    +(()=>{
+      const t=(d.tasa||0)/100;
+      if(t===0) return '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Sin tasa configurada</div>';
+
+      // Determine how many months to show
+      const quincenas=calcQuincenasDeuda(d);
+      const hoy=new Date(); hoy.setHours(0,0,0,0);
+      const inicio=new Date(d.fecha+'T00:00:00');
+      const mesesTranscurridos=Math.max(
+        (hoy.getFullYear()-inicio.getFullYear())*12+(hoy.getMonth()-inicio.getMonth()),0
+      );
+      const totalMeses=d.cuotas>0?d.cuotas:Math.max(mesesTranscurridos+1,1);
+      const maxMostrar=Math.min(totalMeses, Math.max(mesesTranscurridos+2, quincenas.length));
+
+      let html='<div class="sec-label" style="margin-bottom:8px">DETALLE MES A MES</div>';
+
+      for(let i=0;i<maxMostrar;i++){
+        const r=calcMesDeuda(d,i);
+        if(!r) break;
+        const q=quincenas[i]||{fq1:'—',fq2:'—'};
+        const esMesActual=i===mesesTranscurridos;
+        const esFuturo=i>mesesTranscurridos;
+        const boxBorder=esMesActual?'border-color:rgba(112,112,255,.4)':esFuturo?'border-color:rgba(255,255,255,.06)':'';
+        const boxBg=esMesActual?'background:rgba(80,80,255,.06)':esFuturo?'background:rgba(255,255,255,.02)':'';
+
+        html+='<div class="card" style="margin-bottom:8px;'+boxBorder+';'+boxBg+'">'
+          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+          +'<div style="font-size:11px;font-weight:800;color:var(--text2)">MES '+(i+1)
+          +(esMesActual?' <span style="background:rgba(112,112,255,.2);color:#7070ff;border-radius:10px;padding:1px 7px;font-size:9px;margin-left:4px">Actual</span>':'')
+          +(esFuturo?' <span style="background:rgba(255,255,255,.06);color:var(--text3);border-radius:10px;padding:1px 7px;font-size:9px;margin-left:4px">Proyección</span>':'')
+          +'</div>'
+          +'<div style="font-size:10px;color:var(--text3)">Q1: '+fd(q.fq1)+' · Q2: '+fd(q.fq2)+'</div>'
+          +'</div>'
+          // stats4 grid — igual al modo prestamista
+          +'<div class="stats4">'
+          +'<div class="stat"><div class="st-label">Saldo inicio</div><div class="st-val c-blue">'+fmt(r.saldoIni)+'</div></div>'
+          +'<div class="stat"><div class="st-label">Total pagado</div><div class="st-val c-green">'+fmt(r.paid)+'</div></div>'
+          +'<div class="stat"><div class="st-label">Saldo capital</div><div class="st-val c-amber">'+fmt(r.cap)+'</div></div>'
+          +'<div class="stat"><div class="st-label">Nuevo interés</div><div class="st-val c-red">'+fmt(r.interes)+'</div></div>'
+          +'</div>'
+          // Nuevo saldo box
+          +(r.newSaldo>0
+            ?'<div class="nsaldo-box"><div class="st-label">Nuevo saldo → siguiente mes</div><div style="font-size:15px;font-weight:800;color:var(--green);font-family:monospace">'+fmt(r.newSaldo)+'</div></div>'
+            :'<div class="nsaldo-box" style="border-color:var(--green-bdr)"><div class="st-label">Estado</div><div style="font-size:13px;font-weight:800;color:var(--green)">✓ PAGADO</div></div>'
+          )
+          // Q1 / Q2 detail if there are payments
+          +(r.paidQ1>0||r.paidQ2>0
+            ?'<div style="display:flex;gap:6px;margin-top:6px">'
+             +(r.paidQ1>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q1 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ1)+'</div></div>':'')
+             +(r.paidQ2>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q2 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ2)+'</div></div>':'')
+             +'</div>'
+            :'')
+          +'</div>';
+      }
+      return html;
+    })()
     +'<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px">'
     // Costo real del crédito
     +(costoTotal>0&&totalInteresesD>0?
