@@ -4566,15 +4566,216 @@ function renderClienteTab(){
   else if(clienteTabActual==='analisis') renderClienteAnalisis();
 }
 
+// ── DIAGNÓSTICO FINANCIERO ──────────────────────────────────────────────────
+function calcScoreFinanciero(){
+  loadDeudas();
+  const budgets=loadBudgets();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0);
+  if(activas.length===0) return {score:100,nivel:'Excelente',color:'#00e678',detalle:[]};
+
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  let penalizacion=0;
+  const detalle=[];
+
+  // 1. % ingresos comprometido (peso: 35%)
+  const mesActual=budgets[budgets.length-1];
+  const ingresos=mesActual?budMonthIngresos(mesActual):0;
+  const totalCuotas=activas.reduce((s,d)=>s+getCuotaDeuda(d),0);
+  const pctIngresos=ingresos>0?Math.round((totalCuotas/ingresos)*100):0;
+  if(pctIngresos>50){penalizacion+=35;detalle.push({tipo:'red',txt:'Más del 50% de ingresos en deudas — situación crítica'});}
+  else if(pctIngresos>30){penalizacion+=20;detalle.push({tipo:'amber',txt:pctIngresos+'% de ingresos comprometido — supera el límite recomendado (30%)'});}
+  else if(pctIngresos>0){detalle.push({tipo:'green',txt:pctIngresos+'% de ingresos en deudas — nivel saludable ✓'});}
+  else{detalle.push({tipo:'text3',txt:'Sin ingresos registrados en presupuesto'});}
+
+  // 2. Tasas de interés (peso: 30%)
+  const tasaMaxLegal=2.13;
+  const deudasUsura=activas.filter(d=>(d.tasa||0)>tasaMaxLegal);
+  const tasaPromedio=activas.reduce((s,d)=>s+(d.tasa||0),0)/activas.length;
+  if(deudasUsura.length>0){penalizacion+=30;detalle.push({tipo:'red',txt:deudasUsura.length+' deuda(s) con tasa superior a la legal ('+tasaMaxLegal+'%/mes)'});}
+  else if(tasaPromedio>1.5){penalizacion+=15;detalle.push({tipo:'amber',txt:'Tasa promedio '+tasaPromedio.toFixed(2)+'%/mes — considere refinanciar'});}
+  else{detalle.push({tipo:'green',txt:'Tasas dentro del rango saludable ✓'});}
+
+  // 3. Número de deudas (peso: 15%)
+  if(activas.length>=5){penalizacion+=15;detalle.push({tipo:'red',txt:activas.length+' deudas activas — demasiadas obligaciones simultáneas'});}
+  else if(activas.length>=3){penalizacion+=8;detalle.push({tipo:'amber',txt:activas.length+' deudas activas — manejable pero vigilar'});}
+  else{detalle.push({tipo:'green',txt:activas.length+' deuda(s) activa(s) — número controlado ✓'});}
+
+  // 4. Deudas en mora (peso: 20%)
+  const enMora=activas.filter(d=>enMoraDeuda(d));
+  if(enMora.length>0){penalizacion+=20;detalle.push({tipo:'red',txt:enMora.length+' deuda(s) en mora — afecta historial y genera intereses extra'});}
+  else{detalle.push({tipo:'green',txt:'Todas las deudas al día ✓'});}
+
+  const score=Math.max(0,100-penalizacion);
+  let nivel,color;
+  if(score>=80){nivel='Excelente';color='#00e678';}
+  else if(score>=60){nivel='Bueno';color='#00c8ff';}
+  else if(score>=40){nivel='Regular';color='#ffb300';}
+  else if(score>=20){nivel='Crítico';color:'#ff6b6b';}
+  else{nivel='Crítico';color='#ff5252';}
+  return{score,nivel,color,detalle,pctIngresos,ingresos,totalCuotas,tasaPromedio,enMora,deudasUsura,activas};
+}
+
+function calcFechaLibertad(){
+  loadDeudas();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0);
+  if(activas.length===0) return null;
+  let maxMeses=0;
+  activas.forEach(d=>{
+    const t=(d.tasa||0)/100;
+    const cuota=getCuotaDeuda(d)-calcSeguroDeuda(d);
+    let saldo=saldoDeuda(d);
+    let meses=0;
+    for(let i=0;i<360&&saldo>100;i++){
+      const int=saldo*t;
+      const abono=Math.max(cuota-int,0);
+      saldo=Math.max(saldo-abono,0);
+      if(saldo>0) saldo=Math.round(saldo*(1+t));
+      meses++;
+    }
+    maxMeses=Math.max(maxMeses,meses);
+  });
+  const fecha=new Date();
+  fecha.setMonth(fecha.getMonth()+maxMeses);
+  return{meses:maxMeses,fecha:fecha.toLocaleDateString('es-CO',{month:'long',year:'numeric'})};
+}
+
+function calcCostoOportunidad(){
+  loadDeudas();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0);
+  if(activas.length===0) return 0;
+  let totalIntereses=0;
+  activas.forEach(d=>{
+    const t=(d.tasa||0)/100;
+    const cuota=getCuotaDeuda(d)-calcSeguroDeuda(d);
+    let saldo=saldoDeuda(d);
+    for(let i=0;i<360&&saldo>100;i++){
+      const int=Math.round(saldo*t);
+      totalIntereses+=int;
+      const abono=Math.max(cuota-int,0);
+      saldo=Math.max(saldo-abono,0);
+      if(saldo>0) saldo=Math.round(saldo*(1+t));
+    }
+  });
+  return totalIntereses;
+}
+
+function renderDiagnostico(){
+  const sc=calcScoreFinanciero();
+  const libertad=calcFechaLibertad();
+  const costoOp=calcCostoOportunidad();
+  const colorMap={red:'var(--red)',amber:'var(--amber)',green:'var(--green)',text3:'var(--text3)'};
+  const emojiMap={red:'❌',amber:'⚠️',green:'✅',text3:'ℹ️'};
+
+  // Score ring
+  const circ=2*Math.PI*36;
+  const offset=circ*(1-sc.score/100);
+
+  let html=
+    // ── Score financiero ──
+    '<div class="card" style="margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:12px">🏥 DIAGNÓSTICO FINANCIERO</div>'
+    +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:14px">'
+    // SVG score ring
+    +'<div style="position:relative;flex-shrink:0;width:84px;height:84px">'
+    +'<svg width="84" height="84" viewBox="0 0 84 84">'
+    +'<circle cx="42" cy="42" r="36" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="8"/>'
+    +'<circle cx="42" cy="42" r="36" fill="none" stroke="'+sc.color+'" stroke-width="8" stroke-linecap="round"'
+    +' stroke-dasharray="'+circ.toFixed(1)+'" stroke-dashoffset="'+offset.toFixed(1)+'" transform="rotate(-90 42 42)"'
+    +' style="transition:stroke-dashoffset .8s ease"/>'
+    +'</svg>'
+    +'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">'
+    +'<div style="font-size:22px;font-weight:900;color:'+sc.color+';font-family:monospace;line-height:1">'+sc.score+'</div>'
+    +'<div style="font-size:8px;color:var(--text3);letter-spacing:.05em">/ 100</div>'
+    +'</div></div>'
+    // Score info
+    +'<div style="flex:1">'
+    +'<div style="font-size:18px;font-weight:900;color:'+sc.color+'">'+sc.nivel+'</div>'
+    +'<div style="font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5">'
+    +(sc.score>=80?'Sus finanzas están bien gestionadas. Siga así.':
+      sc.score>=60?'Hay áreas de mejora. Revise las alertas.':
+      sc.score>=40?'Su situación requiere atención. Tome acción pronto.':
+      'Situación financiera crítica. Actúe de inmediato.')
+    +'</div>'
+    +'</div></div>'
+    // Detalle items
+    +sc.detalle.map(d=>'<div style="display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-top:1px solid var(--border)">'
+      +'<span style="font-size:13px;flex-shrink:0">'+emojiMap[d.tipo]+'</span>'
+      +'<span style="font-size:11px;color:'+colorMap[d.tipo]+';line-height:1.5">'+d.txt+'</span>'
+      +'</div>').join('')
+    +'</div>'
+
+    // ── Semáforo de deudas ──
+    +'<div class="card" style="margin-bottom:12px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">🚦 SEMÁFORO DE DEUDAS</div>'
+    +deudas.filter(d=>saldoDeuda(d)>0).map(d=>{
+      const t=d.tasa||0;
+      const mora=enMoraDeuda(d);
+      const color=mora?'var(--red)':t>2.13?'var(--red)':t>1.5?'var(--amber)':'var(--green)';
+      const semaforo=mora?'🔴':t>2.13?'🔴':t>1.5?'🟡':'🟢';
+      const estado=mora?'En mora':t>2.13?'Tasa ilegal':t>1.5?'Tasa alta':'Saludable';
+      const sp=saldoDeuda(d);
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border2)">'
+        +'<span style="font-size:18px;flex-shrink:0">'+semaforo+'</span>'
+        +'<div style="flex:1;min-width:0">'
+        +'<div style="font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+d.acreedor+'</div>'
+        +'<div style="font-size:10px;color:'+color+'">'+estado+' · '+t+'%/mes</div>'
+        +'</div>'
+        +'<div style="text-align:right;flex-shrink:0">'
+        +'<div style="font-size:12px;font-weight:700;font-family:monospace">'+fmtS(sp)+'</div>'
+        +'<div style="font-size:9px;color:var(--text3)">saldo</div>'
+        +'</div>'
+        +'</div>';
+    }).join('')
+    +(deudas.filter(d=>saldoDeuda(d)>0).length===0
+      ?'<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Sin deudas activas 🎉</div>':'')
+    +'</div>'
+
+    // ── Fecha de libertad financiera ──
+    +(libertad?
+      '<div class="card" style="margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">🎯 FECHA DE LIBERTAD FINANCIERA</div>'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+      +'<div>'
+      +'<div style="font-size:20px;font-weight:900;color:var(--green);text-transform:capitalize">'+libertad.fecha+'</div>'
+      +'<div style="font-size:11px;color:var(--text2);margin-top:2px">Si mantiene el ritmo actual de pagos</div>'
+      +'</div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:24px;font-weight:900;color:var(--green);font-family:monospace">'+libertad.meses+'</div>'
+      +'<div style="font-size:9px;color:var(--text3)">meses</div>'
+      +'</div></div>'
+      // Progress bar
+      +'<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px 12px;font-size:11px;color:var(--text2)">'
+      +'💡 Pagar $200k extra al mes reduciría el plazo aproximadamente 20-30%'
+      +'</div>'
+      +'</div>'
+    :'')
+
+    // ── Costo de oportunidad ──
+    +(costoOp>0?
+      '<div class="card" style="margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">💸 COSTO REAL DE SUS DEUDAS</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'
+      +'<div class="mc"><div class="mc-label">CAPITAL ADEUDADO</div><div class="mc-value c-blue">'+fmtS(deudas.filter(d=>saldoDeuda(d)>0).reduce((s,d)=>s+saldoDeuda(d),0))+'</div></div>'
+      +'<div class="mc"><div class="mc-label">INTERESES FUTUROS</div><div class="mc-value c-red">'+fmtS(costoOp)+'</div></div>'
+      +'</div>'
+      +'<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);border-radius:var(--radius-xs);padding:10px 12px">'
+      +'<div style="font-size:11px;color:var(--red);font-weight:700;margin-bottom:3px">⚠ Si solo paga la cuota mínima...</div>'
+      +'<div style="font-size:12px;color:var(--text2)">Pagará <strong style="color:white">'+fmtS(costoOp)+'</strong> adicionales en intereses — dinero que podría estar ahorrando o invirtiendo.</div>'
+      +'</div>'
+      +'</div>'
+    :'')
+
+    // ── Bola de nieve ──
+    +'<div class="card" style="margin-bottom:12px">'+renderBolaDeNieve()+'</div>'
+    // ── Presupuesto ──
+    +'<div class="card">'+integracionPresupuesto()+'</div>';
+
+  return html;
+}
+
 function renderClienteAnalisis(){
   const el=document.getElementById('cliente-content');if(!el) return;
-  el.innerHTML=
-    '<div style="display:flex;flex-direction:column;gap:14px">'
-    // Bola de nieve
-    +'<div class="card">'+renderBolaDeNieve()+'</div>'
-    // Presupuesto
-    +'<div class="card">'+integracionPresupuesto()+'</div>'
-    +'</div>';
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:0">'+renderDiagnostico()+'</div>';
 }
 
 function renderClienteDashboard(){
