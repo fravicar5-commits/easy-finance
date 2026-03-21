@@ -4883,6 +4883,15 @@ function graficaEvolucionDeuda(did){
   openModal('modal-detalle-deuda');
 }
 
+function toggleMesDeuda(id){
+  const el=document.getElementById(id);
+  const arr=document.getElementById('arr-'+id);
+  if(!el) return;
+  const open=el.style.display==='block';
+  el.style.display=open?'none':'block';
+  if(arr) arr.textContent=open?'▸':'▾';
+}
+
 function calcMesDeuda(d, idx){
   // Mirrors calcMes() from Modo Prestamista exactly
   const t=(d.tasa||0)/100;
@@ -5206,7 +5215,11 @@ function guardarDeuda(){
   const acreedor=document.getElementById('nd-acreedor').value.trim();
   const tipo=document.getElementById('nd-tipo').value;
   const monto=parseFloat(document.getElementById('nd-monto').value)||0;
-  const cuotas=parseInt(document.getElementById('nd-cuotas').value)||12;
+  const cuotasInput=parseInt(document.getElementById('nd-cuotas').value);
+  const tipocuotaVal=document.getElementById('nd-tipocuota').value;
+  const tipoVal=document.getElementById('nd-tipo').value;
+  const defaultCuotas=(tipocuotaVal==='variable'&&['prestamista','amigo','familiar','otro'].includes(tipoVal))?48:12;
+  const cuotas=cuotasInput||defaultCuotas;
   const tipocuota=document.getElementById('nd-tipocuota').value;
   const fecha=document.getElementById('nd-fecha').value;
   const notas=document.getElementById('nd-notas').value.trim();
@@ -5439,7 +5452,11 @@ function guardarEdicionDeuda(did){
   const acreedor=document.getElementById('nd-acreedor').value.trim();
   const tipo=document.getElementById('nd-tipo').value;
   const monto=parseFloat(document.getElementById('nd-monto').value)||0;
-  const cuotas=parseInt(document.getElementById('nd-cuotas').value)||12;
+  const cuotasInput=parseInt(document.getElementById('nd-cuotas').value);
+  const tipocuotaVal=document.getElementById('nd-tipocuota').value;
+  const tipoVal=document.getElementById('nd-tipo').value;
+  const defaultCuotas=(tipocuotaVal==='variable'&&['prestamista','amigo','familiar','otro'].includes(tipoVal))?48:12;
+  const cuotas=cuotasInput||defaultCuotas;
   const tipocuota=document.getElementById('nd-tipocuota').value;
   const fecha=document.getElementById('nd-fecha').value;
   const notas=document.getElementById('nd-notas').value.trim();
@@ -5718,19 +5735,17 @@ function verDetalleDeuda(did){
     +'</div>'
     +(d.notas?'<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">📝 '+d.notas+'</div>':'')
     +'</div>'
-    // Historial mes a mes — igual al detalle de cliente en Modo Prestamista
+    // Historial mes a mes — colapsable como Modo Prestamista
     +(()=>{
       const t=(d.tasa||0)/100;
-      if(t===0) return '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Sin tasa configurada</div>';
-
-      // Determine how many months to show
+      if(t===0||d.tipocuota==='fija') return ''; // fija uses different view
       const quincenas=calcQuincenasDeuda(d);
       const hoy=new Date(); hoy.setHours(0,0,0,0);
       const inicio=new Date(d.fecha+'T00:00:00');
       const mesesTranscurridos=Math.max(
         (hoy.getFullYear()-inicio.getFullYear())*12+(hoy.getMonth()-inicio.getMonth()),0
       );
-      const totalMeses=d.cuotas>0?d.cuotas:Math.max(mesesTranscurridos+1,1);
+      const totalMeses=d.cuotas>0?d.cuotas:Math.max(mesesTranscurridos+2,1);
       const maxMostrar=Math.min(totalMeses, Math.max(mesesTranscurridos+2, quincenas.length));
 
       let html='<div class="sec-label" style="margin-bottom:8px">DETALLE MES A MES</div>';
@@ -5741,37 +5756,57 @@ function verDetalleDeuda(did){
         const q=quincenas[i]||{fq1:'—',fq2:'—'};
         const esMesActual=i===mesesTranscurridos;
         const esFuturo=i>mesesTranscurridos;
-        const boxBorder=esMesActual?'border-color:rgba(112,112,255,.4)':esFuturo?'border-color:rgba(255,255,255,.06)':'';
-        const boxBg=esMesActual?'background:rgba(80,80,255,.06)':esFuturo?'background:rgba(255,255,255,.02)':'';
+        const pagado=r.paid>0;
+        const mesId='mes-det-'+did+'-'+i;
 
-        html+='<div class="card" style="margin-bottom:8px;'+boxBorder+';'+boxBg+'">'
-          +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-          +'<div style="font-size:11px;font-weight:800;color:var(--text2)">MES '+(i+1)
-          +(esMesActual?' <span style="background:rgba(112,112,255,.2);color:#7070ff;border-radius:10px;padding:1px 7px;font-size:9px;margin-left:4px">Actual</span>':'')
-          +(esFuturo?' <span style="background:rgba(255,255,255,.06);color:var(--text3);border-radius:10px;padding:1px 7px;font-size:9px;margin-left:4px">Proyección</span>':'')
+        // Header color
+        const hdrColor=esMesActual?'rgba(80,80,255,.15)':esFuturo?'rgba(255,255,255,.02)':'rgba(61,220,132,.05)';
+        const hdrBorder=esMesActual?'rgba(112,112,255,.4)':esFuturo?'rgba(255,255,255,.06)':pagado?'rgba(61,220,132,.25)':'rgba(255,255,255,.08)';
+
+        html+='<div style="background:'+hdrColor+';border:1px solid '+hdrBorder+';border-radius:var(--radius);margin-bottom:6px;overflow:hidden">'
+          // ── Collapsed header (always visible) ──
+          +'<div data-mid="'+mesId+'" onclick="toggleMesDeuda(this.dataset.mid)" style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer">'
+            +'<div style="display:flex;align-items:center;gap:8px">'
+              +'<div style="font-size:11px;font-weight:800;color:var(--text2)">Mes '+(i+1)+'</div>'
+              +(esMesActual?'<span style="background:rgba(112,112,255,.2);color:#7070ff;border-radius:10px;padding:1px 7px;font-size:9px">Actual</span>':'')
+              +(esFuturo?'<span style="background:rgba(255,255,255,.06);color:var(--text3);border-radius:10px;padding:1px 7px;font-size:9px">Proyección</span>':'')
+              +(pagado&&!esMesActual&&!esFuturo?'<span style="background:rgba(61,220,132,.12);color:var(--green);border-radius:10px;padding:1px 7px;font-size:9px">✓ Pagado</span>':'')
+            +'</div>'
+            +'<div style="display:flex;align-items:center;gap:10px">'
+              +'<div style="text-align:right">'
+                +'<div style="font-size:11px;font-weight:800;font-family:monospace;color:'+(r.newSaldo===0?'var(--green)':esFuturo?'var(--text3)':'var(--amber)')+'">'+fmt(r.newSaldo===0?r.saldoIni:r.newSaldo)+'</div>'
+                +'<div style="font-size:9px;color:var(--text3)">'+fd(q.fq1)+' · '+fd(q.fq2)+'</div>'
+              +'</div>'
+              +'<span id="arr-'+mesId+'" style="color:var(--text3);font-size:12px;transition:transform .2s">'+(esMesActual?'▾':'▸')+'</span>'
+            +'</div>'
           +'</div>'
-          +'<div style="font-size:10px;color:var(--text3)">Q1: '+fd(q.fq1)+' · Q2: '+fd(q.fq2)+'</div>'
+          // ── Expandable detail ──
+          +'<div id="'+mesId+'" style="display:'+(esMesActual?'block':'none')+';padding:0 12px 10px">'
+            +'<div class="stats4" style="margin-bottom:8px">'
+              +'<div class="stat"><div class="st-label">Saldo inicio</div><div class="st-val c-blue">'+fmt(r.saldoIni)+'</div></div>'
+              +'<div class="stat"><div class="st-label">Total pagado</div><div class="st-val c-green">'+fmt(r.paid)+'</div></div>'
+              +'<div class="stat"><div class="st-label">Saldo capital</div><div class="st-val c-amber">'+fmt(r.cap)+'</div></div>'
+              +'<div class="stat"><div class="st-label">Nuevo interés</div><div class="st-val c-red">'+fmt(r.interes)+'</div></div>'
+            +'</div>'
+            +(r.newSaldo>0
+              ?'<div class="nsaldo-box" style="margin-bottom:8px"><div class="st-label">Nuevo saldo → siguiente mes</div><div style="font-size:15px;font-weight:800;color:var(--green);font-family:monospace">'+fmt(r.newSaldo)+'</div></div>'
+              :'<div class="nsaldo-box" style="margin-bottom:8px;border-color:var(--green-bdr)"><div class="st-label">Estado</div><div style="font-size:13px;font-weight:800;color:var(--green)">✓ PAGADO</div></div>'
+            )
+            +(r.paidQ1>0||r.paidQ2>0
+              ?'<div style="display:flex;gap:6px;margin-bottom:8px">'
+                +(r.paidQ1>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q1 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ1)+'</div></div>':'')
+                +(r.paidQ2>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q2 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ2)+'</div></div>':'')
+              +'</div>'
+              :''
+            )
+            // ── Action buttons per month ──
+            +'<div style="display:flex;gap:5px">'
+              +'<button class="btn-cyan-solid" style="flex:1;font-size:10px" data-did="'+did+'" onclick="closeModal(&quot;modal-detalle-deuda&quot;);abrirPagoDeudaQuincenal(parseInt(this.dataset.did))">📅 Registrar pago</button>'
+              +'<button class="btn-cyan-outline" style="font-size:10px;background:rgba(255,179,0,.1);color:#FFB300;border-color:rgba(255,179,0,.3)" data-did="'+did+'" onclick="closeModal(&quot;modal-detalle-deuda&quot;);editarDeuda(parseInt(this.dataset.did))">✏</button>'
+              +'<button class="btn-cyan-outline" style="font-size:10px;background:rgba(255,107,107,.1);color:#ff6b6b;border-color:rgba(255,107,107,.3)" data-did="'+did+'" onclick="closeModal(&quot;modal-detalle-deuda&quot;);eliminarDeuda(parseInt(this.dataset.did))">🗑</button>'
+            +'</div>'
           +'</div>'
-          // stats4 grid — igual al modo prestamista
-          +'<div class="stats4">'
-          +'<div class="stat"><div class="st-label">Saldo inicio</div><div class="st-val c-blue">'+fmt(r.saldoIni)+'</div></div>'
-          +'<div class="stat"><div class="st-label">Total pagado</div><div class="st-val c-green">'+fmt(r.paid)+'</div></div>'
-          +'<div class="stat"><div class="st-label">Saldo capital</div><div class="st-val c-amber">'+fmt(r.cap)+'</div></div>'
-          +'<div class="stat"><div class="st-label">Nuevo interés</div><div class="st-val c-red">'+fmt(r.interes)+'</div></div>'
-          +'</div>'
-          // Nuevo saldo box
-          +(r.newSaldo>0
-            ?'<div class="nsaldo-box"><div class="st-label">Nuevo saldo → siguiente mes</div><div style="font-size:15px;font-weight:800;color:var(--green);font-family:monospace">'+fmt(r.newSaldo)+'</div></div>'
-            :'<div class="nsaldo-box" style="border-color:var(--green-bdr)"><div class="st-label">Estado</div><div style="font-size:13px;font-weight:800;color:var(--green)">✓ PAGADO</div></div>'
-          )
-          // Q1 / Q2 detail if there are payments
-          +(r.paidQ1>0||r.paidQ2>0
-            ?'<div style="display:flex;gap:6px;margin-top:6px">'
-             +(r.paidQ1>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q1 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ1)+'</div></div>':'')
-             +(r.paidQ2>0?'<div style="flex:1;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:6px 8px"><div class="st-label">Q2 pagado</div><div style="font-size:12px;font-weight:700;color:var(--green);font-family:monospace">'+fmt(r.paidQ2)+'</div></div>':'')
-             +'</div>'
-            :'')
-          +'</div>';
+        +'</div>';
       }
       return html;
     })()
