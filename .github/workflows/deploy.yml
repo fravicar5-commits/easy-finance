@@ -23,6 +23,9 @@ jobs:
           SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: echo "$SA_KEY" > /home/runner/service-account.json
 
+      - name: Verificar credenciales
+        run: cat /home/runner/service-account.json | python3 -c "import sys,json; d=json.load(sys.stdin); print('OK tipo:', d.get('type'), 'email:', d.get('client_email'))"
+
       - name: Deploy a Firebase Hosting
         run: firebase deploy --only hosting --project cuadre-app-59c7f
         env:
