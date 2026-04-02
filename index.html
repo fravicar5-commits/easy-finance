@@ -133,7 +133,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .home-logo-text .finance{font-size:38px;font-weight:800;color:var(--ef-pink2);letter-spacing:-.5px}
 .home-tagline{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:48px;letter-spacing:.05em}
 .home-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:400px}
-.home-cards .home-card:last-child:nth-child(odd){grid-column:1 / -1;max-width:calc(50% - 8px);margin:0 auto;width:100%}
+.home-card-dayday{grid-column:1 / -1;max-width:calc(50% - 8px);margin:0 auto;width:100%}
 .home-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
 .home-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(194,24,91,.15),transparent);opacity:0;transition:opacity .2s}
 .home-card:hover::before,.home-card:active::before{opacity:1}
@@ -635,7 +635,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <div class="hc-title" style="color:#00BCD4">Modo Cliente</div>
       <div class="hc-sub">Control de mis deudas y pagos</div>
     </div>
-    <div class="home-card" onclick="goTo('dayday')">
+    <div class="home-card home-card-dayday" onclick="goTo('dayday')">
       <div class="hc-icon">⚡</div>
       <div class="hc-title">Cuadre Day to Day</div>
       <div class="hc-sub">Calculadora, divisas, ahorros y más</div>
@@ -6013,11 +6013,49 @@ function abrirPagoDeuda(did){
   document.getElementById('pd-fecha').value=today();
   document.getElementById('pd-nota').value='';
   document.getElementById('pd-preview').style.display='none';
-  // Show historial
+
+  // ── Sección retroactiva para deudas no-fija (banco, familiar, etc.) ──
   const hist=d.pagos||[];
+  const numPagos=hist.length;
+  let retroHtml='';
+  if(numPagos>0){
+    // Construir opciones de cuotas anteriores basadas en los pagos registrados
+    const inicio=d.fecha?new Date(d.fecha+'T00:00:00'):null;
+    let optsRetro='<option value="">— Sin cuota anterior retroactiva —</option>';
+    if(inicio){
+      // Generar cuotas pasadas según la periodicidad (mensual)
+      const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+      let mes=0;
+      while(true){
+        const fc=new Date(inicio); fc.setMonth(fc.getMonth()+mes+1);
+        if(fc>=hoyD) break;
+        if(mes>=60) break; // máx 5 años
+        const lbl='Cuota '+(mes+1)+' · '+fd(fc.toISOString().split('T')[0]);
+        optsRetro+='<option value="'+mes+'">'+lbl+'</option>';
+        mes++;
+      }
+    }
+    retroHtml='<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.25);border-radius:var(--radius-xs);padding:11px;margin-bottom:10px">'
+      +'<div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:6px">🔁 ¿Es pago de cuota anterior?</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-bottom:8px">Si este pago corresponde a una cuota vencida, selecciónala para legalizarla. Las fechas del mes vigente no se modifican.</div>'
+      +'<select id="pd-retro" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none">'+optsRetro+'</select>'
+      +'</div>';
+  }
+
+  // Inyectar sección retro antes del historial
+  let extraEl=document.getElementById('pd-retro-wrap');
+  if(!extraEl){
+    extraEl=document.createElement('div');
+    extraEl.id='pd-retro-wrap';
+    const histEl=document.getElementById('pd-historial');
+    histEl.parentNode.insertBefore(extraEl,histEl);
+  }
+  extraEl.innerHTML=retroHtml;
+
+  // Show historial
   document.getElementById('pd-historial').innerHTML=hist.length>0
     ?'<div class="sec-label" style="margin-bottom:6px">HISTORIAL</div>'
-      +hist.slice().reverse().map(p=>'<div class="cliente-pago-item"><div><div style="font-weight:700;font-size:12px">'+fmt(p.valor)+'</div><div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+' · '+(p.metodo||'')+'</div></div><div style="font-size:10px;color:var(--text3)">'+( p.nota||'')+'</div></div>').join('')
+      +hist.slice().reverse().map(p=>'<div class="cliente-pago-item"><div><div style="font-weight:700;font-size:12px">'+fmt(p.valor)+'</div><div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+' · '+(p.metodo||'')+(p.esRetro?' · <span style="color:#00BCD4">Retro cuota '+(p.cuotaIdxRetro+1)+'</span>':'')+'</div></div><div style="font-size:10px;color:var(--text3)">'+(p.nota||'')+'</div></div>').join('')
     :'';
   openModal('modal-pago-deuda');
 }
@@ -6040,12 +6078,35 @@ function guardarPagoDeuda(){
   const fecha=document.getElementById('pd-fecha').value||today();
   const metodo=document.getElementById('pd-metodo').value;
   const nota=document.getElementById('pd-nota').value.trim();
+  const retroEl=document.getElementById('pd-retro');
+  const retroIdx=retroEl&&retroEl.value!==''?parseInt(retroEl.value):null;
   if(!d.pagos) d.pagos=[];
+
+  // Pago principal
   d.pagos.push({id:Date.now(),valor,fecha,metodo,nota});
+
+  // Si es retroactivo: registrar entrada contable de legalización
+  // El pago real ya se registró arriba; esto solo marca la cuota anterior como legalizada
+  // NO modifica fechas ni compromisos del mes vigente
+  if(retroIdx!==null&&retroIdx>=0){
+    d.pagos.push({
+      id:Date.now()+1,
+      valor:0, // entrada contable, el valor real ya está en el pago principal
+      fecha,
+      metodo,
+      nota:'[Legalización cuota '+(retroIdx+1)+'] '+nota,
+      cuotaIdx:retroIdx,
+      cuotaIdxRetro:retroIdx,
+      esRetro:true
+    });
+  }
+
+  d.pagos.sort((a,b)=>a.fecha.localeCompare(b.fecha));
   saveDeudas();
   closeModal('modal-pago-deuda');
   renderClienteDeudas();
-  toast('Pago registrado');
+  const retroMsg=retroIdx!==null?' + Cuota '+(retroIdx+1)+' legalizada':'';
+  toast('✓ Pago registrado'+retroMsg,'success',4000);
 }
 
 // ── PAGO CUOTA FIJA (BANCO) con opción retro ──────────────────────────────────
