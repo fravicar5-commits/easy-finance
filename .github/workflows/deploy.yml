@@ -18,11 +18,6 @@ jobs:
       - name: Instalar Firebase CLI
         run: npm install -g firebase-tools
 
-      - name: Escribir credenciales
-        env:
-          SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: echo "$SA_KEY" > /home/runner/service-account.json
-
       - name: Autenticar con gcloud
         uses: google-github-actions/auth@v2
         with:
