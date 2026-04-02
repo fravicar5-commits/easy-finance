@@ -23,7 +23,10 @@ jobs:
           SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: echo "$SA_KEY" > /home/runner/service-account.json
 
-      - name: Autenticar con Firebase
-        run: |
-          firebase deploy --only hosting --project cuadre-app-59c7f \
-            --service-account /home/runner/service-account.json
+      - name: Autenticar con gcloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Deploy a Firebase Hosting
+        run: firebase deploy --only hosting --project cuadre-app-59c7f
