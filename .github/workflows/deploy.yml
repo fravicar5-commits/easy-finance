@@ -9,10 +9,14 @@ jobs:
     steps:
       - name: Checkout repositorio
         uses: actions/checkout@v4
-      - name: Deploy a Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          projectId: cuadre-app-59c7f
-          channelId: live
+          node-version: '20'
+
+      - name: Instalar Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy a Firebase Hosting
+        run: firebase deploy --only hosting --token "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" --project cuadre-app-59c7f
