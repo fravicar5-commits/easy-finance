@@ -21,9 +21,9 @@ jobs:
       - name: Escribir credenciales
         env:
           SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-        run: echo "$SA_KEY" > service-account.json
+        run: echo "$SA_KEY" > /home/runner/service-account.json
 
       - name: Deploy a Firebase Hosting
         run: firebase deploy --only hosting --project cuadre-app-59c7f
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: service-account.json
+          GOOGLE_APPLICATION_CREDENTIALS: /home/runner/service-account.json
