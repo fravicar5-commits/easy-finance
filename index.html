@@ -482,6 +482,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .recovery-result-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px}
 .recovery-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
 .login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
+/* ── SPLASH SCREEN ── */
+.splash-screen{position:fixed;inset:0;background:linear-gradient(160deg,#090918 0%,#1a0035 60%,#0a0a18 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;transition:opacity .5s ease}
+.splash-logo-box{width:90px;height:90px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 48px rgba(80,80,255,.5);animation:splash-pop .6s cubic-bezier(.34,1.56,.64,1) both}
+.splash-logo-letter{font-size:50px;font-weight:900;color:white;line-height:1}
+.splash-title{font-size:32px;font-weight:900;color:white;margin-top:16px;letter-spacing:-.02em;animation:splash-fade .6s .3s both}
+.splash-sub{font-size:13px;color:rgba(255,255,255,.4);margin-top:6px;animation:splash-fade .6s .5s both}
+.splash-bar-wrap{width:160px;height:3px;background:rgba(255,255,255,.1);border-radius:2px;margin-top:40px;overflow:hidden;animation:splash-fade .4s .4s both}
+.splash-bar-fill{height:100%;background:linear-gradient(90deg,#5050ff,#cc44ff);border-radius:2px;animation:splash-bar 1.4s .3s ease-out both}
+@keyframes splash-pop{from{transform:scale(.4) rotate(-10deg);opacity:0}to{transform:scale(1) rotate(0);opacity:1}}
+@keyframes splash-fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes splash-bar{from{width:0}to{width:100%}}
 .login-logo{text-align:center;margin-bottom:32px}
 .login-logo-text{font-size:42px;font-weight:900;color:white}
 .login-logo-text{background:linear-gradient(135deg,#7070ff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
@@ -1974,8 +1985,89 @@ function renderCajaSidebar(){
     +items;
 }
 
-// ══ DASHBOARD ════════════════════════════════════════════════════════════════
-function renderDashboard(){
+// ── RESUMEN WHATSAPP ──────────────────────────────────────────────────────────
+function enviarResumenWA(){
+  load();
+  const hoy=new Date();
+  const hoyStr=fd(today());
+  const activos=clients.filter(c=>saldoPendiente(c)>0);
+  const mora=clients.filter(c=>diasMora(c)>0);
+  const capitalCalle=activos.reduce((s,c)=>s+saldoPendiente(c),0);
+  const capitalPrestado=clients.reduce((s,c)=>s+c.monto,0);
+  const totalRec=clients.reduce((s,c)=>s+totalPagado(c),0);
+  const totalInt=clients.reduce((s,c)=>s+totalIntereses(c),0);
+  const mesAct=hoy.getMonth(),anioAct=hoy.getFullYear();
+  let intMes=0;
+  clients.forEach(c=>{
+    const t=c.tasa/100;let s=Math.round(c.monto*(1+t));
+    c.meses.forEach(m=>{
+      const fq2=new Date(m.fq2+'T12:00:00');
+      const paid=(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0);
+      const cap=Math.max(s-paid,0);
+      if(fq2.getMonth()===mesAct&&fq2.getFullYear()===anioAct) intMes+=Math.round(cap*t);
+      s=Math.round(cap*(1+t));
+    });
+  });
+
+  // Cobros próximos (próximos 7 días)
+  const en7dias=new Date(hoy); en7dias.setDate(en7dias.getDate()+7);
+  const proxCobros=activos.filter(c=>{
+    const pp=proximoPago(c);
+    if(!pp) return false;
+    const ppDate=new Date(pp.fecha+'T00:00:00');
+    return ppDate>=hoy&&ppDate<=en7dias;
+  });
+
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.id='resumen-wa-overlay';
+
+  // Previsualización del mensaje
+  const msg=
+    '📊 *RESUMEN CUADRE — '+hoyStr+'*\n\n'
+    +'💼 *CARTERA*\n'
+    +'• Clientes activos: '+activos.length+'\n'
+    +'• Capital en calle: $'+fmt(capitalCalle)+'\n'
+    +'• Total prestado: $'+fmt(capitalPrestado)+'\n'
+    +'• Recuperado: $'+fmt(totalRec)+'\n\n'
+    +'💹 *RENDIMIENTO*\n'
+    +'• Intereses este mes: $'+fmt(intMes)+'\n'
+    +'• Total intereses cobrados: $'+fmt(totalInt)+'\n\n'
+    +(mora.length>0
+      ?'⚠️ *EN MORA ('+mora.length+')*\n'
+        +mora.slice(0,5).map(c=>'• '+c.nombre+' — '+diasMora(c)+'d — $'+fmt(saldoPendiente(c))).join('\n')+'\n\n'
+      :'✅ *Sin clientes en mora*\n\n')
+    +(proxCobros.length>0
+      ?'📅 *COBROS PRÓXIMOS 7 DÍAS*\n'
+        +proxCobros.map(c=>{const pp=proximoPago(c);return'• '+c.nombre+' — '+fd(pp.fecha)+' — $'+fmt(saldoPendiente(c));}).join('\n')+'\n\n'
+      :'')
+    +'_Generado por Cuadre · '+hoyStr+'_';
+
+  overlay.innerHTML=
+    '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto">'
+    +'<div style="font-size:15px;font-weight:800;margin-bottom:4px">📊 Resumen para WhatsApp</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:14px">Vista previa del mensaje</div>'
+    +'<div style="background:#dcf8c6;border-radius:10px;padding:14px;font-size:12px;color:#111;white-space:pre-wrap;font-family:sans-serif;margin-bottom:14px;line-height:1.6">'+msg.replace(/\*/g,'<b>').replace(/<b>([^<]*)<\/b>/g,'<b>$1</b>')+'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="document.getElementById(\'resumen-wa-overlay\').remove()" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text);font-family:Nunito,sans-serif;font-size:13px;cursor:pointer">Cancelar</button>'
+    +'<button onclick="copiarResumenWA()" style="flex:2;padding:10px;background:#25D366;color:white;border:none;border-radius:var(--radius-xs);font-family:Nunito,sans-serif;font-size:13px;font-weight:700;cursor:pointer">📱 Copiar y abrir WhatsApp</button>'
+    +'</div>'
+    +'</div>';
+  overlay._msg=msg;
+  document.body.appendChild(overlay);
+}
+
+function copiarResumenWA(){
+  const overlay=document.getElementById('resumen-wa-overlay');
+  if(!overlay) return;
+  const msg=overlay._msg;
+  navigator.clipboard.writeText(msg)
+    .then(()=>{toast('✓ Copiado — abriendo WhatsApp','success',3000);overlay.remove();setTimeout(()=>window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'),500);})
+    .catch(()=>{
+      const t=document.createElement('textarea');t.value=msg;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);
+      toast('✓ Copiado','success');overlay.remove();setTimeout(()=>window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'),500);
+    });
+}
   activeId=null;renderSidebar();
   const tb=document.getElementById('topbar-estado-btn');
   if(tb) tb.style.display='none';
@@ -2010,7 +2102,9 @@ function renderDashboard(){
     +'<div class="cuadre-logo-icon" style="width:20px;height:20px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:6px;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:900;color:white;line-height:1">C</span></div>'
     +'Dashboard</div>'
     +'<div class="main-sub">'+fd(today())+' · '+clients.length+' clientes</div></div>'
-    +'<div class="header-actions"><button class="btn btn-pink" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button></div>'
+    +'<div class="header-actions"><button class="btn btn-pink" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>'
+    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" onclick="enviarResumenWA()">📊 Resumen WA</button>'
+    +'</div>'
     +'</div>'
     +'<div class="content">'
     +'<div class="sec-label">Capital y préstamos</div>'
@@ -2119,7 +2213,7 @@ function renderDetail(){
     +(c.tipocuota==='fija'?' · Cuota fija':' · Variable')
     +(c.tel?' · '+c.tel:'')+'</div></div>'
     +'<div class="header-actions">'
-    +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700">⌂ Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">📄 Estado</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
+    +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700">⌂ Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">📄 Estado</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn" style="background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3);font-size:11px" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" data-tip="Calcular nueva cuota si se amplía el plazo">🔄 Refinanciar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
     +'<div class="content">'
     +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
     +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
@@ -2134,6 +2228,40 @@ function renderDetail(){
     +'<div class="mc"><div class="mc-label">Saldo inicial</div><div class="mc-value c-accent">'+fmt(Math.round(c.monto*(1+c.tasa/100)))+'</div></div>'
     +'<div class="mc"><div class="mc-label">Ganancia neta</div><div class="mc-value c-green">'+(gan>0?fmt(gan):'—')+'</div></div>'
     +'</div>'
+    // Indicador de rentabilidad del cliente
+    +(()=>{
+      const mesesActivos=c.meses.filter(m=>(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0)>0).length||1;
+      const mesesConMora=c.meses.filter(m=>m.enMora||diasMora(c)>0&&m===c.meses[c.meses.length-1]).length;
+      const pctPagado=c.monto>0?Math.round((tp/c.monto)*100):0;
+      // Score: base en intereses generados vs capital, penaliza mora
+      let score=0;
+      const roi=c.monto>0?Math.round((ti/c.monto)*100):0;
+      if(roi>=20) score+=40; else if(roi>=10) score+=25; else if(roi>=5) score+=15; else score+=5;
+      if(mora===0) score+=30; else if(mora<=7) score+=15; else if(mora<=30) score+=5;
+      if(pctPagado>=80) score+=20; else if(pctPagado>=50) score+=12; else if(pctPagado>=20) score+=6;
+      if(tp>0&&mora===0) score+=10; // cumplidor
+      score=Math.min(score,100);
+      const nivel=score>=80?'⭐ Excelente':score>=60?'👍 Bueno':score>=40?'😐 Regular':'⚠️ Riesgoso';
+      const color=score>=80?'var(--green)':score>=60?'#00BCD4':score>=40?'var(--amber)':'var(--red)';
+      const bgColor=score>=80?'rgba(61,220,132,.1)':score>=60?'rgba(0,188,212,.1)':score>=40?'rgba(245,166,35,.1)':'rgba(255,107,107,.1)';
+      return '<div style="background:'+bgColor+';border:1px solid '+color.replace('var(--green)','rgba(61,220,132,.3)').replace('var(--amber)','rgba(245,166,35,.3)').replace('var(--red)','rgba(255,107,107,.3)')+';border-radius:var(--radius);padding:12px 14px;margin-bottom:14px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+        +'<div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">📊 Índice de Rentabilidad</div>'
+        +'<div style="font-size:13px;font-weight:800;color:'+color+'">'+nivel+'</div>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">'
+        +'<div style="height:100%;width:'+score+'%;background:'+color+';border-radius:4px;transition:width .6s ease"></div>'
+        +'</div>'
+        +'<div style="font-size:18px;font-weight:900;font-family:monospace;color:'+color+';min-width:40px;text-align:right">'+score+'%</div>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px;font-size:10px;color:var(--text3)">'
+        +'<div>ROI: <strong style="color:'+color+'">'+roi+'%</strong></div>'
+        +'<div>Mora: <strong style="color:'+(mora===0?'var(--green)':'var(--red)')+'">'+( mora===0?'Sin mora':mora+'d')+'</strong></div>'
+        +'<div>Avance: <strong style="color:var(--text2)">'+pctPagado+'%</strong></div>'
+        +'</div>'
+        +'</div>';
+    })()
     +cfCard
     +(c.notas?'<div class="card" style="margin-bottom:14px;font-size:12px;color:var(--text2)">📝 '+c.notas+'</div>':'')
     +'<div class="sec-label">Historial mensual</div>'
@@ -5048,9 +5176,20 @@ function renderClienteDeudas(){
     return'<div class="deuda-card-item">'
       +'<div class="deuda-accent" style="background:'+color+'"></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
-      +'<div><div class="deuda-acreedor-name">'+d.acreedor+'</div>'
+      +'<div style="flex:1;min-width:0"><div class="deuda-acreedor-name">'+d.acreedor+'</div>'
       +'<div class="deuda-meta-txt">'+d.tipo.charAt(0).toUpperCase()+d.tipo.slice(1)+' · '+d.tasa+'% mensual · '+cuotasInfo+'</div></div>'
-      +'<span style="background:'+(mora?'rgba(239,83,80,.15)':'rgba(76,175,80,.15)')+';color:'+(mora?'#ef5350':'#4CAF50')+';border:1px solid '+(mora?'rgba(239,83,80,.3)':'rgba(76,175,80,.3)')+';border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700">'+(mora?'⚠ En mora':'✓ Al día')+'</span>'
+      // Mini dona SVG
+      +(()=>{
+        const r=20,stroke=5,norm=r-stroke/2;
+        const circ=2*Math.PI*norm;
+        const dash=circ*(pct/100);
+        return '<svg width="48" height="48" viewBox="0 0 48 48" style="flex-shrink:0;margin-left:8px">'
+          +'<circle cx="24" cy="24" r="'+norm+'" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="'+stroke+'"/>'
+          +'<circle cx="24" cy="24" r="'+norm+'" fill="none" stroke="'+color+'" stroke-width="'+stroke+'" stroke-dasharray="'+dash+' '+circ+'" stroke-dashoffset="'+(circ/4)+'" stroke-linecap="round"/>'
+          +'<text x="24" y="28" text-anchor="middle" font-size="10" font-weight="800" fill="'+color+'" font-family="monospace">'+pct+'%</text>'
+          +'</svg>';
+      })()
+      +'<span style="background:'+(mora?'rgba(239,83,80,.15)':'rgba(76,175,80,.15)')+';color:'+(mora?'#ef5350':'#4CAF50')+';border:1px solid '+(mora?'rgba(239,83,80,.3)':'rgba(76,175,80,.3)')+';border-radius:20px;padding:2px 8px;font-size:9px;font-weight:700;white-space:nowrap;align-self:flex-start;margin-left:4px">'+(mora?'⚠ Mora':'✓ Al día')+'</span>'
       +'</div>'
       +'<div style="font-size:10px;color:var(--text3);margin-bottom:4px">Progreso: '+pct+'%</div>'
       +'<div class="deuda-prog-bar"><div class="deuda-prog-fill" style="width:'+pct+'%;background:'+color+'"></div></div>'
@@ -7392,6 +7531,75 @@ function enviarSiguienteBroadcast(lista,msg){
 // ══ RECOVERY / NEGOTIATION ══════════════════════════════════════════════════
 let recoveryCtx={cid:null,monto:0,opcion:0};
 
+// ── CALCULADORA DE REFINANCIACIÓN ─────────────────────────────────────────────
+function abrirRefinanciacion(cid){
+  load();
+  const c=clients.find(x=>x.id===cid);if(!c) return;
+  const sp=saldoPendiente(c);
+  const tasa=c.tasa||0;
+  const overlay=document.createElement('div');
+  overlay.id='refin-overlay';
+  overlay.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+  const cuotasActuales=c.cuotas||12;
+  overlay.innerHTML=
+    '<div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:20px;width:100%;max-width:400px">'
+    +'<div style="font-size:15px;font-weight:800;margin-bottom:4px">🔄 Calculadora de Refinanciación</div>'
+    +'<div style="font-size:11px;color:var(--text3);margin-bottom:16px">'+c.nombre+' · Saldo actual: <strong style="color:var(--amber)">'+fmt(sp)+'</strong></div>'
+    +'<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;display:grid;grid-template-columns:1fr 1fr;gap:6px">'
+    +'<div><span style="color:var(--text3)">Saldo a refinanciar</span><br><strong style="font-family:monospace;color:var(--amber)">'+fmt(sp)+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Tasa actual</span><br><strong style="font-family:monospace">'+tasa+'% mensual</strong></div>'
+    +'<div><span style="color:var(--text3)">Cuotas originales</span><br><strong>'+cuotasActuales+'</strong></div>'
+    +'<div><span style="color:var(--text3)">Cuota original</span><br><strong style="font-family:monospace">'+fmt(Math.round(calcCuotaFija(sp,tasa/100,cuotasActuales)))+'</strong></div>'
+    +'</div>'
+    +'<div class="fr"><label>Nueva tasa mensual (%)</label>'
+    +'<input type="number" id="refin-tasa" value="'+tasa+'" step="0.1" min="0.1" oninput="calcRefinanciacion()" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:14px;outline:none"></div>'
+    +'<div class="fr"><label>Nuevo plazo (meses)</label>'
+    +'<input type="number" id="refin-cuotas" value="'+cuotasActuales+'" min="1" max="120" oninput="calcRefinanciacion()" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:14px;outline:none"></div>'
+    +'<div id="refin-resultado" style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.25);border-radius:var(--radius-xs);padding:14px;margin-bottom:14px;min-height:80px"></div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button onclick="document.getElementById(\'refin-overlay\').remove()" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text);font-family:Nunito,sans-serif;font-size:13px;cursor:pointer">Cerrar</button>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+  // Guardar saldo para calcular
+  overlay._sp=sp;
+  overlay._tasa=tasa;
+  overlay._cuotas=cuotasActuales;
+  calcRefinanciacion();
+}
+
+function calcRefinanciacion(){
+  const overlay=document.getElementById('refin-overlay');if(!overlay) return;
+  const sp=overlay._sp,tasaOrig=overlay._tasa,cuotasOrig=overlay._cuotas;
+  const nuevaTasa=parseFloat(document.getElementById('refin-tasa')?.value)||0;
+  const nuevasCuotas=parseInt(document.getElementById('refin-cuotas')?.value)||0;
+  const res=document.getElementById('refin-resultado');if(!res) return;
+  if(!nuevaTasa||!nuevasCuotas){res.innerHTML='<span style="color:var(--text3);font-size:12px">Ingrese tasa y plazo para calcular</span>';return;}
+  const nuevaCuota=Math.round(calcCuotaFija(sp,nuevaTasa/100,nuevasCuotas));
+  const cuotaOrig=Math.round(calcCuotaFija(sp,tasaOrig/100,cuotasOrig));
+  const totalNuevo=nuevaCuota*nuevasCuotas;
+  const totalOrig=cuotaOrig*cuotasOrig;
+  const diferencia=nuevaCuota-cuotaOrig;
+  const diferenciaTotal=totalNuevo-totalOrig;
+  const ahorra=diferencia<0;
+  res.innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">'
+    +'<div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">NUEVA CUOTA MENSUAL</div>'
+    +'<div style="font-size:22px;font-weight:900;font-family:monospace;color:#00BCD4">'+fmt(nuevaCuota)+'</div></div>'
+    +'<div style="text-align:center"><div style="font-size:10px;color:var(--text3);margin-bottom:4px">TOTAL A PAGAR</div>'
+    +'<div style="font-size:18px;font-weight:800;font-family:monospace;color:var(--amber)">'+fmt(totalNuevo)+'</div></div>'
+    +'</div>'
+    +'<div style="font-size:11px;border-top:1px solid rgba(0,188,212,.2);padding-top:8px;display:flex;justify-content:space-between">'
+    +'<span style="color:var(--text3)">Diferencia cuota mensual:</span>'
+    +'<strong style="color:'+(ahorra?'var(--green)':'var(--red)')+'">'+(ahorra?'':'+')+fmt(Math.abs(diferencia))+'/mes</strong>'
+    +'</div>'
+    +'<div style="font-size:11px;margin-top:4px;display:flex;justify-content:space-between">'
+    +'<span style="color:var(--text3)">Diferencia total del crédito:</span>'
+    +'<strong style="color:'+(diferenciaTotal<=0?'var(--green)':'var(--red)')+'">'+(diferenciaTotal>0?'+':'')+fmt(Math.abs(diferenciaTotal))+'</strong>'
+    +'</div>'
+    +'<div style="font-size:10px;margin-top:6px;color:var(--text3);text-align:center">'+(ahorra?'✅ Esta refinanciación reduce su cuota mensual':'⚠️ Esta refinanciación aumenta el costo total')+'</div>';
+}
+
 function abrirRecuperacion(cid){
   const c=clients.find(x=>x.id===cid);if(!c) return;
   const sp=saldoPendiente(c);
@@ -7786,6 +7994,19 @@ setTimeout(()=>{
 </div>
 
 
+<!-- Splash Screen -->
+<div id="splash-screen" class="splash-screen">
+  <div class="splash-logo-box"><span class="splash-logo-letter">C</span></div>
+  <div class="splash-title">Cuadre</div>
+  <div class="splash-sub">Tu solución financiera personal</div>
+  <div class="splash-bar-wrap"><div class="splash-bar-fill"></div></div>
+</div>
+<script>
+(function(){
+  const sp=document.getElementById('splash-screen');
+  if(!sp) return;
+  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>sp.remove(),500);},1600);
+})();
+</script>
 </body>
-</html>+(c.socio?\'<button class="socio-btn" onclick="verSocioDistribucion(\'+c.id+\')"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">\'+c.socio.nombre+\' · \'+c.socio.tasa+\'% socio / \'+c.socio.tasaMia+\'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'")
-    +(c.socio?\'<button class="socio-btn" onclick="verSocioDistribucion(\'+c.id+\')"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">\'+c.socio.nombre+\' · \'+c.socio.tasa+\'% socio / \'+c.socio.tasaMia+\'% mío</div></div><span style="color:var(--text3)">▶</span></button>\':\')
+</html>
