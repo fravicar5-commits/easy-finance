@@ -118,6 +118,7 @@ body.light-mode .note-card{background:#ffffff}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+@keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.4)}50%{box-shadow:0 0 0 6px rgba(239,83,80,0)}}
 
 /* ── SCREENS ── */
 .screen{display:none;height:100vh;overflow:hidden;flex-direction:column}
@@ -2266,124 +2267,125 @@ function eliminarPago(){
 // ══ ESTADO DE CUENTA ══════════════════════════════════════════════════════════
 function estadoCuenta(id){
   const c=clients.find(x=>x.id===id);if(!c) return;
-  const sp=saldoPendiente(c),tp=totalPagado(c),ti=totalIntereses(c);
+  const sp=saldoPendiente(c),tp=totalPagado(c);
   const pp=proximoPago(c),mora=diasMora(c),hoy=fd(today());
   const hoyDate=new Date();
-  let historial='';
+  const refNum='AP-'+String(Math.floor(Math.random()*90000)+10000);
+  const genero=c.nombre&&c.nombre.trim().split(' ')[0].slice(-1).toLowerCase()==='a'?'a':'';
+  const tratamiento='El señor'+(genero==='a'?'a':'')+' '+c.nombre;
+
+  // Historial de pagos (solo fecha, monto, método — sin capital/interés)
+  let filasHistorial='';
+  let contPagos=0;
   for(let i=0;i<c.meses.length;i++){
-    const r=calcMes(c,i);if(!r) break;
     const m=c.meses[i];
-    // Only show months that have started (fq1 <= today) or have payments
     const fq1Date=new Date(m.fq1+'T00:00:00');
-    const hasPagos=(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0)>0;
-    if(fq1Date>hoyDate && !hasPagos) break;
-    historial+='<tr style="border-bottom:1px solid #e0e0e0">'
-      +'<td style="padding:6px 8px">Mes '+m.mes+'</td>'
-      +'<td style="padding:6px 8px">'+fd(m.fq1)+'</td>'
-      +'<td style="padding:6px 8px">'+fd(m.fq2)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right">'+fmt(r.saldoIni)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;color:#2e7d32;font-weight:700">'+fmt(r.paid)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right">'+fmt(r.cap)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;color:#c62828">'+fmt(r.interes)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;font-weight:700;color:'+(r.newSaldo===0?'#2e7d32':'#1565c0')+'">'+( r.newSaldo===0?'PAGADO':fmt(r.newSaldo))+'</td>'
-      +'</tr>';
-    if(r.newSaldo===0) break;
-  }
-
-  // Build amort table string for fixed
-  let amortHTML='';
-  if(c.tipocuota==='fija'){
-    const t2=c.tasa/100,cf=calcCuotaFija(c.monto,t2,c.cuotas);
-    let s=c.monto;let rows='';
-    for(let i=0;i<c.cuotas;i++){
-      const sIni=Math.round(s*(1+t2)),interes=Math.round(s*t2),aK=Math.round(cf-interes),sFin=Math.max(sIni-Math.round(cf),0);
-      const bg=i%2===0?'#fff3e0':'white';
-      rows+='<tr style="border-bottom:1px solid #e0e0e0;background:'+bg+'">'
-        +'<td style="padding:5px 8px;text-align:center">'+(i+1)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right">'+fmt(sIni)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+fmt(Math.round(cf))+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#c62828">'+fmt(interes)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;color:#2e7d32">'+fmt(aK)+'</td>'
-        +'<td style="padding:5px 8px;text-align:right;font-weight:700">'+(sFin<=0?'PAGADO':fmt(sFin))+'</td>'
+    const pagos=[
+      {val:m.pq1a,fecha:m.dq1a,met:m.mq1a},{val:m.pq1b,fecha:m.dq1b,met:m.mq1b},
+      {val:m.pq2a,fecha:m.dq2a,met:m.mq2a},{val:m.pq2b,fecha:m.dq2b,met:m.mq2b}
+    ].filter(p=>p.val>0);
+    if(fq1Date>hoyDate && pagos.length===0) break;
+    pagos.forEach(p=>{
+      contPagos++;
+      filasHistorial+='<tr style="border-bottom:1px solid #e8e8e8;background:'+(contPagos%2===0?'#fafafa':'#fff')+'">'
+        +'<td style="padding:7px 10px">'+fd(p.fecha||m.fq1)+'</td>'
+        +'<td style="padding:7px 10px;font-weight:700;color:#2e7d32;text-align:right">'+fmt(p.val)+'</td>'
+        +'<td style="padding:7px 10px;color:#555;text-align:center">'+(p.met||'Efectivo')+'</td>'
         +'</tr>';
-      s=Math.max(s-aK,0);if(s<=0) break;
-    }
-    amortHTML='<div style="margin-top:16px">'
-      +'<div style="font-size:13px;font-weight:700;text-transform:uppercase;color:#424242;margin-bottom:8px">Tabla de amortización</div>'
-      +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
-      +'<thead><tr style="background:#e65100;color:white">'
-      +'<th style="padding:6px 8px">Cuota</th><th style="padding:6px 8px;text-align:right">Saldo Inicio</th>'
-      +'<th style="padding:6px 8px;text-align:right">Cuota</th><th style="padding:6px 8px;text-align:right">Interés</th>'
-      +'<th style="padding:6px 8px;text-align:right">Abono Cap.</th><th style="padding:6px 8px;text-align:right">Saldo Final</th>'
-      +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+    });
   }
+  if(!filasHistorial) filasHistorial='<tr><td colspan="3" style="padding:10px;text-align:center;color:#999">Sin pagos registrados</td></tr>';
 
-  const printHTML='<div style="max-width:700px;margin:0 auto;font-family:Arial,sans-serif;color:#212121;padding:20px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;border-bottom:3px solid #C2185B;padding-bottom:14px">'
-    +'<div><div style="font-size:22px;font-weight:800;color:#2D0060">Cuadre<span style="color:#C2185B">Finance</span></div>'
-    +'<div style="font-size:20px;font-weight:700;color:#212121;margin-top:4px">ESTADO DE CUENTA</div>'
-    +'<div style="font-size:12px;color:#757575">Fecha de corte: '+hoy+'</div></div>'
-    +'<div style="text-align:right;font-size:12px;color:#757575"><div>ID-'+String(c.id).padStart(4,'0')+'</div><div>'+hoy+'</div></div>'
-    +'</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">'
-    +'<div style="background:#f5f5f5;border-radius:8px;padding:14px">'
-    +'<div style="font-size:10px;color:#757575;text-transform:uppercase;margin-bottom:4px">Cliente</div>'
-    +'<div style="font-size:18px;font-weight:800">'+c.nombre+'</div>'
-    +(c.tel?'<div style="font-size:12px;color:#555">📞 '+c.tel+'</div>':'')
-    +(c.cedula?'<div style="font-size:12px;color:#555">🪪 CC '+c.cedula+'</div>':'')
-    +'</div>'
-    +'<div style="background:#f5f5f5;border-radius:8px;padding:14px">'
-    +'<div style="font-size:10px;color:#757575;text-transform:uppercase;margin-bottom:4px">Préstamo</div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:12px">'
-    +'<div><span style="color:#757575">Fecha:</span> '+fd(c.fecha)+'</div>'
-    +'<div><span style="color:#757575">Monto:</span> '+fmt(c.monto)+'</div>'
-    +'<div><span style="color:#757575">Tasa:</span> '+c.tasa+'% mensual</div>'
-    +'<div><span style="color:#757575">Tipo:</span> '+(c.tipocuota==='fija'?'Cuota fija':'Variable')+'</div>'
-    +'</div></div></div>'
-    +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:18px">'
-    +'<div style="background:#e3f2fd;border-radius:8px;padding:10px;text-align:center">'
-    +'<div style="font-size:10px;color:#1565c0;text-transform:uppercase;margin-bottom:3px">Saldo inicial</div>'
-    +'<div style="font-size:15px;font-weight:700;color:#1565c0">'+fmt(Math.round(c.monto*(1+c.tasa/100)))+'</div></div>'
-    +'<div style="background:#e8f5e9;border-radius:8px;padding:10px;text-align:center">'
-    +'<div style="font-size:10px;color:#2e7d32;text-transform:uppercase;margin-bottom:3px">Total pagado</div>'
-    +'<div style="font-size:15px;font-weight:700;color:#2e7d32">'+fmt(tp)+'</div></div>'
-    +'<div style="background:#fff3e0;border-radius:8px;padding:10px;text-align:center">'
-    +'<div style="font-size:10px;color:#e65100;text-transform:uppercase;margin-bottom:3px">Saldo pendiente</div>'
-    +'<div style="font-size:15px;font-weight:700;color:#e65100">'+fmt(sp)+'</div></div>'
-    +'<div style="background:'+(mora>0?'#ffebee':'#f3e5f5')+';;border-radius:8px;padding:10px;text-align:center">'
-    +'<div style="font-size:10px;color:'+(mora>0?'#c62828':'#6a1b9a')+';text-transform:uppercase;margin-bottom:3px">'+(mora>0?'En mora':'Próx. pago')+'</div>'
-    +'<div style="font-size:13px;font-weight:700;color:'+(mora>0?'#c62828':'#6a1b9a')+'">'+(mora>0?mora+' días':pp?fd(pp.fecha):'Al día')+'</div></div>'
-    +'</div>'
-    +'<div style="font-size:12px;font-weight:700;text-transform:uppercase;color:#424242;margin-bottom:6px">Historial de pagos</div>'
-    +'<table style="width:100%;border-collapse:collapse;font-size:11px">'
-    +'<thead><tr style="background:#2D0060;color:white">'
-    +'<th style="padding:7px 8px;text-align:left">Mes</th><th style="padding:7px 8px;text-align:left">Fecha Q1</th>'
-    +'<th style="padding:7px 8px;text-align:left">Fecha Q2</th><th style="padding:7px 8px;text-align:right">Saldo Inicio</th>'
-    +'<th style="padding:7px 8px;text-align:right">Pagado</th><th style="padding:7px 8px;text-align:right">Capital</th>'
-    +'<th style="padding:7px 8px;text-align:right">Interés</th><th style="padding:7px 8px;text-align:right">Nuevo Saldo</th>'
-    +'</tr></thead><tbody>'+historial+'</tbody></table>'
-    +amortHTML
-    +'<div style="margin-top:18px;background:linear-gradient(135deg,#2D0060,#C2185B);border-radius:8px;padding:14px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">'
-    +'<div><div style="font-size:11px;color:rgba(255,255,255,.7);text-transform:uppercase;font-weight:700">SALDO TOTAL A PAGAR HOY</div>'
-    +(pp?'<div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">Próxima fecha: '+fd(pp.fecha)+'</div>':'')
-    +(c.tipocuota==='fija'?'<div style="font-size:11px;color:rgba(255,255,255,.8);margin-top:2px;font-weight:700">Cuota fija: '+fmt(Math.round(calcCuotaFija(c.monto,c.tasa/100,c.cuotas)))+'</div>':'')
-    +'</div><div style="font-size:28px;font-weight:800;color:white">'+fmt(sp)+'</div></div>'
-    +'<div style="margin-top:14px;font-size:10px;color:#9e9e9e;text-align:center;border-top:1px solid #e0e0e0;padding-top:10px">'
-    +'Cuadre · Documento generado el '+hoy+' · Solo informativo.</div></div>';
+  const cuotaLabel=c.tipocuota==='fija'?'Cuota acordada: '+fmt(Math.round(calcCuotaFija(c.monto,c.tasa/100,c.cuotas))):'Pago acordado: '+fmt(c.cuotaLibre||0);
+  const proxFechaLabel=pp?fd(pp.fecha):'Pendiente de acordar';
+  const narrativa=tratamiento+' recibió la suma de <strong>'+fmt(c.monto)+'</strong> el día <strong>'+fd(c.fecha)+'</strong> '
+    +'y se comprometió a realizar pagos de acuerdo a las condiciones pactadas. '
+    +'A la fecha ha abonado un total de <strong>'+fmt(tp)+'</strong>, quedando un saldo pendiente de <strong>'+fmt(sp)+'</strong>. '
+    +(mora>0?'A la fecha presenta <strong>'+mora+' día'+(mora!==1?'s':'')+' de atraso</strong> en sus compromisos de pago. ':'')
+    +'El próximo pago acordado corresponde al <strong>'+proxFechaLabel+'</strong>.';
 
-  const w=window.open('','_blank','width=760,height=720');
-  w.document.write('<!DOCTYPE html><html><head><title>Estado de Cuenta — '+c.nombre+'</title>'
-    +'<style>body{margin:0;padding:16px;background:#fff}@media print{body{padding:0}}</style></head>'
+  const printHTML='<div style="max-width:680px;margin:0 auto;font-family:Arial,sans-serif;color:#212121;padding:24px">'
+    // Encabezado
+    +'<div style="border-bottom:2px solid #333;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start">'
+    +'<div>'
+    +'<div style="font-size:11px;font-weight:700;color:#555;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Comprobante de Acuerdo</div>'
+    +'<div style="font-size:20px;font-weight:800;color:#212121">Resumen de Compromiso de Pago</div>'
+    +'<div style="font-size:11px;color:#888;margin-top:3px">Fecha: '+hoy+'</div>'
+    +'</div>'
+    +'<div style="text-align:right">'
+    +'<div style="font-size:13px;font-weight:800;color:#333;background:#f0f0f0;border-radius:6px;padding:6px 12px">'+refNum+'</div>'
+    +(c.cedula?'<div style="font-size:11px;color:#888;margin-top:4px">CC '+c.cedula+'</div>':'')
+    +'</div>'
+    +'</div>'
+    // Datos persona
+    +'<div style="background:#f8f8f8;border-radius:8px;padding:14px;margin-bottom:16px">'
+    +'<div style="font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Datos del titular</div>'
+    +'<div style="font-size:17px;font-weight:800;margin-bottom:3px">'+c.nombre+'</div>'
+    +(c.tel?'<div style="font-size:12px;color:#555">Teléfono: '+c.tel+'</div>':'')
+    +'</div>'
+    // Narrativa
+    +'<div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:14px;margin-bottom:16px;font-size:13px;line-height:1.7;color:#333">'
+    +narrativa
+    +'</div>'
+    // Métricas
+    +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">'
+    +'<div style="background:#e8f5e9;border-radius:8px;padding:12px;text-align:center">'
+    +'<div style="font-size:10px;color:#2e7d32;text-transform:uppercase;margin-bottom:4px">Suma recibida</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#1b5e20">'+fmt(c.monto)+'</div></div>'
+    +'<div style="background:#e3f2fd;border-radius:8px;padding:12px;text-align:center">'
+    +'<div style="font-size:10px;color:#1565c0;text-transform:uppercase;margin-bottom:4px">Total abonado</div>'
+    +'<div style="font-size:16px;font-weight:800;color:#0d47a1">'+fmt(tp)+'</div></div>'
+    +'<div style="background:'+(mora>0?'#ffebee':'#fff3e0')+';;border-radius:8px;padding:12px;text-align:center">'
+    +'<div style="font-size:10px;color:'+(mora>0?'#c62828':'#e65100')+';text-transform:uppercase;margin-bottom:4px">Saldo pendiente</div>'
+    +'<div style="font-size:16px;font-weight:800;color:'+(mora>0?'#b71c1c':'#bf360c')+'">'+fmt(sp)+'</div></div>'
+    +'</div>'
+    // Próximo pago
+    +'<div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">'
+    +'<div><div style="font-size:11px;color:#888;text-transform:uppercase;margin-bottom:2px">Próximo pago acordado</div>'
+    +'<div style="font-size:14px;font-weight:700">'+proxFechaLabel+'</div></div>'
+    +'<div style="text-align:right"><div style="font-size:11px;color:#888;margin-bottom:2px">'+cuotaLabel+'</div></div>'
+    +'</div>'
+    // Historial
+    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:#555;margin-bottom:6px;letter-spacing:.5px">Historial de abonos</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:18px">'
+    +'<thead><tr style="background:#424242;color:white">'
+    +'<th style="padding:8px 10px;text-align:left;font-weight:700">Fecha</th>'
+    +'<th style="padding:8px 10px;text-align:right;font-weight:700">Valor abonado</th>'
+    +'<th style="padding:8px 10px;text-align:center;font-weight:700">Método</th>'
+    +'</tr></thead><tbody>'+filasHistorial+'</tbody>'
+    +'<tfoot><tr style="background:#f5f5f5;border-top:2px solid #333">'
+    +'<td style="padding:8px 10px;font-weight:700">Total abonado</td>'
+    +'<td style="padding:8px 10px;font-weight:800;color:#2e7d32;text-align:right">'+fmt(tp)+'</td>'
+    +'<td></td></tr></tfoot>'
+    +'</table>'
+    // Pie legal
+    +'<div style="border:1px solid #ccc;border-radius:8px;padding:12px;font-size:11px;color:#666;line-height:1.6;background:#fafafa">'
+    +'<strong style="color:#333">Nota legal:</strong> Este documento es únicamente un comprobante informativo de acuerdo entre las partes. '
+    +'<strong>No constituye título valor, letra de cambio, pagaré, ni documento de cobro coactivo de ningún tipo.</strong> '
+    +'No genera obligaciones adicionales distintas a las acordadas voluntariamente por las partes. '
+    +'Generado el '+hoy+' · Referencia '+refNum+'.'
+    +'</div>'
+    +'</div>';
+
+  const waText='*Comprobante de Acuerdo — Ref. '+refNum+'*\n\n'
+    +'*Titular:* '+c.nombre+(c.cedula?' (CC '+c.cedula+')':'')+'\n'
+    +'*Fecha:* '+hoy+'\n\n'
+    +'*Suma recibida:* '+fmt(c.monto)+'\n'
+    +'*Total abonado:* '+fmt(tp)+'\n'
+    +'*Saldo pendiente:* '+fmt(sp)+'\n'
+    +'*Próximo pago:* '+proxFechaLabel+'\n'
+    +(mora>0?'\n⚠ Presenta '+mora+' día'+(mora!==1?'s':'')+' de atraso.\n':'')
+    +'\n_Este mensaje es un resumen informativo de compromiso de pago. No es título valor ni documento de cobro._';
+
+  const w=window.open('','_blank','width=760,height=780');
+  w.document.write('<!DOCTYPE html><html><head><title>Comprobante '+refNum+' — '+c.nombre+'</title>'
+    +'<style>body{margin:0;padding:16px;background:#fff}@media print{.no-print{display:none}body{padding:0}}</style></head>'
     +'<body>'+printHTML
-    +'<div style="text-align:center;margin:16px 0;display:flex;gap:10px;justify-content:center">'
-    +'<button onclick="window.print()" style="padding:9px 20px;background:#2D0060;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:Arial">🖨 Imprimir / PDF</button>'
+    +'<div class="no-print" style="text-align:center;margin:16px 0;display:flex;gap:10px;justify-content:center">'
+    +'<button onclick="window.print()" style="padding:9px 20px;background:#333;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:Arial">🖨 Imprimir / PDF</button>'
     +'<button onclick="copyWA()" style="padding:9px 20px;background:#25d366;color:white;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:Arial">📱 Copiar para WhatsApp</button>'
-    +'</div><script>function copyWA(){'
-    +'const txt="*ESTADO DE CUENTA — Cuadre*\\n\\n*Cliente:* '+c.nombre+'\\n*Fecha:* '+hoy
-    +'\\n\\n*Monto prestado:* '+fmt(c.monto)+'\\n*Total pagado:* '+fmt(tp)+'\\n*Intereses:* '+fmt(ti)
-    +'\\n\\n*SALDO PENDIENTE: '+fmt(sp)+'*\\n'+(pp?'*Próximo pago: '+fd(pp.fecha)+'*\\n':'')
-    +(mora>0?'\\n⚠ *En mora hace '+mora+' días*':'')+'";'
-    +'navigator.clipboard.writeText(txt).then(()=>alert("Copiado ✓")).catch(()=>{var t=document.createElement("textarea");t.value=txt;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);alert("Copiado ✓");});}'
+    +'</div><script>var _wa='+JSON.stringify(waText)+';function copyWA(){'
+    +'navigator.clipboard.writeText(_wa).then(()=>alert("Copiado ✓")).catch(()=>{var t=document.createElement("textarea");t.value=_wa;document.body.appendChild(t);t.select();document.execCommand("copy");document.body.removeChild(t);alert("Copiado ✓");});}'
     +'<\/script></body></html>');
   w.document.close();
 }
@@ -4940,17 +4942,77 @@ function renderClienteDashboard(){
   clienteTabActual='dashboard';
   const activas=deudas.filter(d=>saldoDeuda(d)>0);
   const totalDebo=activas.reduce((s,d)=>s+saldoDeuda(d),0);
-  const totalPagado=deudas.reduce((s,d)=>s+totalPagadoDeuda(d),0);
+  const totalPagadoD=deudas.reduce((s,d)=>s+totalPagadoDeuda(d),0);
   const proximos=proximosPagosDeuda();
   const alDia=activas.filter(d=>!enMoraDeuda(d)).length;
-
   const pp=proximos[0];
-  const reminderHTML = renderReminderBanners();
+  const reminderHTML=renderReminderBanners();
+
+  // ── Banda de alerta inteligente ──────────────────────────────────────────────
+  const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+  const enMoraList=activas.filter(d=>enMoraDeuda(d));
+  let alertaHTML='';
+  if(enMoraList.length>0){
+    // 🔴 En mora — pulsante
+    const nombres=enMoraList.map(d=>d.acreedor).join(', ');
+    alertaHTML='<div style="background:rgba(239,83,80,.15);border:1.5px solid rgba(239,83,80,.5);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;animation:pulse-red 1.5s infinite">'
+      +'<span style="font-size:22px">🚨</span>'
+      +'<div><div style="font-size:13px;font-weight:800;color:#ef5350">'+enMoraList.length+' pago'+(enMoraList.length>1?'s':'')+' vencido'+(enMoraList.length>1?'s':'')+' — En mora</div>'
+      +'<div style="font-size:11px;color:rgba(239,83,80,.8);margin-top:2px">'+nombres+'</div></div>'
+      +'</div>';
+  } else if(pp){
+    const ppDate=new Date(pp.fecha+'T00:00:00');
+    const diffMs=ppDate-hoyD;
+    const dias=Math.round(diffMs/(1000*60*60*24));
+    if(dias<=0){
+      alertaHTML='<div style="background:rgba(255,152,0,.15);border:1.5px solid rgba(255,152,0,.5);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+        +'<span style="font-size:22px">⚡</span>'
+        +'<div><div style="font-size:13px;font-weight:800;color:#FF9800">¡Vence HOY! — '+pp.acreedor+'</div>'
+        +'<div style="font-size:11px;color:rgba(255,152,0,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
+        +'</div>';
+    } else if(dias<=3){
+      alertaHTML='<div style="background:rgba(255,152,0,.12);border:1.5px solid rgba(255,152,0,.4);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+        +'<span style="font-size:22px">⚡</span>'
+        +'<div><div style="font-size:13px;font-weight:800;color:#FF9800">Vence en '+dias+' día'+(dias>1?'s':'')+' — '+pp.acreedor+'</div>'
+        +'<div style="font-size:11px;color:rgba(255,152,0,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
+        +'</div>';
+    } else if(dias<=7){
+      alertaHTML='<div style="background:rgba(255,235,59,.1);border:1.5px solid rgba(255,235,59,.4);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+        +'<span style="font-size:22px">⏰</span>'
+        +'<div><div style="font-size:13px;font-weight:800;color:#FDD835">Pago en '+dias+' días — '+pp.acreedor+'</div>'
+        +'<div style="font-size:11px;color:rgba(253,216,53,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
+        +'</div>';
+    } else if(dias<=14){
+      alertaHTML='<div style="background:rgba(0,229,209,.08);border:1.5px solid rgba(0,229,209,.3);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
+        +'<span style="font-size:22px">📅</span>'
+        +'<div><div style="font-size:13px;font-weight:800;color:#00E5D1">Próximo en '+dias+' días — '+pp.acreedor+'</div>'
+        +'<div style="font-size:11px;color:rgba(0,229,209,.7);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
+        +'</div>';
+    }
+  }
+
+  // ── Vencimientos con días restantes coloreados ───────────────────────────────
+  const proximosHTML=proximos.slice(0,5).map(p=>{
+    const pDate=new Date(p.fecha+'T00:00:00');
+    const dias=Math.round((pDate-hoyD)/(1000*60*60*24));
+    const esMora=enMoraDeuda(deudas.find(d=>d.id===p.did));
+    const diasColor=esMora?'var(--red)':dias<=3?'#FF9800':dias<=7?'#FDD835':'#00BCD4';
+    const diasLabel=esMora?'Vencido':dias===0?'Hoy':dias===1?'Mañana':dias+' días';
+    return '<div class="cliente-pago-item">'
+      +'<div><div style="font-weight:700;font-size:13px">'+p.acreedor+'</div>'
+      +'<div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+'</div></div>'
+      +'<div style="text-align:right">'
+      +'<div style="color:var(--amber);font-family:monospace;font-weight:700">'+fmt(p.monto)+'</div>'
+      +'<div style="font-size:10px;font-weight:700;color:'+diasColor+'">'+diasLabel+'</div>'
+      +'</div></div>';
+  }).join('');
+
   el.innerHTML=
     reminderHTML
+    +alertaHTML
     +'<div class="metrics" style="margin-bottom:14px">'
     +'<div class="mc"><div class="mc-label">TOTAL QUE DEBO</div><div class="mc-value c-red">'+fmtS(totalDebo)+'</div><div class="mc-sub">'+activas.length+' acreedores</div></div>'
-    +'<div class="mc"><div class="mc-label">TOTAL PAGADO</div><div class="mc-value c-green">'+fmtS(totalPagado)+'</div></div>'
+    +'<div class="mc"><div class="mc-label">TOTAL PAGADO</div><div class="mc-value c-green">'+fmtS(totalPagadoD)+'</div></div>'
     +'<div class="mc"><div class="mc-label">PRÓXIMO PAGO</div><div class="mc-value c-amber">'+(pp?fmtS(pp.monto):'$0')+'</div><div class="mc-sub">'+(pp?fd(pp.fecha):'Sin vencimientos')+'</div></div>'
     +'<div class="mc"><div class="mc-label">AL DÍA</div><div class="mc-value" style="color:#00BCD4">'+alDia+' de '+activas.length+'</div></div>'
     +'</div>'
@@ -4958,10 +5020,7 @@ function renderClienteDashboard(){
       ?'<div class="empty-state"><div class="empty-icon">💳</div><div style="font-size:14px;font-weight:600;color:var(--text2)">Sin deudas registradas</div><div style="font-size:12px;color:var(--text3)">Toca "+ Nueva" para agregar una deuda</div></div>'
       :'<div class="sec-label">PRÓXIMOS VENCIMIENTOS</div>'
       +'<div class="card" style="max-height:200px;overflow-y:auto">'
-      +proximos.slice(0,5).map(p=>'<div class="cliente-pago-item">'
-        +'<div><div style="font-weight:700;font-size:13px">'+p.acreedor+'</div><div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+'</div></div>'
-        +'<div style="color:var(--amber);font-family:monospace;font-weight:700">'+fmt(p.monto)+'</div>'
-        +'</div>').join('')
+      +proximosHTML
       +'</div>'
     );
 }
@@ -7587,7 +7646,53 @@ initReminderCheck();
 initColorTheme();
 setTimeout(()=>updateColorThemeUI(getColorTheme()),500);
 
-// ── Service Worker (PWA) ─────────────────────────────────────────────────────
+// ── Botón atrás del celular (PWA) ────────────────────────────────────────────
+const _navHistory=[];
+function _pushNav(id){
+  if(_navHistory[_navHistory.length-1]!==id) _navHistory.push(id);
+  history.pushState({screen:id},'',location.pathname);
+}
+
+window.addEventListener('popstate',function(e){
+  // 1. Cerrar overlay flotante de cuota fija si existe
+  const cuotaOverlay=document.getElementById('cuota-fija-overlay');
+  if(cuotaOverlay){cuotaOverlay.remove();history.pushState({},'',' ');return;}
+
+  // 2. Cerrar cualquier modal visible
+  const modalAbierto=document.querySelector('.overlay[style*="flex"],.overlay.active');
+  if(modalAbierto){
+    const closeBtn=modalAbierto.querySelector('.modal-close');
+    if(closeBtn) closeBtn.click();
+    else modalAbierto.style.display='none';
+    history.pushState({},'',' ');
+    return;
+  }
+
+  // 3. Cerrar sidebar si está abierto
+  const sb=document.getElementById('sidebar');
+  if(sb&&sb.classList.contains('open')){closeSB();history.pushState({},'',' ');return;}
+
+  // 4. Navegar a pantalla anterior
+  _navHistory.pop();
+  const prev=_navHistory[_navHistory.length-1];
+  if(prev&&prev!=='home'){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(prev)?.classList.add('active');
+    history.pushState({screen:prev},'',' ');
+  } else {
+    // Estamos en home o sin historial — dejar que el navegador salga normalmente
+    history.back();
+  }
+});
+
+// Registrar navegación en historial
+const _origGoTo=goTo;
+function goTo(id){
+  _origGoTo(id);
+  _pushNav(id);
+}
+// Inicializar con home
+_pushNav('home');
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('/sw.js')
