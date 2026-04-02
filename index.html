@@ -1754,6 +1754,8 @@ function goTo(id){
   }
   if(id==='loans'){renderSidebar();renderDashboard();}
   if(id==='dayday'){renderDDTab(ddTab);}
+  // Registrar en historial de navegación para botón atrás
+  if(typeof _pushNav==='function') _pushNav(id);
 }
 
 // ══ HELPERS ═══════════════════════════════════════════════════════════════════
@@ -7686,12 +7688,7 @@ window.addEventListener('popstate',function(e){
 });
 
 // Registrar navegación en historial
-const _origGoTo=goTo;
-function goTo(id){
-  _origGoTo(id);
-  _pushNav(id);
-}
-// Inicializar con home
+// Inicializar historial con home
 _pushNav('home');
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
