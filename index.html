@@ -2068,6 +2068,9 @@ function copiarResumenWA(){
       toast('✓ Copiado','success');overlay.remove();setTimeout(()=>window.open('https://wa.me/?text='+encodeURIComponent(msg),'_blank'),500);
     });
 }
+
+// ══ DASHBOARD ════════════════════════════════════════════════════════════════
+function renderDashboard(){
   activeId=null;renderSidebar();
   const tb=document.getElementById('topbar-estado-btn');
   if(tb) tb.style.display='none';
@@ -7906,6 +7909,11 @@ if('serviceWorker' in navigator){
   });
 }
 
+// Inicializar login y drive después del DOM completo
+window.addEventListener('DOMContentLoaded',()=>{
+  try{ updateDriveStatus(); }catch(e){}
+  setTimeout(checkLogin, 300);
+});
 </script>
 <!-- Login Screen -->
 <div class="login-screen" id="login-screen" style="display:none">
@@ -7933,13 +7941,6 @@ if('serviceWorker' in navigator){
   </div>
   <div class="login-footer">Cuadre v2.0 · Colombia 2026</div>
 </div>
-<script>
-// Inicializar después de que el DOM esté completo
-setTimeout(()=>{
-  try{ updateDriveStatus(); }catch(e){}
-  checkLogin();
-},200);
-</script>
 
 <!-- Terms & Conditions Modal -->
 <div class="tc-overlay" id="tc-overlay" style="display:none">
