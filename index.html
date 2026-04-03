@@ -792,10 +792,30 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     <div class="modal-title">➕ Registrar deuda <button class="modal-close" onclick="closeModal('modal-nueva-deuda')">✕</button></div>
     <div class="fr"><label>¿A quién le debo?</label><input type="text" id="nd-acreedor" placeholder="Nombre del acreedor" oninput="formatNombrePropio('nd-acreedor')"></div>
     <div class="fr"><label>Tipo de acreedor</label>
-      <select id="nd-tipo" onchange="ndToggleSeguro()"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="socio_inv">Socio / Inversionista</option><option value="otro">Otro</option></select>
+      <select id="nd-tipo" onchange="ndToggleSeguro();ndToggleUVR()"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="socio_inv">Socio / Inversionista</option><option value="otro">Otro</option></select>
+    </div>
+    <!-- Tipo de crédito — solo banco -->
+    <div class="fr" id="nd-tipocredito-wrap" style="display:none">
+      <label>Tipo de crédito</label>
+      <select id="nd-tipocredito" onchange="ndToggleUVR()">
+        <option value="libre_inversion">Libre inversión</option>
+        <option value="vivienda_uvr">🏠 Vivienda en UVR</option>
+        <option value="vehiculo">Vehículo</option>
+        <option value="microcredito">Microcrédito</option>
+      </select>
+    </div>
+    <!-- Campos especiales UVR -->
+    <div id="nd-uvr-box" style="display:none;background:rgba(0,150,136,.1);border:1px solid rgba(0,150,136,.3);border-radius:var(--radius-xs);padding:12px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:8px;letter-spacing:.5px">🏠 CRÉDITO EN UVR</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div class="fr" style="margin-bottom:0"><label>Monto en UVR</label><input type="number" id="nd-monto-uvr" min="0" placeholder="Ej: 50000" oninput="ndCalcUVR()"></div>
+        <div class="fr" style="margin-bottom:0"><label>Valor UVR desembolso</label><input type="number" id="nd-uvr-inicio" min="0" step="0.01" placeholder="Ej: 385.50" oninput="ndCalcUVR()"></div>
+      </div>
+      <div id="nd-uvr-equiv" style="font-size:11px;color:#00BCD4;margin-top:6px;text-align:center"></div>
+      <div class="fr" style="margin-top:8px;margin-bottom:0"><label>Valor UVR hoy (para calcular cuota actual)</label><input type="number" id="nd-uvr-hoy" min="0" step="0.01" placeholder="Ej: 392.10" oninput="ndCalcUVR()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fr"><label>Monto recibido</label><input type="number" id="nd-monto" min="0" placeholder="0" oninput="ndCalcTodo()"></div>
+      <div class="fr"><label id="nd-monto-lbl">Monto recibido ($)</label><input type="number" id="nd-monto" min="0" placeholder="0" oninput="ndCalcTodo()"></div>
       <div class="fr"><label>Cuotas</label><input type="number" id="nd-cuotas" min="1" placeholder="12" oninput="ndCalcTodo()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
@@ -5175,7 +5195,8 @@ function renderClienteDeudas(){
     const tm=d.tasa||0;
     const eaStr=tm>0?((Math.pow(1+tm/100,12)-1)*100).toFixed(1)+'% E.A.':'0% E.A.';
     const segStr=d.seguroTipo&&d.seguroTipo!=='no'?' · Seguro incl.':'';
-    const cuotasInfo=d.tipocuota==='libre'?'Sin plazo fijo':(d.cuotas+' cuotas · '+(d.tipocuota==='fija'?'Fija':'Variable')+' · '+eaStr+segStr);
+    const tipoCreditoLabel={libre_inversion:'Libre inv.',vivienda_uvr:'🏠 Vivienda UVR',vehiculo:'Vehículo',microcredito:'Microcrédito'}[d.tipocredito]||'';
+    const cuotasInfo=d.tipocuota==='libre'?'Sin plazo fijo':(d.cuotas+' cuotas · '+(d.tipocuota==='fija'?'Fija':'Variable')+' · '+eaStr+segStr+(tipoCreditoLabel?' · '+tipoCreditoLabel:''));
     return'<div class="deuda-card-item">'
       +'<div class="deuda-accent" style="background:'+color+'"></div>'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">'
@@ -5658,14 +5679,49 @@ function ndSetTasaTipo(tipo){
 function ndToggleSeguro(){
   const tipo = document.getElementById('nd-tipo')?.value;
   const box = document.getElementById('nd-seguro-box');
+  const tipocreditoWrap=document.getElementById('nd-tipocredito-wrap');
   if(!box) return;
   if(tipo==='banco'){
     box.style.display='block';
+    if(tipocreditoWrap) tipocreditoWrap.style.display='block';
   } else {
     box.style.display='none';
+    if(tipocreditoWrap) tipocreditoWrap.style.display='none';
     // Reset seguro when hidden
     ndSeguroTipo='no';
     ndSetSeguro('no');
+  }
+  ndToggleUVR();
+}
+
+function ndToggleUVR(){
+  const tipo=document.getElementById('nd-tipo')?.value;
+  const tipocredito=document.getElementById('nd-tipocredito')?.value;
+  const esUVR=tipo==='banco'&&tipocredito==='vivienda_uvr';
+  const uvrBox=document.getElementById('nd-uvr-box');
+  const montoLbl=document.getElementById('nd-monto-lbl');
+  const montoInput=document.getElementById('nd-monto');
+  if(uvrBox) uvrBox.style.display=esUVR?'block':'none';
+  if(montoLbl) montoLbl.textContent=esUVR?'Monto en pesos (calculado)':'Monto recibido ($)';
+  if(montoInput){montoInput.readOnly=esUVR;montoInput.style.opacity=esUVR?'0.6':'1';}
+}
+
+function ndCalcUVR(){
+  const montoUVR=parseFloat(document.getElementById('nd-monto-uvr')?.value)||0;
+  const uvrInicio=parseFloat(document.getElementById('nd-uvr-inicio')?.value)||0;
+  const uvrHoy=parseFloat(document.getElementById('nd-uvr-hoy')?.value)||0;
+  const equiv=document.getElementById('nd-uvr-equiv');
+  const montoInput=document.getElementById('nd-monto');
+  if(montoUVR&&uvrInicio){
+    const enPesosInicio=Math.round(montoUVR*uvrInicio);
+    const enPesosHoy=uvrHoy?Math.round(montoUVR*uvrHoy):null;
+    if(equiv) equiv.innerHTML=
+      '<span style="color:var(--text3)">Al desembolso: </span><strong>'+fmt(enPesosInicio)+'</strong>'
+      +(enPesosHoy?'&nbsp;&nbsp;<span style="color:var(--text3)">Hoy: </span><strong style="color:var(--amber)">'+fmt(enPesosHoy)+'</strong>':'');
+    if(montoInput) montoInput.value=enPesosInicio;
+    ndCalcTodo();
+  } else {
+    if(equiv) equiv.innerHTML='';
   }
 }
 
@@ -5783,7 +5839,9 @@ function abrirNuevaDeuda(){
 function guardarDeuda(){
   const acreedor=document.getElementById('nd-acreedor').value.trim();
   const tipo=document.getElementById('nd-tipo').value;
-  const monto=parseFloat(document.getElementById('nd-monto').value)||0;
+  const tipocredito=document.getElementById('nd-tipocredito')?.value||'libre_inversion';
+  const esUVR=tipo==='banco'&&tipocredito==='vivienda_uvr';
+  let monto=parseFloat(document.getElementById('nd-monto').value)||0;
   const cuotasInput=parseInt(document.getElementById('nd-cuotas').value);
   const tipocuotaVal=document.getElementById('nd-tipocuota').value;
   const tipoVal=document.getElementById('nd-tipo').value;
@@ -5793,6 +5851,19 @@ function guardarDeuda(){
   const fecha=document.getElementById('nd-fecha').value;
   const notas=document.getElementById('nd-notas').value.trim();
   if(!acreedor||!monto){toast('Complete los campos requeridos','error');return;}
+
+  // Datos UVR
+  let uvrData=null;
+  if(esUVR){
+    const montoUVR=parseFloat(document.getElementById('nd-monto-uvr')?.value)||0;
+    const uvrInicio=parseFloat(document.getElementById('nd-uvr-inicio')?.value)||0;
+    const uvrHoy=parseFloat(document.getElementById('nd-uvr-hoy')?.value)||uvrInicio;
+    if(!montoUVR||!uvrInicio){toast('Complete monto en UVR y valor UVR de desembolso','error');return;}
+    uvrData={montoUVR,uvrInicio,uvrHoy,uvrActual:uvrHoy};
+    // Monto en pesos = montoUVR * uvrInicio (al momento del desembolso)
+    monto=Math.round(montoUVR*uvrInicio);
+  }
+
   // Get tasa mensual (always store as monthly)
   const tasaMensual=ndGetTasaMensual()*100;
   // Get seguro
@@ -5803,11 +5874,10 @@ function guardarDeuda(){
   const pagosHistoricos=ndHistPagos.map(p=>({...p,esHistorico:true}));
   loadDeudas();
   const id=deudas.length?Math.max(...deudas.map(d=>d.id))+1:1;
-  deudas.push({id,acreedor,tipo,monto,tasa:tasaMensual,tasaOriginal:parseFloat(document.getElementById('nd-tasa')?.value)||0,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,pagos:pagosHistoricos});
+  deudas.push({id,acreedor,tipo,tipocredito,monto,tasa:tasaMensual,tasaOriginal:parseFloat(document.getElementById('nd-tasa')?.value)||0,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,uvrData,pagos:pagosHistoricos});
   saveDeudas();
   closeModal('modal-nueva-deuda');
   renderClienteDeudas();
-  // Switch to deudas tab
   clienteTabActual='deudas';
   document.querySelectorAll('.cliente-tab').forEach((t,i)=>{t.classList.toggle('active',i===1);});
   toast('Deuda registrada');
@@ -6205,24 +6275,59 @@ function abrirPagoDeuda(did){
   pagoDeudaCtx.did=did;
   const sp=saldoDeuda(d);
   const tp=totalPagadoDeuda(d);
+  const esUVR=d.uvrData!=null;
   document.getElementById('pago-deuda-title').innerHTML='💳 Pago — '+d.acreedor+' <button class="modal-close" onclick="closeModal(&quot;modal-pago-deuda&quot;)">✕</button>';
   const cuota=getCuotaDeuda(d);
   const seg=calcSeguroDeuda(d);
+  let uvrInfo='';
+  if(esUVR&&d.uvrData){
+    const uvr=d.uvrData;
+    const uvrVig=uvr.uvrActual||uvr.uvrHoy||uvr.uvrInicio;
+    const saldoUVR=uvrVig?Math.round(sp/uvrVig*100)/100:0;
+    uvrInfo='<div style="background:rgba(0,150,136,.12);border:1px solid rgba(0,188,212,.3);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:10px;font-size:11px">'
+      +'<div style="font-weight:800;color:#00BCD4;margin-bottom:4px">🏠 Crédito Vivienda UVR</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:var(--text3)">Saldo aprox. en UVR</span><span style="font-family:monospace;font-weight:700;color:#00BCD4">'+saldoUVR.toLocaleString("es-CO",{maximumFractionDigits:2})+' UVR</span></div>'
+      +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">UVR última registrada</span><span style="font-family:monospace;font-weight:700;color:var(--amber)">'+uvrVig.toLocaleString("es-CO",{maximumFractionDigits:4})+'</span></div>'
+      +'</div>';
+  }
   document.getElementById('pago-deuda-saldo').innerHTML=
-    '<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Saldo pendiente</span><span class="c-red" style="font-family:monospace;font-weight:700">'+fmt(sp)+'</span></div>'
+    uvrInfo
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Saldo pendiente</span><span class="c-red" style="font-family:monospace;font-weight:700">'+fmt(sp)+'</span></div>'
     +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Total pagado</span><span class="c-green" style="font-family:monospace;font-weight:700">'+fmt(tp)+'</span></div>'
-    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Cuota estimada'+(seg>0?' (incl. seguro $'+seg.toLocaleString('es-CO')+')':'')+'</span><span class="c-amber" style="font-family:monospace;font-weight:700">'+fmt(cuota)+'</span></div>';
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Cuota estimada'+(seg>0?" (incl. seguro)":"")+'</span><span class="c-amber" style="font-family:monospace;font-weight:700">'+fmt(cuota)+'</span></div>'
+    +(esUVR?'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)"><label style="font-size:10px;color:#00BCD4;font-weight:700;display:block;margin-bottom:4px">VALOR UVR DEL DÍA DEL PAGO</label><input type="number" id="pd-uvr-dia" step="0.0001" placeholder="Ej: 392.1045" style="width:100%;background:var(--surface2);border:1px solid rgba(0,188,212,.4);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:13px;outline:none" oninput="updateUVRPreview()"><div id="pd-uvr-preview" style="font-size:10px;color:var(--text3);margin-top:4px">Ingrese el valor UVR para calcular correctamente</div></div>':"");
   document.getElementById('pd-valor').value='';
   document.getElementById('pd-fecha').value=today();
   document.getElementById('pd-nota').value='';
   document.getElementById('pd-preview').style.display='none';
-  // Show historial
   const hist=d.pagos||[];
+  let extraEl=document.getElementById('pd-retro-wrap');
+  if(!extraEl){extraEl=document.createElement('div');extraEl.id='pd-retro-wrap';const histEl=document.getElementById('pd-historial');histEl.parentNode.insertBefore(extraEl,histEl);}
+  let retroHtml='';
+  if(hist.length>0){
+    const inicio=d.fecha?new Date(d.fecha+'T00:00:00'):null;
+    let optsRetro='<option value="">— Sin cuota anterior retroactiva —</option>';
+    if(inicio){const hoyD=new Date();hoyD.setHours(0,0,0,0);let mes=0;while(mes<60){const fc=new Date(inicio);fc.setMonth(fc.getMonth()+mes+1);if(fc>=hoyD) break;optsRetro+='<option value="'+mes+'">Cuota '+(mes+1)+' · '+fd(fc.toISOString().split('T')[0])+'</option>';mes++;}}
+    retroHtml='<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.25);border-radius:var(--radius-xs);padding:11px;margin-bottom:10px"><div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:6px">🔁 ¿Es pago de cuota anterior?</div><div style="font-size:11px;color:var(--text3);margin-bottom:8px">Las fechas del mes vigente no se modifican.</div><select id="pd-retro" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none">'+optsRetro+'</select></div>';
+  }
+  extraEl.innerHTML=retroHtml;
   document.getElementById('pd-historial').innerHTML=hist.length>0
     ?'<div class="sec-label" style="margin-bottom:6px">HISTORIAL</div>'
-      +hist.slice().reverse().map(p=>'<div class="cliente-pago-item"><div><div style="font-weight:700;font-size:12px">'+fmt(p.valor)+'</div><div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+' · '+(p.metodo||'')+'</div></div><div style="font-size:10px;color:var(--text3)">'+( p.nota||'')+'</div></div>').join('')
+      +hist.slice().reverse().map(p=>'<div class="cliente-pago-item"><div><div style="font-weight:700;font-size:12px">'+fmt(p.valor)+'</div><div style="font-size:10px;color:var(--text3)">'+fd(p.fecha)+' · '+(p.metodo||'')+(p.uvrDia?' · <span style="color:#00BCD4">UVR:'+p.uvrDia+'</span>':'')+'</div></div><div style="font-size:10px;color:var(--text3)">'+(p.nota||'')+'</div></div>').join('')
     :'';
   openModal('modal-pago-deuda');
+}
+
+function updateUVRPreview(){
+  const d=deudas.find(x=>x.id===pagoDeudaCtx.did);if(!d||!d.uvrData) return;
+  const uvrDia=parseFloat(document.getElementById('pd-uvr-dia')?.value)||0;
+  const prev=document.getElementById('pd-uvr-preview');if(!prev) return;
+  if(!uvrDia){prev.innerHTML='Ingrese el valor UVR del día';return;}
+  const sp=saldoDeuda(d);
+  const saldoUVR=(sp/uvrDia).toLocaleString('es-CO',{maximumFractionDigits:2});
+  const varPct=d.uvrData.uvrInicio?(((uvrDia-d.uvrData.uvrInicio)/d.uvrData.uvrInicio)*100).toFixed(2):0;
+  prev.innerHTML='Saldo: <strong style="color:#00BCD4">'+saldoUVR+' UVR</strong> · UVR '+(varPct>0?'+':'')+varPct+'% vs desembolso';
+  if(d.uvrData) d.uvrData.uvrActual=uvrDia;
 }
 
 function updatePagoDeudaPreview(){
@@ -6243,12 +6348,26 @@ function guardarPagoDeuda(){
   const fecha=document.getElementById('pd-fecha').value||today();
   const metodo=document.getElementById('pd-metodo').value;
   const nota=document.getElementById('pd-nota').value.trim();
+  const retroEl=document.getElementById('pd-retro');
+  const retroIdx=retroEl&&retroEl.value!==''?parseInt(retroEl.value):null;
+  // UVR del día si es crédito vivienda
+  const uvrDia=d.uvrData?parseFloat(document.getElementById('pd-uvr-dia')?.value)||null:null;
   if(!d.pagos) d.pagos=[];
-  d.pagos.push({id:Date.now(),valor,fecha,metodo,nota});
+  d.pagos.push({id:Date.now(),valor,fecha,metodo,nota,uvrDia});
+  // Guardar UVR actual en la deuda para referencia futura
+  if(uvrDia&&d.uvrData) d.uvrData.uvrActual=uvrDia;
+  // Retroactivo
+  if(retroIdx!==null&&retroIdx>=0){
+    d.pagos.push({id:Date.now()+1,valor:0,fecha,metodo,
+      nota:'[Legalización cuota '+(retroIdx+1)+'] '+nota,
+      cuotaIdx:retroIdx,cuotaIdxRetro:retroIdx,esRetro:true});
+  }
+  d.pagos.sort((a,b)=>a.fecha.localeCompare(b.fecha));
   saveDeudas();
   closeModal('modal-pago-deuda');
   renderClienteDeudas();
-  toast('Pago registrado');
+  const retroMsg=retroIdx!==null?' + Cuota '+(retroIdx+1)+' legalizada':'';
+  toast('✓ Pago registrado'+retroMsg,'success',3000);
 }
 
 // ── PAGO CUOTA FIJA (BANCO) con opción retro ──────────────────────────────────
@@ -6403,6 +6522,67 @@ function verDetalleDeuda(did){
     +'</div>'
     +(d.notas?'<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">📝 '+d.notas+'</div>':'')
     +'</div>'
+    // ── Panel UVR si es crédito vivienda ─────────────────────────────────────
+    +(()=>{
+      if(!d.uvrData) return '';
+      const uvr=d.uvrData;
+      const uvrVig=uvr.uvrActual||uvr.uvrHoy||uvr.uvrInicio;
+      const saldoUVR=uvrVig?Math.round(sp/uvrVig*100)/100:0;
+      const montoUVRInicio=uvr.montoUVR||0;
+      const varUVR=uvr.uvrInicio?(uvrVig-uvr.uvrInicio):0;
+      const varPct=uvr.uvrInicio?((varUVR/uvr.uvrInicio)*100).toFixed(2):0;
+      // Saldo en pesos al inicio vs hoy
+      const saldoPesosInicio=montoUVRInicio*uvr.uvrInicio;
+      const saldoPesosHoy=montoUVRInicio*uvrVig;
+      const incrementoPesos=Math.round(saldoPesosHoy-saldoPesosInicio);
+      // Cuota en UVR (amortización francesa sobre saldo UVR)
+      const t=(d.tasa||0)/100;
+      const cuotaUVR=t>0&&d.cuotas&&montoUVRInicio
+        ?Math.round(montoUVRInicio*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1)*100)/100:0;
+      const cuotaHoyPesos=cuotaUVR?Math.round(cuotaUVR*uvrVig):0;
+      // Historial de UVR registradas en pagos
+      const uvrHist=(d.pagos||[]).filter(p=>p.uvrDia).map(p=>({fecha:p.fecha,uvr:p.uvrDia,pesos:p.valor}));
+      return '<div style="background:rgba(0,150,136,.1);border:1px solid rgba(0,188,212,.35);border-radius:var(--radius);padding:14px;margin-bottom:12px">'
+        +'<div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:10px;letter-spacing:.5px">🏠 CRÉDITO VIVIENDA EN UVR</div>'
+        // Panel UVR actualizar
+        +'<div style="background:rgba(0,0,0,.2);border-radius:var(--radius-xs);padding:10px;margin-bottom:10px">'
+        +'<div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700">VALOR UVR VIGENTE</div>'
+        +'<div style="display:flex;gap:6px;align-items:center">'
+        +'<input type="number" id="uvr-det-val" step="0.0001" placeholder="'+uvrVig+'" value="'+uvrVig+'" style="flex:1;background:var(--surface2);border:1px solid rgba(0,188,212,.4);border-radius:var(--radius-xs);padding:7px 10px;color:var(--text);font-size:13px;outline:none" oninput="actualizarUVRDetalle('+did+')">'
+        +'<button onclick="actualizarUVRDetalle('+did+')" style="padding:7px 12px;background:#006064;color:#00E5D1;border:none;border-radius:var(--radius-xs);font-size:11px;font-weight:700;cursor:pointer;font-family:Nunito,sans-serif">Actualizar</button>'
+        +'</div>'
+        +'<div id="uvr-det-preview-'+did+'" style="font-size:10px;color:var(--text3);margin-top:5px">UVR desembolso: '+uvr.uvrInicio+' · Variación: '+(varPct>0?'+':'')+varPct+'%</div>'
+        +'</div>'
+        // Métricas UVR
+        +'<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">'
+        +'<div style="background:rgba(0,0,0,.15);border-radius:var(--radius-xs);padding:10px;text-align:center">'
+        +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Saldo en UVR</div>'
+        +'<div style="font-size:18px;font-weight:800;font-family:monospace;color:#00BCD4" id="uvr-saldo-uvr-'+did+'">'+saldoUVR.toLocaleString("es-CO",{maximumFractionDigits:2})+'</div>'
+        +'<div style="font-size:9px;color:var(--text3)">de '+montoUVRInicio.toLocaleString("es-CO",{maximumFractionDigits:0})+' UVR originales</div>'
+        +'</div>'
+        +'<div style="background:rgba(0,0,0,.15);border-radius:var(--radius-xs);padding:10px;text-align:center">'
+        +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:3px">Cuota en UVR</div>'
+        +'<div style="font-size:18px;font-weight:800;font-family:monospace;color:var(--amber)">'+cuotaUVR.toLocaleString("es-CO",{maximumFractionDigits:2})+'</div>'
+        +'<div style="font-size:9px;color:var(--text3)" id="uvr-cuota-pesos-'+did+'">≈ '+fmt(cuotaHoyPesos)+' hoy</div>'
+        +'</div>'
+        +'</div>'
+        // Evolución pesos vs UVR
+        +(incrementoPesos!==0?'<div style="background:'+(incrementoPesos>0?'rgba(255,107,107,.1)':'rgba(61,220,132,.1)')+';;border:1px solid '+(incrementoPesos>0?'rgba(255,107,107,.3)':'rgba(61,220,132,.3)')+';border-radius:var(--radius-xs);padding:8px 10px;margin-bottom:8px;font-size:11px">'
+        +'<span style="color:var(--text3)">Efecto inflación en saldo (pesos): </span>'
+        +'<strong style="color:'+(incrementoPesos>0?'var(--red)':'var(--green)')+';font-family:monospace">'+(incrementoPesos>0?'+':'')+fmt(Math.abs(incrementoPesos))+'</strong>'
+        +'<span style="color:var(--text3);font-size:10px"> vs desembolso</span>'
+        +'</div>':'')
+        // Historial UVR
+        +(uvrHist.length>0?'<div style="font-size:10px;font-weight:700;color:var(--text3);margin-bottom:4px;text-transform:uppercase">Historial UVR registrado</div>'
+        +'<div style="max-height:100px;overflow-y:auto">'
+        +uvrHist.slice().reverse().map(u=>'<div style="display:flex;justify-content:space-between;font-size:10px;padding:3px 0;border-bottom:1px solid var(--border)">'
+          +'<span style="color:var(--text3)">'+fd(u.fecha)+'</span>'
+          +'<span style="color:#00BCD4;font-family:monospace">'+u.uvr+'</span>'
+          +'<span style="color:var(--green);font-family:monospace">'+fmt(u.pesos)+'</span>'
+          +'</div>').join('')
+        +'</div>':'')
+        +'</div>';
+    })()
     // Cuotas proyectadas — crédito de cuota fija (bancos)
     +(()=>{
       if(d.tipocuota!=='fija') return '';
@@ -6434,22 +6614,39 @@ function verDetalleDeuda(did){
         const estadoBg=pagada?'rgba(61,220,132,.08)':esPasada?'rgba(255,107,107,.08)':esActual?'rgba(245,166,35,.08)':'transparent';
         const estadoBorder=pagada?'rgba(61,220,132,.25)':esPasada?'rgba(255,107,107,.25)':esActual?'rgba(245,166,35,.3)':'var(--border)';
         const estadoLabel=pagada?'✓ Pagada':esPasada?'⚠ Vencida':esActual?'◉ Actual':'Próxima';
+        // Calcular UVR para esta cuota si aplica
+        const esUVR=d.uvrData!=null;
+        const uvrVig=esUVR?(d.uvrData.uvrActual||d.uvrData.uvrHoy||d.uvrData.uvrInicio):0;
+        const cuotaUVRval=esUVR&&d.uvrData.montoUVR&&d.tasa&&d.cuotas
+          ?Math.round(d.uvrData.montoUVR*(d.tasa/100)*Math.pow(1+d.tasa/100,d.cuotas)/(Math.pow(1+d.tasa/100,d.cuotas)-1)*100)/100:0;
+        const capitalUVR=esUVR&&saldo&&d.uvrData.montoUVR?Math.round((capital/(d.monto||1))*(d.uvrData.montoUVR)*100)/100:0;
+        const interesUVR=esUVR&&cuotaUVRval?Math.round((cuotaUVRval-capitalUVR)*100)/100:0;
         rows+='<div style="background:'+estadoBg+';border:1px solid '+estadoBorder+';border-radius:var(--radius-xs);padding:9px 11px;margin-bottom:5px;cursor:pointer" onclick="abrirPagoCuotaFija('+did+','+i+')">'
           +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
           +'<div style="font-size:11px;font-weight:800;color:var(--text2)">Cuota '+(i+1)+' de '+d.cuotas
           +(esActual?' <span style="background:rgba(245,166,35,.2);color:var(--amber);border-radius:8px;padding:1px 6px;font-size:9px">Actual</span>':'')
           +(tieneRetro?' <span style="background:rgba(0,188,212,.15);color:#00BCD4;border-radius:8px;padding:1px 6px;font-size:9px">+ Retro</span>':'')
+          +(esUVR?' <span style="background:rgba(0,150,136,.2);color:#00BCD4;border-radius:8px;padding:1px 6px;font-size:9px">UVR</span>':'')
           +'</div>'
           +'<span style="font-size:9px;font-weight:700;color:'+estadoColor+'">'+estadoLabel+'</span>'
           +'</div>'
+          // Fila pesos
           +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:10px">'
           +'<div><div style="color:var(--text3)">Vence</div><div style="font-weight:700">'+fd(fechaStr)+'</div></div>'
-          +'<div><div style="color:var(--text3)">Cuota</div><div style="font-weight:700;color:var(--amber);font-family:monospace">'+fmt(cuotaTotal)+'</div></div>'
+          +'<div><div style="color:var(--text3)">Cuota $</div><div style="font-weight:700;color:var(--amber);font-family:monospace">'+fmt(cuotaTotal)+'</div></div>'
           +'<div><div style="color:var(--text3)">Capital</div><div style="font-weight:700;font-family:monospace">'+fmt(capital)+'</div></div>'
           +'<div><div style="color:var(--text3)">Interés</div><div style="font-weight:700;font-family:monospace;color:var(--red)">'+fmt(interes)+'</div></div>'
           +'</div>'
+          // Fila UVR — solo si es crédito vivienda
+          +(esUVR&&cuotaUVRval?'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;font-size:10px;margin-top:4px;padding-top:4px;border-top:1px dashed rgba(0,188,212,.2)">'
+          +'<div><div style="color:#00BCD4;font-size:9px">En UVR</div></div>'
+          +'<div><div style="color:var(--text3);font-size:9px">Cuota</div><div style="font-weight:700;color:#00BCD4;font-family:monospace;font-size:10px">'+cuotaUVRval.toLocaleString("es-CO",{maximumFractionDigits:2})+'</div></div>'
+          +'<div><div style="color:var(--text3);font-size:9px">Capital</div><div style="font-weight:700;font-family:monospace;font-size:10px">'+capitalUVR.toLocaleString("es-CO",{maximumFractionDigits:2})+'</div></div>'
+          +'<div><div style="color:var(--text3);font-size:9px">Interés</div><div style="font-weight:700;font-family:monospace;color:var(--red);font-size:10px">'+interesUVR.toLocaleString("es-CO",{maximumFractionDigits:2})+'</div></div>'
+          +'</div>':'')
           +(totalPagadoCuota>0?'<div style="margin-top:4px;font-size:10px;color:var(--green);font-weight:700">Pagado: '+fmt(totalPagadoCuota)+(totalPagadoRetro>0?' + Retro: '+fmt(totalPagadoRetro):'')+'</div>':'')
-          +'<div style="margin-top:3px;font-size:9px;color:var(--text3)">Saldo capital: <span style="font-family:monospace">'+fmt(nuevoSaldo)+'</span></div>'
+          +'<div style="margin-top:3px;font-size:9px;color:var(--text3)">Saldo capital: <span style="font-family:monospace">'+fmt(nuevoSaldo)+'</span>'
+          +(esUVR&&uvrVig?' · <span style="color:#00BCD4">'+Math.round(nuevoSaldo/uvrVig*100)/100+' UVR</span>':'')+'</div>'
           +'</div>';
         saldo=nuevoSaldo;
         if(saldo<=0) break;
@@ -6570,6 +6767,33 @@ function verDetalleDeuda(did){
     +'</div>';
 
   openModal('modal-detalle-deuda');
+}
+
+// ── ACTUALIZAR UVR EN DETALLE ─────────────────────────────────────────────────
+function actualizarUVRDetalle(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);if(!d||!d.uvrData) return;
+  const input=document.getElementById('uvr-det-val');
+  const nuevoUVR=parseFloat(input?.value)||0;
+  if(!nuevoUVR){toast('Ingrese el valor UVR','error');return;}
+  // Actualizar en el objeto
+  d.uvrData.uvrActual=nuevoUVR;
+  saveDeudas();
+  // Actualizar UI sin reabrir modal
+  const sp=saldoDeuda(d);
+  const saldoUVR=Math.round(sp/nuevoUVR*100)/100;
+  const t=(d.tasa||0)/100;
+  const cuotaUVR=t>0&&d.cuotas&&d.uvrData.montoUVR
+    ?Math.round(d.uvrData.montoUVR*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1)*100)/100:0;
+  const cuotaHoyPesos=cuotaUVR?Math.round(cuotaUVR*nuevoUVR):0;
+  const varPct=d.uvrData.uvrInicio?(((nuevoUVR-d.uvrData.uvrInicio)/d.uvrData.uvrInicio)*100).toFixed(2):0;
+  const elSaldoUVR=document.getElementById('uvr-saldo-uvr-'+did);
+  const elCuotaPesos=document.getElementById('uvr-cuota-pesos-'+did);
+  const elPreview=document.getElementById('uvr-det-preview-'+did);
+  if(elSaldoUVR) elSaldoUVR.textContent=saldoUVR.toLocaleString('es-CO',{maximumFractionDigits:2});
+  if(elCuotaPesos) elCuotaPesos.textContent='≈ '+fmt(cuotaHoyPesos)+' hoy';
+  if(elPreview) elPreview.textContent='UVR desembolso: '+d.uvrData.uvrInicio+' · Variación: '+(varPct>0?'+':'')+varPct+'%';
+  toast('UVR actualizada ✓','success',2000);
 }
 
 // ══ SOCIO / PARTNER CAPITAL ══════════════════════════════════════════════════
