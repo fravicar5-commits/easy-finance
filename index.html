@@ -429,6 +429,29 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 
 /* Notes */
 .notes-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.note-view-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9998;display:flex;align-items:center;justify-content:center;padding:16px}
+.note-view-box{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);width:100%;max-width:480px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden}
+.note-view-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0}
+.note-view-title{font-size:15px;font-weight:800;color:var(--text);flex:1;min-width:0;margin-right:8px;word-break:break-word}
+.note-view-body{padding:16px;overflow-y:auto;flex:1;font-size:13px;color:var(--text2);line-height:1.7}
+.note-view-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0}
+.folder-pill{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-size:11px;cursor:pointer;transition:border-color .15s}
+.folder-pill:hover,.folder-pill.active{border-color:var(--ef-pink);color:var(--ef-pink)}
+.folder-pill-icon{font-size:12px}
+.alarm-note-banner{border-radius:var(--radius-xs);padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;gap:8px;font-size:11px}
+.alarm-note-banner.hoy{background:rgba(255,107,107,.15);border:1px solid rgba(255,107,107,.4)}
+.alarm-note-banner.pronto{background:rgba(255,152,0,.12);border:1px solid rgba(255,152,0,.35)}
+.alarm-note-banner.semana{background:rgba(255,235,59,.1);border:1px solid rgba(255,235,59,.3)}
+.alarm-note-banner.proximo{background:rgba(0,229,209,.08);border:1px solid rgba(0,229,209,.25)}
+.note-date-badge{display:inline-flex;align-items:center;gap:3px;border-radius:20px;padding:2px 7px;font-size:9px;font-weight:700}
+.mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-top:6px}
+.mini-cal-day{font-size:10px;text-align:center;padding:4px 2px;border-radius:4px;cursor:pointer;color:var(--text2)}
+.mini-cal-day:hover{background:var(--surface2)}
+.mini-cal-day.today{background:rgba(112,112,255,.2);color:var(--accent);font-weight:700}
+.mini-cal-day.selected{background:var(--ef-pink);color:white;font-weight:700}
+.mini-cal-day.has-note{position:relative}
+.mini-cal-day.has-note::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--ef-pink)}
+.mini-cal-hdr{font-size:9px;text-align:center;color:var(--text3);padding:2px}
 /* Tooltips */
 [data-tip]{position:relative}
 [data-tip]:hover::after,[data-tip]:focus::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#f0edf8;font-size:10px;padding:5px 9px;border-radius:5px;white-space:nowrap;pointer-events:none;z-index:200;border:1px solid #353560;font-family:'Nunito',sans-serif;font-weight:600;max-width:200px;white-space:normal;text-align:center}
@@ -1252,7 +1275,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
   <div class="modal" style="max-width:560px">
     <div class="modal-title" id="note-modal-title">Nueva nota <button class="modal-close" onclick="closeModal('modal-note')">✕</button></div>
     <div class="fr"><label>Título</label><input type="text" id="note-title-input" placeholder="Título de la nota"></div>
-    <div class="fr"><label>Etiquetas (separadas por coma)</label><input type="text" id="note-tags-input" placeholder="ej: trabajo, importante, recordatorio"></div>
+    <!-- Carpeta -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div class="fr" style="margin-bottom:0">
+        <label>Carpeta</label>
+        <select id="note-folder-input" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:13px;outline:none">
+          <option value="">Sin carpeta</option>
+        </select>
+      </div>
+      <div class="fr" style="margin-bottom:0">
+        <label>Etiquetas</label>
+        <input type="text" id="note-tags-input" placeholder="trabajo, viaje...">
+      </div>
+    </div>
+    <!-- Nueva carpeta -->
+    <div style="margin-bottom:10px;display:flex;gap:6px;align-items:center">
+      <input type="text" id="note-new-folder" placeholder="📁 Nueva carpeta..." style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 10px;color:var(--text);font-size:12px;outline:none">
+      <button class="btn" style="font-size:11px;white-space:nowrap" onclick="crearCarpetaNota()">+ Crear</button>
+    </div>
     <div class="fr" style="margin-bottom:0">
       <label>Contenido</label>
       <div class="notes-toolbar">
@@ -1265,7 +1305,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
         <button class="ntb-btn" onclick="document.getElementById('note-photo-input').click()" title="Foto">📷</button>
         <input type="file" id="note-photo-input" accept="image/*" style="display:none" onchange="adjuntarFoto(event)">
       </div>
-      <textarea class="note-editor" id="note-body-input" placeholder="Escribe aquí... Usa ## para títulos, • para listas, ☐ para tareas"></textarea>
+      <textarea class="note-editor" id="note-body-input" placeholder="Escribe aquí... Usa ## para títulos, • para listas, ☐ para tareas" style="min-height:160px;resize:vertical"></textarea>
     </div>
     <div id="note-photo-preview" style="margin-bottom:8px;display:none">
       <img id="note-photo-img" style="max-width:100%;max-height:150px;border-radius:var(--radius-xs);border:1px solid var(--border)">
@@ -1273,6 +1313,41 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
     </div>
     <button class="voice-btn" id="voice-btn" onclick="toggleVoz()">🎤 Dictar nota de voz</button>
     <div id="voice-status" style="font-size:11px;color:var(--text3);text-align:center;margin-bottom:8px;display:none">🔴 Escuchando... hable ahora</div>
+    <!-- Programar fecha/alarma -->
+    <div style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer" onclick="toggleNotaFecha()">
+        <span style="font-size:12px;font-weight:700;color:var(--text2)">📅 Programar fecha / alarma</span>
+        <span id="nota-fecha-toggle-ico" style="color:var(--text3);font-size:12px">▸</span>
+      </div>
+      <div id="nota-fecha-box" style="display:none;padding:10px;background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius-xs) var(--radius-xs)">
+        <!-- Mini calendario -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <button onclick="navNotaCal(-1)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px">‹</button>
+          <span id="nota-cal-label" style="font-size:12px;font-weight:700;color:var(--text)"></span>
+          <button onclick="navNotaCal(1)" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:14px">›</button>
+        </div>
+        <div class="mini-cal-grid" id="nota-cal-days">
+          <div class="mini-cal-hdr">D</div><div class="mini-cal-hdr">L</div><div class="mini-cal-hdr">M</div><div class="mini-cal-hdr">M</div><div class="mini-cal-hdr">J</div><div class="mini-cal-hdr">V</div><div class="mini-cal-hdr">S</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+          <div class="fr" style="margin-bottom:0">
+            <label style="font-size:10px">Hora</label>
+            <input type="time" id="nota-hora-input" value="08:00" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:6px 8px;color:var(--text);font-size:12px;outline:none">
+          </div>
+          <div class="fr" style="margin-bottom:0">
+            <label style="font-size:10px">Avisar con anticipación</label>
+            <select id="nota-alarma-input" style="width:100%;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:6px 8px;color:var(--text);font-size:12px;outline:none">
+              <option value="0">El mismo día</option>
+              <option value="1">1 día antes</option>
+              <option value="3" selected>3 días antes</option>
+              <option value="7">1 semana antes</option>
+            </select>
+          </div>
+        </div>
+        <div id="nota-fecha-seleccionada" style="font-size:11px;color:var(--ef-cyan);margin-top:6px;text-align:center"></div>
+        <button class="btn btn-red" style="font-size:10px;padding:4px 10px;margin-top:6px;width:100%" onclick="limpiarNotaFecha()">✕ Quitar fecha</button>
+      </div>
+    </div>
     <div class="fr"><label>Color</label>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <label style="display:flex;align-items:center;gap:4px;font-size:12px"><input type="radio" name="note-color" value="#C2185B" checked> <span style="color:#C2185B">●</span> Rosa</label>
@@ -3585,8 +3660,20 @@ function getAllTags(){
 
 function renderNotes(el){
   const allTags=getAllTags();
-  // Filter notes
+  const allFolders=getAllNoteFolders();
+  const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+
+  // Alarmas de notas con fecha
+  const notasConFecha=notes.filter(n=>n.fechaProg);
+  const alarmas=notasConFecha.map(n=>{
+    const fp=new Date(n.fechaProg+'T00:00:00');
+    const dias=Math.round((fp-hoyD)/(86400000));
+    return{n,dias,fp};
+  }).filter(a=>a.dias>=-1&&a.dias<=14).sort((a,b)=>a.dias-b.dias);
+
+  // Filtros
   let filtered=notes.slice();
+  if(activeFolderFilter) filtered=filtered.filter(n=>(n.carpeta||'')===(activeFolderFilter));
   if(activeNoteTag) filtered=filtered.filter(n=>(n.tags||[]).includes(activeNoteTag));
   if(noteSearchQ){
     const q=noteSearchQ.toLowerCase();
@@ -3596,32 +3683,71 @@ function renderNotes(el){
       (n.tags||[]).some(t=>t.toLowerCase().includes(q))
     );
   }
-  // Sort: pinned first
   filtered=filtered.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0));
 
+  // Alarmas HTML
+  let alarmasHTML='';
+  if(alarmas.length>0){
+    alarmasHTML='<div style="margin-bottom:10px">';
+    alarmas.forEach(({n,dias})=>{
+      let cls,ico,txt;
+      if(dias<=0){cls='hoy';ico='🔴';txt=dias===0?'Hoy: '+n.titulo:'Ayer: '+n.titulo;}
+      else if(dias<=3){cls='pronto';ico='🟠';txt='En '+dias+' día'+(dias>1?'s':'')+': '+n.titulo;}
+      else if(dias<=7){cls='semana';ico='🟡';txt='Esta semana: '+n.titulo;}
+      else{cls='proximo';ico='📅';txt='En '+dias+' días: '+n.titulo;}
+      const carpeta=n.carpeta?'<span style="font-size:10px;opacity:.7"> · '+n.carpeta+'</span>':'';
+      alarmasHTML+='<div class="alarm-note-banner '+cls+'" onclick="verNota('+n.id+')" style="cursor:pointer">'
+        +'<span style="font-size:14px">'+ico+'</span>'
+        +'<div style="flex:1"><div style="font-weight:700">'+txt+'</div>'
+        +(n.horaAlarm?'<div style="font-size:10px;opacity:.75">'+n.horaAlarm+carpeta+'</div>':'')
+        +'</div></div>';
+    });
+    alarmasHTML+='</div>';
+  }
+
+  // Carpetas HTML
+  let carpetasHTML='';
+  if(allFolders.length>0){
+    carpetasHTML='<div style="margin-bottom:10px">'
+      +'<div class="sec-label" style="margin-bottom:6px">Carpetas</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'
+      +'<button class="folder-pill'+(activeFolderFilter===''?' active':'')+'" onclick="activeFolderFilter=\'\';refreshNotes()">📂 Todas</button>'
+      +allFolders.map(f=>'<button class="folder-pill'+(activeFolderFilter===f?' active':'')+'" onclick="activeFolderFilter=\''+f+'\';refreshNotes()"><span class="folder-pill-icon">📁</span>'+f+'<span style="font-size:10px;opacity:.6;margin-left:3px">'+notes.filter(n=>n.carpeta===f).length+'</span></button>').join('')
+      +'</div></div>';
+  }
+
   el.innerHTML=
-    // Header
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-    +'<div class="sec-label">Mis Notas ('+notes.length+')</div>'
+    +'<div class="sec-label">Notas ('+notes.length+')</div>'
     +'<button class="btn btn-pink" onclick="abrirNota()">+ Nueva nota</button>'
     +'</div>'
-    // Search bar
+    +alarmasHTML
+    +carpetasHTML
     +'<div class="note-search-bar">'
     +'<input type="text" placeholder="🔍 Buscar notas..." value="'+noteSearchQ+'" oninput="noteSearchQ=this.value;refreshNotes()" id="note-search-inp">'
     +(noteSearchQ?'<button class="btn" style="font-size:11px" onclick="clearNoteSearch()">✕</button>':'')
     +'</div>'
-    // Tags filter
     +(allTags.length>0?'<div class="note-tags-wrap">'
       +'<button class="note-tag'+(activeNoteTag===''?' active':'')+'" data-tag="" onclick="setNoteTag(this)">Todas</button>'
       +allTags.map(t=>'<button class="note-tag'+(activeNoteTag===t?' active':'')+'" data-tag="'+t+'" onclick="setNoteTag(this)">'+t+'</button>').join('')
       +'</div>':'')
-    // Notes grid
     +(filtered.length===0
-      ?'<div class="empty-state"><div class="empty-icon">📝</div><div style="font-size:14px;font-weight:600;color:var(--text2)">'+(noteSearchQ||activeNoteTag?'Sin resultados':'Sin notas')+'</div><div style="font-size:12px;color:var(--text3)">'+(noteSearchQ||activeNoteTag?'Pruebe con otra búsqueda':'Toca "+ Nueva nota" para crear la primera')+'</div></div>'
+      ?'<div class="empty-state"><div class="empty-icon">📝</div><div style="font-size:14px;font-weight:600;color:var(--text2)">'+(noteSearchQ||activeNoteTag||activeFolderFilter?'Sin resultados':'Sin notas')+'</div><div style="font-size:12px;color:var(--text3)">'+(noteSearchQ||activeNoteTag||activeFolderFilter?'Pruebe con otra búsqueda':'Toca "+ Nueva nota" para crear la primera')+'</div></div>'
       :'<div class="notes-grid">'
         +filtered.map(n=>{
           const tags=(n.tags||[]).map(t=>'<span class="note-tag-badge" style="background:'+(n.color||'#C2185B')+'22;color:'+(n.color||'#C2185B')+'">'+t+'</span>').join('');
-          return'<div class="note-card'+(n.pinned?' pinned':'')+(n.esVoz?' voice-note-card':'')+'" onclick="editarNota('+n.id+')" style="position:relative">'
+          // Badge de fecha/alarma
+          let fechaBadge='';
+          if(n.fechaProg){
+            const fp=new Date(n.fechaProg+'T00:00:00');
+            const dias=Math.round((fp-hoyD)/86400000);
+            if(dias<=0) fechaBadge='<span class="note-date-badge" style="background:rgba(255,107,107,.15);color:#ff6b6b">🔴 '+( dias===0?'Hoy':'Ayer')+'</span>';
+            else if(dias<=3) fechaBadge='<span class="note-date-badge" style="background:rgba(255,152,0,.15);color:#FF9800">🟠 '+dias+'d</span>';
+            else if(dias<=7) fechaBadge='<span class="note-date-badge" style="background:rgba(255,235,59,.12);color:#FDD835">📅 '+dias+'d</span>';
+            else fechaBadge='<span class="note-date-badge" style="background:rgba(0,229,209,.1);color:#00E5D1">📅 '+dias+'d</span>';
+          }
+          const carpetaBadge=n.carpeta?'<span style="font-size:9px;color:var(--text3);margin-right:3px">📁'+n.carpeta+'</span>':'';
+          return'<div class="note-card'+(n.pinned?' pinned':'')+(n.esVoz?' voice-note-card':'')+'" onclick="verNota('+n.id+')" style="position:relative">'
             +'<button class="note-del" onclick="event.stopPropagation();eliminarNota('+n.id+')">✕</button>'
             +(n.pinned?'<span class="note-pinned-badge">📌</span>':'')
             +'<div class="note-color" style="border-color:transparent '+(n.color||'#C2185B')+' transparent transparent"></div>'
@@ -3629,24 +3755,29 @@ function renderNotes(el){
             +(n.esVoz?'<div style="font-size:10px;color:var(--ef-pink2);margin-bottom:4px">🎤 Nota de voz</div>':'')
             +'<div class="note-title">'+n.titulo+'</div>'
             +'<div class="note-body" style="font-size:11px;color:var(--text2);line-height:1.5;overflow:hidden;max-height:60px">'+n.cuerpo.replace(/<[^>]+>/g,'').slice(0,120)+(n.cuerpo.length>120?'...':'')+'</div>'
-            +tags
+            +'<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px">'+carpetaBadge+fechaBadge+tags+'</div>'
             +'<div class="note-date">'+fd(n.fecha)+'</div>'
             +'</div>';
         }).join('')+'</div>');
 }
 
 function abrirNota(){
-  editNoteId=null;notePhotoData='';
+  editNoteId=null;notePhotoData='';notaFechaSeleccionada=null;
   document.getElementById('note-modal-title').innerHTML='Nueva nota <button class="modal-close" onclick="closeModal(&quot;modal-note&quot;)">✕</button>';
   document.getElementById('note-title-input').value='';
   document.getElementById('note-body-input').value='';
   document.getElementById('note-tags-input').value='';
   document.getElementById('note-photo-preview').style.display='none';
   document.getElementById('voice-status').style.display='none';
+  document.getElementById('nota-fecha-box').style.display='none';
+  document.getElementById('nota-fecha-toggle-ico').textContent='▸';
+  document.getElementById('nota-fecha-seleccionada').textContent='';
   const vb=document.getElementById('voice-btn');
   if(vb){vb.className='voice-btn';vb.textContent='🎤 Dictar nota de voz';}
   const radio=document.querySelector('input[name="note-color"][value="#C2185B"]');
   if(radio) radio.checked=true;
+  refreshNoteFolderSelect('');
+  renderNotaCal();
   openModal('modal-note');
 }
 
@@ -3654,6 +3785,7 @@ function editarNota(id){
   editNoteId=id;
   const n=notes.find(x=>x.id===id);if(!n) return;
   notePhotoData=n.foto||'';
+  notaFechaSeleccionada=n.fechaProg||null;
   document.getElementById('note-modal-title').innerHTML='Editar nota <button class="modal-close" onclick="closeModal(&quot;modal-note&quot;)">✕</button>';
   document.getElementById('note-title-input').value=n.titulo;
   document.getElementById('note-body-input').value=n.cuerpo;
@@ -3666,6 +3798,20 @@ function editarNota(id){
   if(vb){vb.className='voice-btn';vb.textContent='🎤 Agregar por voz';}
   const radio=document.querySelector('input[name="note-color"][value="'+(n.color||'#C2185B')+'"]');
   if(radio) radio.checked=true;
+  // Fecha
+  if(n.fechaProg){
+    document.getElementById('nota-fecha-box').style.display='block';
+    document.getElementById('nota-fecha-toggle-ico').textContent='▾';
+    if(n.horaAlarm) document.getElementById('nota-hora-input').value=n.horaAlarm;
+    if(n.diasAlarma!=null) document.getElementById('nota-alarma-input').value=n.diasAlarma;
+    document.getElementById('nota-fecha-seleccionada').textContent='Fecha: '+fd(n.fechaProg)+(n.horaAlarm?' · '+n.horaAlarm:'');
+  } else {
+    document.getElementById('nota-fecha-box').style.display='none';
+    document.getElementById('nota-fecha-toggle-ico').textContent='▸';
+    document.getElementById('nota-fecha-seleccionada').textContent='';
+  }
+  refreshNoteFolderSelect(n.carpeta||'');
+  renderNotaCal();
   openModal('modal-note');
 }
 
@@ -3675,12 +3821,15 @@ function guardarNota(){
   const color=document.querySelector('input[name="note-color"]:checked')?.value||'#C2185B';
   const tagsRaw=document.getElementById('note-tags-input').value;
   const tags=tagsRaw.split(',').map(t=>t.trim()).filter(Boolean);
+  const carpeta=document.getElementById('note-folder-input')?.value||'';
+  const horaAlarm=document.getElementById('nota-hora-input')?.value||'08:00';
+  const diasAlarma=parseInt(document.getElementById('nota-alarma-input')?.value)||0;
   if(!cuerpo){toast('Escribe algo en la nota','error');return;}
   if(editNoteId){
     const n=notes.find(x=>x.id===editNoteId);
-    Object.assign(n,{titulo,cuerpo,color,tags,foto:notePhotoData,fecha:today()});
+    Object.assign(n,{titulo,cuerpo,color,tags,carpeta,foto:notePhotoData,fecha:today(),fechaProg:notaFechaSeleccionada||null,horaAlarm,diasAlarma});
   } else {
-    notes.unshift({id:Date.now(),titulo,cuerpo,color,tags,foto:notePhotoData,fecha:today(),pinned:false,esVoz:false});
+    notes.unshift({id:Date.now(),titulo,cuerpo,color,tags,carpeta,foto:notePhotoData,fecha:today(),pinned:false,esVoz:false,fechaProg:notaFechaSeleccionada||null,horaAlarm,diasAlarma});
   }
   save();closeModal('modal-note');
   renderNotes(document.getElementById('dd-content'));
@@ -4650,6 +4799,7 @@ async function activarRecordatorios(){
 }
 
 function initReminderCheck(){
+  setTimeout(checkNotaAlarmas, 2000);
   if(localStorage.getItem('ef_notif_enabled')==='true' && Notification.permission==='granted'){
     setTimeout(()=>{
       checkPaymentReminders().forEach(r=>{
@@ -8082,6 +8232,170 @@ renderSidebar();
 initReminderCheck();
 initColorTheme();
 setTimeout(()=>updateColorThemeUI(getColorTheme()),500);
+
+
+// ── NOTAS: CARPETAS, VISTA LECTURA, CALENDARIO ────────────────────────────────
+let activeFolderFilter='';
+let notaFechaSeleccionada=null;
+let notaCalYear=new Date().getFullYear();
+let notaCalMonth=new Date().getMonth();
+
+function getAllNoteFolders(){
+  const s=new Set();
+  notes.forEach(n=>{if(n.carpeta) s.add(n.carpeta);});
+  return[...s].sort();
+}
+
+function refreshNoteFolderSelect(current){
+  const sel=document.getElementById('note-folder-input');
+  if(!sel) return;
+  const folders=getAllNoteFolders();
+  sel.innerHTML='<option value="">Sin carpeta</option>'
+    +folders.map(f=>'<option value="'+f+'"'+(f===current?' selected':'')+'>📁 '+f+'</option>').join('');
+  if(current) sel.value=current;
+}
+
+function crearCarpetaNota(){
+  const inp=document.getElementById('note-new-folder');
+  const name=(inp?.value||'').trim();
+  if(!name){toast('Escriba un nombre de carpeta','error');return;}
+  inp.value='';
+  refreshNoteFolderSelect(name);
+  document.getElementById('note-folder-input').value=name;
+  toast('Carpeta "'+name+'" lista','success');
+}
+
+// ── Vista lectura de nota ─────────────────────────────────────────
+function closeNoteView(){
+  const ov=document.getElementById('note-view-overlay');
+  if(ov) ov.remove();
+}
+
+function verNota(id){
+  const n=notes.find(x=>x.id===id);if(!n) return;
+  const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+  let fechaHTML='';
+  if(n.fechaProg){
+    const fp=new Date(n.fechaProg+'T00:00:00');
+    const dias=Math.round((fp-hoyD)/86400000);
+    let color='var(--ef-cyan)',bg='rgba(0,229,209,.1)',bdr='rgba(0,229,209,.3)';
+    if(dias<=0){color='#ff6b6b';bg='rgba(255,107,107,.12)';bdr='rgba(255,107,107,.3)';}
+    else if(dias<=3){color='#FF9800';bg='rgba(255,152,0,.12)';bdr='rgba(255,152,0,.3)';}
+    else if(dias<=7){color='#FDD835';bg='rgba(255,235,59,.1)';bdr='rgba(255,235,59,.25)';}
+    fechaHTML='<div style="background:'+bg+';border:1px solid '+bdr+';border-radius:var(--radius-xs);padding:8px 10px;margin-bottom:10px">'
+      +'<div style="font-size:11px;font-weight:800;color:'+color+'">📅 '+fd(n.fechaProg)+(n.horaAlarm?' · '+n.horaAlarm:'')+'</div>'
+      +'<div style="font-size:10px;color:'+color+';opacity:.8">'+(dias<=0?'¡Hoy es la fecha!':dias===1?'Mañana':'En '+dias+' días')+'</div>'
+      +'</div>';
+  }
+  const carpetaHTML=n.carpeta?'<span style="font-size:11px;color:var(--text3);margin-bottom:8px;display:block">📁 '+n.carpeta+'</span>':'';
+  const tagsHTML=(n.tags||[]).map(t=>'<span class="note-tag-badge" style="background:'+(n.color||'#C2185B')+'22;color:'+(n.color||'#C2185B')+'">'+t+'</span>').join('');
+  const overlay=document.createElement('div');
+  overlay.className='note-view-overlay';
+  overlay.id='note-view-overlay';
+  overlay.innerHTML=
+    '<div class="note-view-box">'
+    +'<div class="note-view-header">'
+    +'<div>'
+    +(n.pinned?'<span style="font-size:11px;color:var(--ef-pink)">📌 </span>':'')
+    +'<div class="note-view-title">'+n.titulo+'</div>'
+    +carpetaHTML
+    +'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">'+tagsHTML+'</div>'
+    +'</div>'
+    +'<button onclick="closeNoteView()" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;padding:2px 6px;flex-shrink:0">✕</button>'
+    +'</div>'
+    +'<div class="note-view-body">'
+    +fechaHTML
+    +(n.foto?'<img src="'+n.foto+'" style="max-width:100%;border-radius:var(--radius-xs);margin-bottom:10px">':'')
+    +renderNoteBody(n.cuerpo)
+    +'<div style="font-size:10px;color:var(--text3);margin-top:12px">'+fd(n.fecha)+'</div>'
+    +'</div>'
+    +'<div class="note-view-footer">'
+    +'<button class="btn btn-pink" style="flex:1" data-nid="'+n.id+'" onclick="closeNoteView();editarNota(parseInt(this.dataset.nid))">✏ Editar</button>'
+    +'<button class="btn" style="flex:1" data-nid="'+n.id+'" onclick="event.stopPropagation();togglePinNota(parseInt(this.dataset.nid));closeNoteView()">'+(n.pinned?'📌 Desanclar':'📌 Anclar')+'</button>'
+    +'<button class="btn btn-red" style="font-size:12px" data-nid="'+n.id+'" onclick="closeNoteView();eliminarNota(parseInt(this.dataset.nid))">🗑</button>'
+    +'</div>'
+    +'</div>';
+  document.body.appendChild(overlay);
+}
+
+// ── Calendario mini para notas ────────────────────────────────────
+function toggleNotaFecha(){
+  const box=document.getElementById('nota-fecha-box');
+  const ico=document.getElementById('nota-fecha-toggle-ico');
+  const open=box.style.display==='none'||!box.style.display;
+  box.style.display=open?'block':'none';
+  ico.textContent=open?'▾':'▸';
+  if(open) renderNotaCal();
+}
+
+function navNotaCal(dir){
+  notaCalMonth+=dir;
+  if(notaCalMonth>11){notaCalMonth=0;notaCalYear++;}
+  if(notaCalMonth<0){notaCalMonth=11;notaCalYear--;}
+  renderNotaCal();
+}
+
+function renderNotaCal(){
+  const lbl=document.getElementById('nota-cal-label');
+  const grid=document.getElementById('nota-cal-days');
+  if(!lbl||!grid) return;
+  const meses=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  lbl.textContent=meses[notaCalMonth]+' '+notaCalYear;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const primerDia=new Date(notaCalYear,notaCalMonth,1).getDay();
+  const diasMes=new Date(notaCalYear,notaCalMonth+1,0).getDate();
+  // Notas con fecha en este mes
+  const notasEsteMes=notes.filter(n=>{
+    if(!n.fechaProg) return false;
+    const fp=new Date(n.fechaProg+'T00:00:00');
+    return fp.getFullYear()===notaCalYear&&fp.getMonth()===notaCalMonth;
+  }).map(n=>new Date(n.fechaProg+'T00:00:00').getDate());
+  let html='<div class="mini-cal-hdr">D</div><div class="mini-cal-hdr">L</div><div class="mini-cal-hdr">M</div><div class="mini-cal-hdr">M</div><div class="mini-cal-hdr">J</div><div class="mini-cal-hdr">V</div><div class="mini-cal-hdr">S</div>';
+  for(let i=0;i<primerDia;i++) html+='<div></div>';
+  for(let d=1;d<=diasMes;d++){
+    const thisDate=new Date(notaCalYear,notaCalMonth,d);
+    const esHoy=thisDate.getTime()===hoy.getTime();
+    const esSel=notaFechaSeleccionada===notaCalYear+'-'+String(notaCalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const tieneNota=notasEsteMes.includes(d);
+    let cls='mini-cal-day';
+    if(esHoy) cls+=' today';
+    if(esSel) cls+=' selected';
+    if(tieneNota&&!esSel) cls+=' has-note';
+    const fechaStr=notaCalYear+'-'+String(notaCalMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    html+='<div class="'+cls+'" onclick="selNotaFecha(\''+fechaStr+'\')">'+d+'</div>';
+  }
+  grid.innerHTML=html;
+}
+
+function selNotaFecha(fechaStr){
+  notaFechaSeleccionada=fechaStr;
+  const hora=document.getElementById('nota-hora-input')?.value||'08:00';
+  document.getElementById('nota-fecha-seleccionada').textContent='Fecha: '+fd(fechaStr)+' · '+hora;
+  renderNotaCal();
+}
+
+function limpiarNotaFecha(){
+  notaFechaSeleccionada=null;
+  document.getElementById('nota-fecha-seleccionada').textContent='';
+  renderNotaCal();
+  toast('Fecha eliminada');
+}
+
+// ── Alarmas de notas en initReminderCheck ─────────────────────────
+function checkNotaAlarmas(){
+  const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+  notes.forEach(n=>{
+    if(!n.fechaProg) return;
+    const fp=new Date(n.fechaProg+'T00:00:00');
+    const dias=Math.round((fp-hoyD)/86400000);
+    const anticipacion=n.diasAlarma||0;
+    if(dias===0){
+      toast('📅 Hoy: '+n.titulo,'info',6000);
+    } else if(dias>0&&dias<=anticipacion){
+      toast('⏰ En '+dias+' días: '+n.titulo,'info',5000);
+    }
+  });
+}
 
 // ── Botón atrás del celular (PWA) ────────────────────────────────────────────
 const _navHistory=[];
