@@ -120,6 +120,74 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.4)}50%{box-shadow:0 0 0 6px rgba(239,83,80,0)}}
 
+/* ── COTIZADOR ── */
+.modal-tabs{display:flex;border-bottom:1px solid var(--border);margin:-4px -16px 14px;padding:0 16px}
+.modal-tab{padding:9px 14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-size:12px;font-weight:700;cursor:pointer;font-family:"Nunito",sans-serif;transition:all .15s;white-space:nowrap}
+.modal-tab.active{color:var(--ef-pink2);border-bottom-color:var(--ef-pink2)}
+.cot-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.cot-field label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);display:block;margin-bottom:4px}
+.cot-field input,.cot-field select{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-family:"Nunito",sans-serif;font-size:13px;outline:none}
+.cot-field input:focus,.cot-field select:focus{border-color:var(--ef-pink)}
+.cot-full{grid-column:1/-1}
+.cot-result{background:linear-gradient(135deg,rgba(80,80,255,.12),rgba(136,0,204,.08));border:1px solid rgba(80,80,255,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.cot-result-main{text-align:center;margin-bottom:12px}
+.cot-result-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.cot-result-value{font-size:28px;font-weight:900;font-family:"DM Mono",monospace;color:var(--ef-cyan)}
+.cot-result-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.cot-breakdown{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.cot-bk{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:9px 11px}
+.cot-bk-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.cot-bk-val{font-size:13px;font-weight:800;font-family:"DM Mono",monospace}
+.cot-schedule{max-height:180px;overflow-y:auto;scrollbar-width:thin;border:1px solid var(--border);border-radius:var(--radius-xs);margin-bottom:12px}
+.cot-schedule-row{display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:0;font-size:11px;font-family:"DM Mono",monospace;border-bottom:1px solid var(--border)}
+.cot-schedule-row:last-child{border-bottom:none}
+.cot-schedule-row.header{background:var(--surface2);font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0}
+.cot-schedule-row div{padding:6px 9px}
+.cot-wa-preview{background:rgba(37,211,102,.08);border:1px solid rgba(37,211,102,.25);border-radius:var(--radius-xs);padding:10px 12px;font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:12px;white-space:pre-wrap}
+.cot-actions{display:flex;gap:8px}
+.cot-empty{text-align:center;padding:30px 16px;color:var(--text3);font-size:12px}
+.cot-slider-wrap{margin-bottom:4px}
+.cot-slider{width:100%;accent-color:var(--ef-pink2);margin-top:4px}
+
+/* ── COBROS DEL DÍA ── */
+.cobros-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.cobros-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.cobros-title svg{flex-shrink:0}
+.cobros-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.cobros-tabs{display:flex;gap:4px;margin-bottom:10px}
+.cobros-tab{padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--text3);font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.cobros-tab.active-hoy{background:rgba(255,107,107,.15);border-color:var(--red-bdr);color:var(--red)}
+.cobros-tab.active-mora{background:rgba(255,107,107,.15);border-color:var(--red-bdr);color:var(--red)}
+.cobros-tab.active-prox{background:rgba(112,112,255,.15);border-color:var(--blue-bdr);color:var(--blue)}
+.cobros-tab.active-todos{background:rgba(245,166,35,.12);border-color:var(--amber-bdr);color:var(--amber)}
+.cobros-badge{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:800;padding:0 4px}
+.cobros-badge.red{background:var(--red);color:white}
+.cobros-badge.blue{background:var(--accent);color:white}
+.cobros-badge.amber{background:var(--amber);color:#000}
+.cobros-empty{text-align:center;padding:24px 16px;color:var(--text3);font-size:12px}
+.cobros-empty svg{margin:0 auto 8px;display:block;opacity:.4}
+.cobro-card{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);margin-bottom:6px;transition:border-color .15s;cursor:pointer}
+.cobro-card:hover{border-color:var(--border2)}
+.cobro-card.es-hoy{border-left:3px solid var(--red);background:rgba(255,107,107,.06)}
+.cobro-card.es-mora{border-left:3px solid #ff4444;background:rgba(255,68,68,.06)}
+.cobro-card.es-prox{border-left:3px solid var(--accent);background:rgba(112,112,255,.05)}
+.cobro-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;color:white}
+.cobro-info{flex:1;min-width:0}
+.cobro-nombre{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cobro-meta{font-size:10px;color:var(--text3);margin-top:2px;font-family:'DM Mono',monospace}
+.cobro-right{text-align:right;flex-shrink:0}
+.cobro-monto{font-size:13px;font-weight:800;font-family:'DM Mono',monospace;color:var(--amber)}
+.cobro-actions{display:flex;gap:5px;margin-top:4px;justify-content:flex-end}
+.cobro-btn{padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:none;font-family:'Nunito',sans-serif;white-space:nowrap}
+.cobro-btn-pago{background:linear-gradient(135deg,var(--ef-pink),var(--ef-purple2));color:white}
+.cobro-btn-wa{background:#25D366;color:white}
+.cobro-btn-ver{background:var(--surface3);color:var(--text2);border:1px solid var(--border2) !important}
+.cobros-resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.cobros-res-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;text-align:center}
+.cobros-res-val{font-size:15px;font-weight:800;font-family:'DM Mono',monospace;margin-bottom:2px}
+.cobros-res-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.cobros-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:10px 0 6px;font-family:'DM Mono',monospace}
+
 /* ── SCREENS ── */
 .screen{display:none;height:100vh;overflow:hidden;flex-direction:column}
 .screen.active{display:flex}
@@ -139,7 +207,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .home-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(194,24,91,.15),transparent);opacity:0;transition:opacity .2s}
 .home-card:hover::before,.home-card:active::before{opacity:1}
 .home-card:hover{transform:translateY(-3px);border-color:rgba(194,24,91,.4)}
-.hc-icon{font-size:36px;margin-bottom:10px}
+.hc-icon{font-size:36px;margin-bottom:10px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.85)}
+.hc-icon svg{filter:drop-shadow(0 0 8px rgba(255,255,255,.15))}
+.dd-tab{display:flex;align-items:center;gap:5px}
+.dd-tab svg{flex-shrink:0}
+.btn-new-sm svg{display:block}
+.gmi-icon svg{display:block}
+.menu-btn{display:flex;align-items:center;justify-content:center}
+.dd-back{display:flex;align-items:center;gap:5px}
 .hc-title{font-size:15px;font-weight:700;color:white;margin-bottom:4px}
 .hc-sub{font-size:11px;color:rgba(255,255,255,.45);line-height:1.4}
 .home-version{position:absolute;bottom:14px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em}
@@ -661,23 +736,23 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
   <div class="home-tagline">Tu solución financiera personal</div>
   <div class="home-cards">
     <div class="home-card" id="card-prestamista" onclick="goTo('loans')">
-      <div class="hc-icon">🏦</div>
+      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
       <div class="hc-title">Modo Prestamista</div>
       <div class="hc-sub">Clientes, pagos, caja y reportes</div>
     </div>
     <div class="home-card" onclick="goTo('cliente')" style="border-color:rgba(0,188,212,.3);background:linear-gradient(135deg,rgba(0,51,68,.4),rgba(0,96,100,.2))">
-      <div class="hc-icon">👤</div>
+      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
       <div class="hc-title" style="color:#00BCD4">Modo Cliente</div>
       <div class="hc-sub">Control de mis deudas y pagos</div>
     </div>
     <div class="home-card" onclick="goTo('dayday')">
-      <div class="hc-icon">⚡</div>
+      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
       <div class="hc-title">Cuadre Day to Day</div>
       <div class="hc-sub">Calculadora, divisas, ahorros y más</div>
     </div>
   </div>
   <div class="home-version">v2.0 · Cuadre</div>
-  <button id="theme-toggle-btn" onclick="toggleTheme()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px">🌙 Modo oscuro</button>
+  <button id="theme-toggle-btn" onclick="toggleTheme()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px">🌙 Oscuro</button>
 </div>
 
 <!-- ════════════════════════════════
@@ -692,8 +767,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <span style="font-size:15px;font-weight:900;color:white;letter-spacing:-.02em">Cuadre</span>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button id="topbar-estado-btn" style="display:none;background:rgba(194,24,91,.2);color:var(--ef-pink2);border:1px solid rgba(194,24,91,.4);padding:5px 9px;border-radius:var(--radius-xs);font-size:11px;font-weight:700;cursor:pointer" onclick="estadoCuentaActivo()" title="Estado de cuenta del cliente">📄 Estado</button>
-      <button class="menu-btn" onclick="toggleSB()">☰</button>
+      <button id="topbar-estado-btn" style="display:none;background:rgba(194,24,91,.2);color:var(--ef-pink2);border:1px solid rgba(194,24,91,.4);padding:5px 9px;border-radius:var(--radius-xs);font-size:11px;font-weight:700;cursor:pointer" onclick="estadoCuentaActivo()" title="Estado de cuenta del cliente">Estado</button>
+      <button class="menu-btn" onclick="toggleSB()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg></button>
     </div>
   </div>
 
@@ -720,9 +795,9 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <div class="sidebar-list" id="sidebar-list"></div>
       <div class="sidebar-footer">
         <button class="btn-new" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>
-        <button class="btn-new-sm" title="Capital" onclick="abrirCapital()">💰</button>
-        <button class="btn-new-sm" title="Opciones" onclick="toggleGearMenu(true)">⚙️</button>
-        <button class="btn-new-sm" title="Inicio" onclick="goTo('home')">⌂</button>
+        <button class="btn-new-sm" title="Capital" onclick="abrirCapital()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></button>
+        <button class="btn-new-sm" title="Opciones" onclick="toggleGearMenu(true)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
+        <button class="btn-new-sm" title="Inicio" onclick="goTo('home')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
       </div>
     </aside>
 
@@ -741,7 +816,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <!-- Socio distribution modal -->
 <div class="overlay" id="modal-socio-dist">
   <div class="modal" style="max-width:500px">
-    <div class="modal-title">💼 Distribución con socio <button class="modal-close" onclick="closeModal('modal-socio-dist')">✕</button></div>
+    <div class="modal-title">Distribución con socio <button class="modal-close" onclick="closeModal('modal-socio-dist')">✕</button></div>
     <div id="socio-dist-content"></div>
   </div>
 </div>
@@ -770,13 +845,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
           </div>
           <div id="storage-status" style="font-size:10px;margin-top:4px;color:var(--text3)"></div>
         </div>
-        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportJSON()"><span class="gmi-icon">💾</span>Guardar respaldo</button>
-        <button class="gear-menu-item" onclick="toggleGearMenu(false);importJSON()"><span class="gmi-icon">📂</span>Cargar respaldo</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportJSON()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/><path d="M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7"/><path d="M7 3v4a1 1 0 0 0 1 1h7"/></svg></span>Guardar respaldo</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);importJSON()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 14 1.45-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.55 6a2 2 0 0 1-1.94 1.5H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H18a2 2 0 0 1 2 2v2"/></svg></span>Cargar respaldo</button>
         <div style="height:1px;background:var(--border);margin:2px 0"></div>
-        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportXLSX()"><span class="gmi-icon">📊</span>Exportar Excel</button>
-        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirImportExcel()"><span class="gmi-icon">📥</span>Importar Excel</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);exportXLSX()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/></svg></span>Exportar Excel</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirImportExcel()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>Importar Excel</button>
         <div style="height:1px;background:var(--border);margin:2px 0"></div>
-        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirReportes()"><span class="gmi-icon">📈</span>Ver reportes</button>
+        <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirReportes()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>Ver reportes</button>
       </div>
     </main>
   </div>
@@ -788,16 +863,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <div class="screen" id="cliente">
   <div class="cliente-topbar">
     <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-size:20px">👤</span>
+      <span style="display:flex;align-items:center;color:currentColor"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></span>
       <span class="cliente-title">Mis Deudas</span>
     </div>
     <div style="display:flex;gap:8px;align-items:center" id="cliente-topbar-actions">
       <button onclick="abrirNuevaDeuda()" style="background:#006064;color:#00E5D1;border:none;border-radius:7px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">+ Nueva</button>
       <button onclick="syncDeudasNube()" id="btn-sync-deudas" style="display:none"></button>
-      <button onclick="exportDeudasXLSX()" style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);color:#4CAF50;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer" title="Exportar Excel">📊</button>
+      <button onclick="exportDeudasXLSX()" style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);color:#4CAF50;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer;display:flex;align-items:center" title="Exportar Excel"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg></button>
       <button onclick="recuperarDeudasNube()" id="btn-recuperar-deudas" style="display:none"></button>
-      <button onclick="activarRecordatorios()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer" title="Activar recordatorios de pago">🔔</button>
-      <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer" title="Inicio">⌂</button>
+      <button onclick="activarRecordatorios()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer;display:flex;align-items:center" title="Activar recordatorios de pago"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+      <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center" title="Inicio"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
     </div>
   </div>
   <div class="cliente-tabs">
@@ -937,17 +1012,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 ════════════════════════════════ -->
 <div class="screen" id="dayday">
   <div class="dd-header">
-    <button class="dd-back" onclick="goTo('home')">⌂ Inicio</button>
+    <button class="dd-back" onclick="goTo('home')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</button>
     <div class="dd-title">Easy <span>Day to Day</span></div>
     <div class="cuadre-logo-icon" style="width:28px;height:28px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-size:15px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span></div><!---->
   </div>
   <div class="dd-tabs">
-    <button class="dd-tab active" onclick="setDDTab('converter',this)">💱 Divisas</button>
-    <button class="dd-tab" onclick="setDDTab('calc',this)">🔢 Calculadora</button>
-    <button class="dd-tab" onclick="setDDTab('budget',this)">💼 Presupuesto</button>
-    <button class="dd-tab" onclick="setDDTab('savings',this)">🐷 Bolsillos</button>
-    <button class="dd-tab" onclick="setDDTab('tips',this)">💡 Consejos</button>
-    <button class="dd-tab" onclick="setDDTab('notes',this)">📝 Notas</button>
+    <button class="dd-tab active" onclick="setDDTab('converter',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg> Divisas</button>
+    <button class="dd-tab" onclick="setDDTab('calc',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg> Calculadora</button>
+    <button class="dd-tab" onclick="setDDTab('budget',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg> Presupuesto</button>
+    <button class="dd-tab" onclick="setDDTab('savings',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2z"/><path d="M2 9v1a2 2 0 0 0 2 2h1"/><path d="M16 11h.01"/></svg> Bolsillos</button>
+    <button class="dd-tab" onclick="setDDTab('tips',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> Consejos</button>
+    <button class="dd-tab" onclick="setDDTab('notes',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg> Notas</button>
   </div>
   <div class="dd-content" id="dd-content"></div>
 </div>
@@ -958,6 +1033,30 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <div class="overlay" id="modal-new">
   <div class="modal">
     <div class="modal-title">Nuevo préstamo <button class="modal-close" onclick="closeModal('modal-new')">✕</button></div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-btn-cot" onclick="switchModalTab('cot')">Cotizar</button>
+      <button class="modal-tab" id="tab-btn-form" onclick="switchModalTab('form')">Registrar</button>
+    </div>
+    <!-- COTIZADOR TAB -->
+    <div id="tab-cot">
+      <div class="cot-grid">
+        <div class="cot-field cot-full"><label>Nombre del cliente (opcional)</label><input type="text" id="cot-nombre" placeholder="Ej: Juan Pérez" oninput="cotizar()"></div>
+        <div class="cot-field"><label>Monto ($)</label><input type="number" id="cot-monto" min="0" step="50000" placeholder="500000" oninput="cotizar()"></div>
+        <div class="cot-field"><label>Tasa mensual (%)</label><input type="number" id="cot-tasa" min="0" max="100" step="0.1" placeholder="10" oninput="cotizar()"></div>
+        <div class="cot-field"><label>Cuotas</label><input type="number" id="cot-cuotas" min="1" max="60" placeholder="3" oninput="cotizar()"></div>
+        <div class="cot-field"><label>Tipo de cuota</label>
+          <select id="cot-tipo" onchange="cotizar()">
+            <option value="variable">Variable (saldo libre)</option>
+            <option value="fija">Fija (amortización)</option>
+          </select>
+        </div>
+      </div>
+      <div id="cot-result-area">
+        <div class="cot-empty">Complete los campos para ver la cotización</div>
+      </div>
+    </div>
+    <!-- FORM TAB (hidden by default) -->
+    <div id="tab-form" style="display:none">
     <div class="fr"><label>Nombre del cliente</label><input type="text" id="n-name" autocomplete="off" placeholder="Ej: Juan Pérez" oninput="formatNombrePropio('n-name')"></div>
     <div class="fr"><label>Teléfono (opcional)</label><input type="tel" id="n-tel" placeholder="+57"></div>
     <div class="fr"><label>Documento de identidad (opcional)</label><input type="text" id="n-cedula" placeholder="Cédula o NIT"></div>
@@ -1040,6 +1139,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
       <button class="btn" onclick="closeModal('modal-new')">Cancelar</button>
       <button class="btn btn-pink" onclick="crearCliente()">Crear préstamo</button>
     </div>
+    </div><!-- /tab-form -->
   </div>
 </div>
 
@@ -1163,7 +1263,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <!-- WhatsApp Modal -->
 <div class="overlay" id="modal-wa">
   <div class="modal" style="max-width:500px">
-    <div class="modal-title">📱 Enviar por WhatsApp <button class="modal-close" onclick="closeModal('modal-wa')">✕</button></div>
+    <div class="modal-title">Enviar por WhatsApp <button class="modal-close" onclick="closeModal('modal-wa')">✕</button></div>
     <div id="wa-templates"></div>
     <div class="wa-preview-box">
       <div class="wa-preview-label">VISTA PREVIA DEL MENSAJE</div>
@@ -1179,7 +1279,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <!-- Reports Modal -->
 <div class="overlay" id="modal-reportes">
   <div class="modal" style="max-width:620px;max-height:90vh;overflow-y:auto">
-    <div class="modal-title">📊 Reportes del negocio <button class="modal-close" onclick="closeModal('modal-reportes')">✕</button></div>
+    <div class="modal-title">Reportes del negocio <button class="modal-close" onclick="closeModal('modal-reportes')">✕</button></div>
     <div style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;-webkit-overflow-scrolling:touch" id="report-tabs">
       <button class="ctab active" data-tab="rentabilidad" onclick="switchReportTab(this)">💰 Rentabilidad</button>
       <button class="ctab" data-tab="clientes" onclick="switchReportTab(this)">👥 Clientes</button>
@@ -1195,7 +1295,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <!-- WhatsApp Broadcast Modal -->
 <div class="overlay" id="modal-wa-broadcast">
   <div class="modal" style="max-width:500px">
-    <div class="modal-title">📢 Envío masivo WhatsApp <button class="modal-close" onclick="closeModal('modal-wa-broadcast')">✕</button></div>
+    <div class="modal-title">Envío masivo WhatsApp <button class="modal-close" onclick="closeModal('modal-wa-broadcast')">✕</button></div>
     <div id="broadcast-client-list" style="margin-bottom:12px"></div>
     <div style="margin-bottom:10px">
       <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Mensaje a enviar:</div>
@@ -1212,7 +1312,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 <!-- Recovery/Negotiation Modal -->
 <div class="overlay" id="modal-recovery">
   <div class="modal" style="max-width:500px">
-    <div class="modal-title" id="recovery-title">🤝 Negociación de cartera <button class="modal-close" onclick="closeModal('modal-recovery')">✕</button></div>
+    <div class="modal-title" id="recovery-title">Negociación de cartera <button class="modal-close" onclick="closeModal('modal-recovery')">✕</button></div>
     <div id="recovery-step1">
       <div id="recovery-info-box" class="info-box" style="margin-bottom:12px"></div>
       <div class="sec-label" style="margin-bottom:8px">OPCIONES DE NEGOCIACIÓN</div>
@@ -2179,6 +2279,179 @@ function copiarResumenWA(){
 }
 
 // ══ DASHBOARD ════════════════════════════════════════════════════════════════
+
+// ══ COBROS DEL DÍA ═══════════════════════════════════════════════════════════
+let cobrosTab = 'hoy'; // hoy | mora | prox | todos
+
+function renderCobrosDelDia(el) {
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const hoyStr = iso(hoy);
+  const en3 = new Date(hoy); en3.setDate(en3.getDate() + 3);
+  const en7 = new Date(hoy); en7.setDate(en7.getDate() + 7);
+
+  // Clasificar clientes activos
+  const cobrosHoy = [], cobroraMora = [], cobrosProx = [];
+  clients.forEach(c => {
+    if (saldoPendiente(c) === 0) return;
+    const mora = diasMora(c);
+    const pp = proximoPago(c);
+    if (mora > 0) {
+      cobroraMora.push({ c, mora, pp });
+    } else if (pp) {
+      const ppDate = new Date(pp.fecha + 'T00:00:00');
+      if (pp.fecha === hoyStr) cobrosHoy.push({ c, pp });
+      else if (ppDate > hoy && ppDate <= en7) cobrosProx.push({ c, pp, ppDate });
+    }
+  });
+  cobrosProx.sort((a, b) => a.ppDate - b.ppDate);
+
+  // Totales para resumen
+  const totalHoy = cobrosHoy.reduce((s, x) => s + saldoPendiente(x.c), 0);
+  const totalMora = cobroraMora.reduce((s, x) => s + saldoPendiente(x.c), 0);
+  const totalProx = cobrosProx.slice(0, 5).reduce((s, x) => s + saldoPendiente(x.c), 0);
+
+  // Avatar color por nombre
+  function avatarColor(nombre) {
+    const colors = ['#C2185B','#5050ff','#00897B','#F57C00','#7B1FA2','#0288D1','#388E3C','#D32F2F'];
+    let h = 0; for (let i = 0; i < nombre.length; i++) h = nombre.charCodeAt(i) + ((h << 5) - h);
+    return colors[Math.abs(h) % colors.length];
+  }
+  function initials(nombre) {
+    const p = nombre.trim().split(' ');
+    return p.length >= 2 ? (p[0][0] + p[1][0]).toUpperCase() : nombre.slice(0, 2).toUpperCase();
+  }
+
+  // Render tarjeta individual
+  function renderCard(c, opts = {}) {
+    const { mora = 0, pp = null, tipo = 'prox' } = opts;
+    const sp = saldoPendiente(c);
+    const color = avatarColor(c.nombre);
+    const ini = initials(c.nombre);
+    let metaText = '';
+    if (tipo === 'mora') metaText = '<span style="color:var(--red)">' + mora + ' día' + (mora !== 1 ? 's' : '') + ' en mora</span>';
+    else if (pp) metaText = (pp.fecha === hoyStr ? '<span style="color:var(--red)">Vence HOY</span>' : fd(pp.fecha)) + ' · ' + pp.quincena;
+    const clazz = tipo === 'mora' ? 'es-mora' : tipo === 'hoy' ? 'es-hoy' : 'es-prox';
+
+    // Find midx for payment modal
+    let midx = -1, payKey = 'q1a';
+    if (pp) {
+      midx = c.meses.findIndex(m => m.fq1 === pp.fecha || m.fq2 === pp.fecha);
+      if (midx >= 0) {
+        const m = c.meses[midx];
+        payKey = pp.quincena && pp.quincena.startsWith('1') ? ((m.pq1a == null ? 'q1a' : 'q1b')) : ((m.pq2a == null ? 'q2a' : 'q2b'));
+      }
+    } else if (tipo === 'mora') {
+      // Find first unpaid quincena
+      for (let i = 0; i < c.meses.length; i++) {
+        const m = c.meses[i];
+        if ((m.pq1a == null || m.pq1b == null) && new Date(m.fq1 + 'T00:00:00') < new Date()) {
+          midx = i; payKey = m.pq1a == null ? 'q1a' : 'q1b'; break;
+        }
+        if ((m.pq2a == null || m.pq2b == null) && new Date(m.fq2 + 'T00:00:00') < new Date()) {
+          midx = i; payKey = m.pq2a == null ? 'q2a' : 'q2b'; break;
+        }
+      }
+    }
+
+    const canPay = canDo('registrarPago');
+    const pagoBtn = canPay && midx >= 0
+      ? '<button class="cobro-btn cobro-btn-pago" onclick="event.stopPropagation();openPago(' + c.id + ',' + midx + ',\'' + payKey + '\')">✓ Pago</button>'
+      : '';
+    const waBtn = '<button class="cobro-btn cobro-btn-wa" onclick="event.stopPropagation();abrirWhatsApp(' + c.id + ')">WA</button>';
+    const verBtn = '<button class="cobro-btn cobro-btn-ver" onclick="event.stopPropagation();openClient(' + c.id + ')">Ver</button>';
+
+    return '<div class="cobro-card ' + clazz + '" onclick="openClient(' + c.id + ')">'
+      + '<div class="cobro-avatar" style="background:' + color + '">' + ini + '</div>'
+      + '<div class="cobro-info">'
+      + '<div class="cobro-nombre">' + c.nombre + '</div>'
+      + '<div class="cobro-meta">' + metaText + '</div>'
+      + '</div>'
+      + '<div class="cobro-right">'
+      + '<div class="cobro-monto">' + fmtS(sp) + '</div>'
+      + '<div class="cobro-actions">' + pagoBtn + waBtn + verBtn + '</div>'
+      + '</div>'
+      + '</div>';
+  }
+
+  // Render lista según tab activo
+  function renderLista() {
+    if (cobrosTab === 'hoy') {
+      if (cobrosHoy.length === 0) return '<div class="cobros-empty">'
+        + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+        + 'Sin cobros para hoy</div>';
+      return cobrosHoy.map(x => renderCard(x.c, { pp: x.pp, tipo: 'hoy' })).join('');
+    }
+    if (cobrosTab === 'mora') {
+      if (cobroraMora.length === 0) return '<div class="cobros-empty">'
+        + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>'
+        + 'Sin clientes en mora</div>';
+      return cobroraMora.map(x => renderCard(x.c, { mora: x.mora, pp: x.pp, tipo: 'mora' })).join('');
+    }
+    if (cobrosTab === 'prox') {
+      if (cobrosProx.length === 0) return '<div class="cobros-empty">'
+        + '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'
+        + 'Sin cobros próximos</div>';
+      // Group by date
+      let html = '', lastDate = '';
+      cobrosProx.forEach(x => {
+        if (x.pp.fecha !== lastDate) {
+          const diffDays = Math.round((x.ppDate - hoy) / 86400000);
+          const label = diffDays === 1 ? 'Mañana' : diffDays === 2 ? 'Pasado mañana' : 'En ' + diffDays + ' días · ' + fd(x.pp.fecha);
+          html += '<div class="cobros-section-label">' + label + '</div>';
+          lastDate = x.pp.fecha;
+        }
+        html += renderCard(x.c, { pp: x.pp, tipo: 'prox' });
+      });
+      return html;
+    }
+    // todos
+    let html = '';
+    if (cobrosHoy.length) {
+      html += '<div class="cobros-section-label">Hoy</div>';
+      html += cobrosHoy.map(x => renderCard(x.c, { pp: x.pp, tipo: 'hoy' })).join('');
+    }
+    if (cobroraMora.length) {
+      html += '<div class="cobros-section-label">En mora</div>';
+      html += cobroraMora.map(x => renderCard(x.c, { mora: x.mora, pp: x.pp, tipo: 'mora' })).join('');
+    }
+    if (cobrosProx.length) {
+      html += '<div class="cobros-section-label">Próximos 7 días</div>';
+      html += cobrosProx.map(x => renderCard(x.c, { pp: x.pp, tipo: 'prox' })).join('');
+    }
+    if (!html) return '<div class="cobros-empty">Sin cobros pendientes</div>';
+    return html;
+  }
+
+  function tabClass(t) {
+    if (cobrosTab !== t) return 'cobros-tab';
+    return 'cobros-tab active-' + t;
+  }
+
+  const svg_clock = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+
+  el.innerHTML =
+    '<div class="cobros-header">'
+    + '<div class="cobros-title">' + svg_clock + 'Cobros del día</div>'
+    + '<div class="cobros-date">' + fd(hoyStr) + '</div>'
+    + '</div>'
+    + '<div class="cobros-resumen">'
+    + '<div class="cobros-res-card"><div class="cobros-res-val c-red">' + cobrosHoy.length + '</div><div class="cobros-res-label">Hoy</div></div>'
+    + '<div class="cobros-res-card"><div class="cobros-res-val c-red">' + cobroraMora.length + '</div><div class="cobros-res-label">En mora</div></div>'
+    + '<div class="cobros-res-card"><div class="cobros-res-val c-blue">' + cobrosProx.length + '</div><div class="cobros-res-label">Próx. 7 días</div></div>'
+    + '</div>'
+    + '<div class="cobros-tabs">'
+    + '<button class="' + tabClass("hoy") + '" onclick="cobrosTab=&quot;hoy&quot;;renderCobrosDelDia(document.getElementById(&quot;cobros-content&quot;))">'
+    + 'Hoy' + (cobrosHoy.length > 0 ? ' <span class="cobros-badge red">' + cobrosHoy.length + '</span>' : '') + '</button>'
+    + '<button class="' + tabClass("mora") + '" onclick="cobrosTab=&quot;mora&quot;;renderCobrosDelDia(document.getElementById(&quot;cobros-content&quot;))">'
+    + 'Mora' + (cobroraMora.length > 0 ? ' <span class="cobros-badge red">' + cobroraMora.length + '</span>' : '') + '</button>'
+    + '<button class="' + tabClass("prox") + '" onclick="cobrosTab=&quot;prox&quot;;renderCobrosDelDia(document.getElementById(&quot;cobros-content&quot;))">'
+    + 'Próximos' + (cobrosProx.length > 0 ? ' <span class="cobros-badge blue">' + cobrosProx.length + '</span>' : '') + '</button>'
+    + '<button class="' + tabClass("todos") + '" onclick="cobrosTab=&quot;todos&quot;;renderCobrosDelDia(document.getElementById(&quot;cobros-content&quot;))">'
+    + 'Todos</button>'
+    + '</div>'
+    + '<div id="cobros-lista">' + renderLista() + '</div>';
+}
+
 function renderDashboard(){
   activeId=null;renderSidebar();
   const tb=document.getElementById('topbar-estado-btn');
@@ -2219,6 +2492,7 @@ function renderDashboard(){
     +'</div>'
     +'</div>'
     +'<div class="content">'
+    +'<div class="card" id="cobros-content" style="margin-bottom:14px;padding:12px 14px"></div>'
     +'<div class="sec-label">Capital y préstamos</div>'
     +'<div class="metrics" style="margin-bottom:12px">'
     +'<div class="mc"><div class="mc-label">Capital en calle</div><div class="mc-value c-amber">'+fmtS(capitalCalle)+'</div><div class="mc-sub">'+activos.length+' activos</div></div>'
@@ -2278,6 +2552,9 @@ function renderDashboard(){
     +'</div></div>';
 
   document.getElementById('main-content').innerHTML=dashHTML;
+  // Render cobros del día inside the placeholder card
+  const cobrosEl = document.getElementById('cobros-content');
+  if(cobrosEl) renderCobrosDelDia(cobrosEl);
 }
 
 
@@ -2325,7 +2602,7 @@ function renderDetail(){
     +(c.tipocuota==='fija'?' · Cuota fija':' · Variable')
     +(c.tel?' · '+c.tel:'')+'</div></div>'
     +'<div class="header-actions">'
-    +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700">⌂ Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">📄 Estado</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn" style="background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3);font-size:11px" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" data-tip="Calcular nueva cuota si se amplía el plazo">🔄 Refinanciar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
+    +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">Estado</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn" style="background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3);font-size:11px" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" data-tip="Calcular nueva cuota si se amplía el plazo">🔄 Refinanciar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
     +'<div class="content">'
     +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
     +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
@@ -2484,7 +2761,7 @@ function guardarPago(){
       concepto:'Pago — '+c.nombre+' · Mes '+c.meses[midx].mes});
   }
   // isLiquidado() checks dynamically based on actual payments
-  save();closeModal('modal-pago');renderDetail();
+  save();closeModal('modal-pago');const _cel=document.getElementById('cobros-content');if(_cel)renderCobrosDelDia(_cel);renderDetail();
   if(!isEdit) setTimeout(()=>{if(confirm('¿Generar recibo de pago?')) generarRecibo(c,midx,quinc+slot);},200);
   toast((isEdit?'Pago actualizado':'Pago registrado')+' — '+fmt(valor));
 }
@@ -2898,6 +3175,126 @@ function openNewModal(){
   document.getElementById('banco-select-wrap').style.display='none';
   openModal('modal-new');
 }
+
+// ══ COTIZADOR DE PRÉSTAMOS ════════════════════════════════════════════════════
+function switchModalTab(tab) {
+  document.getElementById('tab-cot').style.display = tab === 'cot' ? 'block' : 'none';
+  document.getElementById('tab-form').style.display = tab === 'form' ? 'block' : 'none';
+  document.getElementById('tab-btn-cot').classList.toggle('active', tab === 'cot');
+  document.getElementById('tab-btn-form').classList.toggle('active', tab === 'form');
+}
+
+function cotizar() {
+  const monto   = parseFloat(document.getElementById('cot-monto').value) || 0;
+  const tasa    = parseFloat(document.getElementById('cot-tasa').value)  || 0;
+  const cuotas  = parseInt(document.getElementById('cot-cuotas').value)  || 0;
+  const tipo    = document.getElementById('cot-tipo').value;
+  const nombre  = document.getElementById('cot-nombre').value.trim() || 'el cliente';
+  const el      = document.getElementById('cot-result-area');
+
+  if (!monto || !tasa || !cuotas) {
+    el.innerHTML = '<div class="cot-empty">Complete los campos para ver la cotización</div>';
+    return;
+  }
+
+  const t = tasa / 100;
+  const interesMes = Math.round(monto * t);
+  const saldoInicial = Math.round(monto * (1 + t));
+  let cuotaQ, cuotaLabel, totalPagar, schedule = [];
+
+  if (tipo === 'fija') {
+    const cf = calcCuotaFija(monto, t, cuotas);
+    cuotaQ = Math.round(cf / 2);
+    cuotaLabel = 'por quincena (cuota fija)';
+    totalPagar = Math.round(cf * cuotas);
+    // Build amortization schedule
+    let saldo = monto;
+    for (let i = 0; i < cuotas; i++) {
+      const int = Math.round(saldo * t);
+      const cap = Math.round(cf - int);
+      schedule.push({ mes: i + 1, cuota: Math.round(cf), interes: int, capital: cap, saldo: Math.max(saldo - cap, 0) });
+      saldo = Math.max(saldo - cap, 0);
+      if (saldo <= 0) break;
+    }
+  } else {
+    cuotaQ = interesMes; // variable: pay interest only per quincena
+    cuotaLabel = 'por quincena (solo interés)';
+    totalPagar = interesMes * cuotas + monto;
+    for (let i = 0; i < cuotas; i++) {
+      schedule.push({ mes: i + 1, cuota: interesMes, interes: interesMes, capital: i === cuotas - 1 ? monto : 0, saldo: i === cuotas - 1 ? 0 : monto });
+    }
+  }
+
+  const ganancia = totalPagar - monto;
+  const usuraWarn = tasa > 2.13 ? '<div style="background:rgba(255,107,107,.12);border:1px solid var(--red-bdr);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--red);margin-bottom:10px">⚠ La tasa supera la tasa de usura vigente (≈2.13% mensual)</div>' : '';
+
+  // WhatsApp message preview
+  const waMsg = 'Hola ' + nombre + ', aquí va su cotización:%0A%0A'
+    + '💰 Monto: $' + monto.toLocaleString('es-CO') + '%0A'
+    + '📊 Tasa: ' + tasa + '% mensual%0A'
+    + '📅 Plazo: ' + cuotas + ' mes' + (cuotas !== 1 ? 'es' : '') + ' (' + tipo + ')%0A'
+    + '💵 Cuota quincenal: $' + cuotaQ.toLocaleString('es-CO') + '%0A'
+    + '💳 Total a pagar: $' + totalPagar.toLocaleString('es-CO') + '%0A%0A'
+    + '_Generado por Cuadre_';
+
+  // Schedule HTML
+  const schedHTML = '<div class="cot-schedule">'
+    + '<div class="cot-schedule-row header"><div>Mes</div><div>Cuota</div><div>Interés</div><div>Saldo</div></div>'
+    + schedule.map(r =>
+        '<div class="cot-schedule-row">'
+        + '<div>' + r.mes + '</div>'
+        + '<div>$' + r.cuota.toLocaleString('es-CO') + '</div>'
+        + '<div style="color:var(--red)">$' + r.interes.toLocaleString('es-CO') + '</div>'
+        + '<div style="color:var(--amber)">$' + r.saldo.toLocaleString('es-CO') + '</div>'
+        + '</div>'
+      ).join('')
+    + '</div>';
+
+  el.innerHTML = usuraWarn
+    + '<div class="cot-result">'
+    + '<div class="cot-result-main">'
+    + '<div class="cot-result-label">Cuota quincenal</div>'
+    + '<div class="cot-result-value">$' + cuotaQ.toLocaleString('es-CO') + '</div>'
+    + '<div class="cot-result-sub">' + cuotaLabel + '</div>'
+    + '</div>'
+    + '<div class="cot-breakdown">'
+    + '<div class="cot-bk"><div class="cot-bk-label">Monto</div><div class="cot-bk-val c-blue">$' + monto.toLocaleString('es-CO') + '</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">Interés/mes</div><div class="cot-bk-val c-red">$' + interesMes.toLocaleString('es-CO') + '</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">Total a pagar</div><div class="cot-bk-val c-amber">$' + totalPagar.toLocaleString('es-CO') + '</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">Su ganancia</div><div class="cot-bk-val c-green">$' + ganancia.toLocaleString('es-CO') + '</div></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="sec-label" style="margin-bottom:6px">Tabla de pagos</div>'
+    + schedHTML
+    + '<div class="cot-actions">'
+    + '<button class="btn btn-pink" style="flex:1" onclick="cotizarACrear()">→ Crear préstamo</button>'
+    + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text=' + waMsg + '" target="_blank">WA</a>'
+    + '</div>';
+}
+
+function cotizarACrear() {
+  // Pass values from cotizador to the form tab and switch
+  const monto  = document.getElementById('cot-monto').value;
+  const tasa   = document.getElementById('cot-tasa').value;
+  const cuotas = document.getElementById('cot-cuotas').value;
+  const tipo   = document.getElementById('cot-tipo').value;
+  const nombre = document.getElementById('cot-nombre').value.trim();
+
+  switchModalTab('form');
+
+  if (nombre) document.getElementById('n-name').value = nombre;
+  document.getElementById('n-monto').value  = monto;
+  document.getElementById('n-tasa').value   = tasa;
+  document.getElementById('n-cuotas').value = cuotas;
+  document.getElementById('n-tipocuota').value = tipo;
+  document.getElementById('n-fecha').value  = iso();
+  prev('n');
+  toast('Datos pasados al formulario — complete y guarde', 'info', 3000);
+}
+
+// Reset cotizador when modal opens
+const _origOpenModal = window.openModal;
+// Hook into openModal for modal-new
 function crearCliente(){
   if(!canDo('crearPrestamo')){toast('Sin permisos para crear préstamos','error');return;}
   const nombre=document.getElementById('n-name').value.trim();
@@ -3047,7 +3444,7 @@ function verCajaCompleta(){
   document.getElementById('main-content').innerHTML=
     '<div class="main-header"><div><div class="main-title">Caja y Capital</div><div class="main-sub">Movimientos completos</div></div>'
     +'<div class="header-actions">'
-    +'<button class="btn" onclick="renderDashboard()" style="font-weight:700">⌂ Inicio</button>'
+    +'<button class="btn" onclick="renderDashboard()" style="font-weight:700"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</button>'
     +'<button class="btn btn-green" onclick="abrirCapital()">💰 Capital</button>'
     +(gd>0?'<button class="btn btn-green" onclick="reinvertirGanancias()">🔄 Reinvertir</button>':'')
     +'<button class="btn" onclick="openModal(\'modal-caja\')">+ Movimiento</button>'
@@ -6998,7 +7395,7 @@ function verDetalleDeuda(did){
       ?'<button class="btn-cyan-solid" style="flex:1;font-size:11px" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');abrirPagoDeuda(parseInt(this.dataset.did))">💳 Registrar pago</button>'
       :'<button class="btn-cyan-solid" style="flex:1;font-size:11px" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');abrirPagoDeudaQuincenal(parseInt(this.dataset.did))">📅 Pagos</button>'
     )
-    +'<button class="btn" style="font-size:11px;background:rgba(245,166,35,.1);color:#FFB300;border-color:rgba(245,166,35,.3)" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');estadoCuentaDeuda(parseInt(this.dataset.did))">📄 Estado</button>'
+    +'<button class="btn" style="font-size:11px;background:rgba(245,166,35,.1);color:#FFB300;border-color:rgba(245,166,35,.3)" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');estadoCuentaDeuda(parseInt(this.dataset.did))">Estado</button>'
     +'<button class="btn" style="font-size:11px;background:rgba(0,188,212,.08);color:#00BCD4;border-color:rgba(0,188,212,.3)" data-did="'+d.id+'" onclick="graficaEvolucionDeuda(parseInt(this.dataset.did))">📈 Gráfica</button>'
     +'</div>'
     +'</div>';
@@ -8298,7 +8695,17 @@ function applyTheme(){
 }
 
 // ══ UTILS ════════════════════════════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('open');}
+function openModal(id){
+  document.getElementById(id).classList.add('open');
+  if(id==='modal-new'){
+    // Always start on cotizador tab
+    switchModalTab('cot');
+    // Clear cotizador fields
+    ['cot-nombre','cot-monto','cot-tasa','cot-cuotas'].forEach(f=>{const el=document.getElementById(f);if(el)el.value='';});
+    const ra=document.getElementById('cot-result-area');
+    if(ra) ra.innerHTML='<div class="cot-empty">Complete los campos para ver la cotización</div>';
+  }
+}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 function toggleSB(){document.getElementById('sidebar').classList.toggle('mobile-open');document.getElementById('sb-overlay').classList.toggle('active');}
 function closeSB(){document.getElementById('sidebar').classList.remove('mobile-open');document.getElementById('sb-overlay').classList.remove('active');}
