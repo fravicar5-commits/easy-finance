@@ -187,6 +187,31 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito
 .cobros-res-val{font-size:15px;font-weight:800;font-family:'DM Mono',monospace;margin-bottom:2px}
 .cobros-res-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
 .cobros-section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin:10px 0 6px;font-family:'DM Mono',monospace}
+/* ── CATEGORÍAS GASTOS VARIABLES ── */
+.cat-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;background:var(--surface3);border:1px solid var(--border2);color:var(--text2);margin-right:4px;margin-bottom:2px;white-space:nowrap}
+.gv-cat-select{background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:7px 8px;color:var(--text);font-family:'Nunito',sans-serif;font-size:12px;outline:none;flex:1.2;min-width:90px}
+.gv-cat-select:focus{border-color:var(--ef-pink)}
+.cat-group{margin-bottom:10px}
+.cat-group-header{display:flex;align-items:center;justify-content:space-between;padding:6px 0 4px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.cat-group-label{font-size:11px;font-weight:700;display:flex;align-items:center;gap:5px}
+.cat-group-total{font-size:11px;font-family:'DM Mono',monospace;color:var(--red)}
+/* ── HOME BUDGET WIDGET ── */
+
+.hbw-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hbw-title{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.06em}
+.hbw-saldo{font-size:18px;font-weight:800;font-family:'DM Mono',monospace}
+.hbw-bars{display:flex;gap:8px;align-items:flex-end;height:80px;margin-bottom:4px}
+.hbw-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:0}
+.hbw-bar-group{width:100%;display:flex;gap:2px;align-items:flex-end;height:56px}
+.hbw-bar-col{flex:1;border-radius:3px 3px 0 0;transition:height .4s;min-height:2px}
+.hbw-bar-label{font-size:9px;color:rgba(255,255,255,.4);font-family:'DM Mono',monospace;text-align:center;margin-top:3px;width:100%}
+.hbw-cats{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.hbw-cat-pill{font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.1)}
+
+body.light-mode .hbw-title{color:rgba(26,26,46,.5)}
+body.light-mode .hbw-bar-bg{background:rgba(26,26,46,.08)}
+body.light-mode .hbw-bar-label{color:rgba(26,26,46,.4)}
+body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,.5);border-color:rgba(26,26,46,.12)}
 
 /* ── SCREENS ── */
 .screen{display:none;height:100vh;overflow:hidden;flex-direction:column}
@@ -1536,6 +1561,7 @@ function saveBudgets(arr){
   localStorage.setItem(getBK(),JSON.stringify(arr));
   // Solo sincronizar a Firestore si ya hay sesión iniciada (no durante arranque)
   if(currentUser&&_fsUid()) _fsSave({budgets:arr,updatedAt:new Date().toISOString()});
+
 }
 
 function getBudget(key){
@@ -1636,14 +1662,36 @@ function renderBudget(el){
   const qSaldo=qTI-qGT;
 
   el.innerHTML=
+    // ── WIDGET RESUMEN ──
+    (()=>{
+      if(arr.length===0) return '';
+      const last4=arr.slice(0,4).reverse();
+      const maxVal=Math.max(
+        ...last4.map(m2=>budMonthIngresos(m2)),
+        ...last4.map(m2=>budMonthGastosFijos(m2)+budMonthGastosVar(m2)),
+        1);
+      const BAR_H=56,mes3=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+      const barsH=last4.map(m2=>{
+        const ing=budMonthIngresos(m2),gas=budMonthGastosFijos(m2)+budMonthGastosVar(m2);
+        const hI=ing>0?Math.max(Math.round((ing/maxVal)*BAR_H),3):0;
+        const hG=gas>0?Math.max(Math.round((gas/maxVal)*BAR_H),3):0;
+        const isAct=m2.key===b.key;
+        const opI=isAct?'1':'.35',opG=isAct?'1':'.35';
+        return '<div class="hbw-bar-wrap">'
+          +'<div class="hbw-bar-group">'
+          +(ing>0?'<div class="hbw-bar-col" style="height:'+hI+'px;background:var(--green);opacity:'+opI+'"></div>':'<div class="hbw-bar-col" style="height:2px;background:rgba(255,255,255,.05)"></div>')
+          +(gas>0?'<div class="hbw-bar-col" style="height:'+hG+'px;background:var(--red);opacity:'+opG+'"></div>':'<div class="hbw-bar-col" style="height:2px;background:rgba(255,255,255,.05)"></div>')
+          +'</div>'
+          +'<div class="hbw-bar-label">'+mes3[m2.mes]+'</div></div>';
+      }).join('');
+      const allGV=[...(b.q1.gastosVar||[]),...(b.q2.gastosVar||[])];
+      const catT={};allGV.forEach(g=>{const c=g.categoria||'otros';catT[c]=(catT[c]||0)+(g.valor||0);});
+      const topC=Object.entries(catT).sort((a,c)=>c[1]-a[1]).slice(0,5);
+      const sc=saldo>=0?'var(--green)':'var(--red)';
+      return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">'        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'        +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">📊 Resumen · '+b.nombre+'</div>'        +'<div style="font-size:20px;font-weight:800;font-family:\'DM Mono\',monospace;color:'+sc+'">'+fmtS(saldo)+'</div>'        +'</div>'        +(last4.length>1          ?'<div class="hbw-bars" style="margin-bottom:6px">'+barsH+'</div>'           +'<div style="display:flex;gap:12px;margin-bottom:10px">'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Ingresos</span>'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>Gastos</span>'           +'</div>':'')        +(topC.length>0?'<div class="hbw-cats">'+topC.map(([cId,tot])=>{const cat=gvCat(cId);return '<span class="hbw-cat-pill" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text2)">'+cat.icon+' '+cat.label+' '+fmtS(tot)+'</span>';}).join('')+'</div>':'')        +'</div>';
+    })()
     // Header
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'
-    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'
-    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'
-    +'</div>'
-
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'    +'</div>'
     // Month nav
     +(arr.length>0?'<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+monthNav+'</div>':'')
 
@@ -1708,20 +1756,13 @@ function renderBudget(el){
     // ── GASTOS VARIABLES ──
     +'<div class="bud-section">'
     +'<div class="bud-section-title">🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día de esta quincena.')+'</div>'
-    +'<div class="expense-input">'
+    +'<div class="expense-input" style="flex-wrap:wrap;gap:5px">'
+    +'<select class="gv-cat-select" id="gv-cat">'+GV_CATS.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.label+'</option>').join('')+'</select>'
     +'<input type="text" id="gv-nombre" placeholder="Concepto (ej: almuerzo)" style="flex:2">'
     +'<input type="number" id="gv-valor" placeholder="$" style="flex:1;min-width:70px" inputmode="numeric">'
     +'<button class="expense-add-btn" onclick="addGastoVar()">+</button>'
     +'</div>'
-    +(qdata.gastosVar.slice().reverse().map((g,i)=>{
-      const ri=qdata.gastosVar.length-1-i;
-      return'<div class="bud-item">'
-        +'<span style="font-size:10px;color:var(--text3);margin-right:5px">'+fd(g.fecha)+'</span>'
-        +'<span class="bud-item-name">'+g.nombre+'</span>'
-        +'<span class="bud-item-val c-red">'+fmt(g.valor)+'</span>'
-        +'<button class="bud-del" onclick="delBudItemVar('+ri+')">✕</button>'
-        +'</div>';
-    }).join('')||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos variables</div>')
+    +renderGastosVarAgrupados(qdata.gastosVar)
     +(qGV>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos variables: <strong class="c-red">'+fmt(qGV)+'</strong></div>':'')
     +'</div>'
 
@@ -1844,15 +1885,62 @@ function delBudItem(field,idx){
   renderBudget(document.getElementById('dd-content'));
 }
 
+// ── CATEGORÍAS GASTOS VARIABLES ──────────────────────────────────────────
+const GV_CATS=[
+  {id:'mercado',    icon:'🛒', label:'Mercado'},
+  {id:'comidas',    icon:'🍽️', label:'Comidas'},
+  {id:'transporte', icon:'🚌', label:'Transporte'},
+  {id:'salud',      icon:'💊', label:'Salud'},
+  {id:'ocio',       icon:'🎮', label:'Ocio'},
+  {id:'ropa',       icon:'👗', label:'Ropa'},
+  {id:'servicios',  icon:'💡', label:'Servicios'},
+  {id:'educacion',  icon:'📚', label:'Educación'},
+  {id:'mascota',    icon:'🐾', label:'Mascota'},
+  {id:'otros',      icon:'📦', label:'Otros'},
+];
+function gvCat(id){return GV_CATS.find(c=>c.id===id)||{id:'otros',icon:'📦',label:'Otros'};}
+
+function renderGastosVarAgrupados(gastosVar){
+  if(!gastosVar||gastosVar.length===0) return '<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos variables</div>';
+  // Group by category
+  const grupos={};
+  gastosVar.forEach((g,origIdx)=>{
+    const cat=g.categoria||'otros';
+    if(!grupos[cat]) grupos[cat]={items:[],total:0};
+    grupos[cat].items.push({...g,origIdx});
+    grupos[cat].total+=g.valor||0;
+  });
+  let html='';
+  Object.entries(grupos).forEach(([catId,grupo])=>{
+    const cat=gvCat(catId);
+    html+='<div class="cat-group">';
+    html+='<div class="cat-group-header">';
+    html+='<span class="cat-group-label">'+cat.icon+' '+cat.label+'</span>';
+    html+='<span class="cat-group-total">'+fmt(grupo.total)+'</span>';
+    html+='</div>';
+    grupo.items.slice().reverse().forEach(g=>{
+      html+='<div class="bud-item">';
+      html+='<span style="font-size:10px;color:var(--text3);margin-right:5px">'+fd(g.fecha)+'</span>';
+      html+='<span class="bud-item-name">'+g.nombre+'</span>';
+      html+='<span class="bud-item-val c-red">'+fmt(g.valor)+'</span>';
+      html+='<button class="bud-del" onclick="delBudItemVar('+g.origIdx+')">✕</button>';
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+
 function addGastoVar(){
   const nombre=document.getElementById('gv-nombre')?.value.trim();
   const valor=parseFloat(document.getElementById('gv-valor')?.value);
+  const categoria=document.getElementById('gv-cat')?.value||'otros';
   if(!nombre){toast('Ingrese un concepto','error');return;}
   if(!valor||valor<=0){toast('Ingrese un valor','error');return;}
   const arr=loadBudgets();
   const b=arr.find(b=>b.key===activeBudgetKey);
   if(!b) return;
-  b[activeBudgetQ].gastosVar.push({nombre,valor,fecha:today()});
+  b[activeBudgetQ].gastosVar.push({nombre,valor,categoria,fecha:today()});
   document.getElementById('gv-nombre').value='';
   document.getElementById('gv-valor').value='';
   saveBudgets(arr);
@@ -1867,6 +1955,7 @@ function delBudItemVar(idx){
   saveBudgets(arr);
   renderBudget(document.getElementById('dd-content'));
 }
+
 
 // Legacy compat — keep save/load using BK but for budgets array
 // Override save to also save budgets (budgets array stored separately via saveBudgets)
