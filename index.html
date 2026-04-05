@@ -492,7 +492,14 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .dd-back{background:none;border:1px solid var(--border2);color:var(--text2);padding:6px 10px;border-radius:var(--radius-xs);cursor:pointer;font-size:12px;font-family:'Nunito',sans-serif;font-weight:600}
 .dd-title{font-size:15px;font-weight:800;flex:1}
 .dd-title span{color:var(--ef-pink2)}
-.dd-tabs{display:flex;overflow-x:auto;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--border);gap:0}
+.dd-tabs{display:flex;overflow-x:auto;padding:0 14px;background:var(--surface);border-bottom:1px solid var(--border);gap:0;transition:max-height .25s ease,opacity .2s ease,padding .2s ease;max-height:60px;overflow:hidden}
+.dd-tabs.collapsed{max-height:0;opacity:0;padding-top:0;padding-bottom:0;border-bottom:none}
+.dd-toggle{background:none;border:none;color:var(--text3);cursor:pointer;padding:4px 8px;border-radius:var(--radius-xs);display:flex;align-items:center;transition:color .15s}
+.dd-toggle:hover{color:var(--text)}
+.dd-toggle svg{transition:transform .25s}
+.dd-toggle.collapsed svg{transform:rotate(180deg)}
+.dd-tab-indicator{font-size:10px;color:var(--ef-pink2);font-weight:700;font-family:"Nunito",sans-serif;max-width:80px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .15s}
+.dd-tab-indicator.visible{opacity:1}
 .dd-tab{padding:10px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-size:12px;font-weight:600;cursor:pointer;font-family:'Nunito',sans-serif;white-space:nowrap;transition:all .15s}
 .dd-tab.active{color:var(--ef-pink2);border-bottom-color:var(--ef-pink2)}
 .dd-content{flex:1;overflow-y:auto;padding:16px}
@@ -1039,7 +1046,10 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
   <div class="dd-header">
     <button class="dd-back" onclick="goTo('home')"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</button>
     <div class="dd-title">Easy <span>Day to Day</span></div>
-    <div class="cuadre-logo-icon" style="width:28px;height:28px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:8px;display:flex;align-items:center;justify-content:center"><span style="font-size:15px;font-weight:900;color:white;font-family:'Nunito',sans-serif;line-height:1">C</span></div><!---->
+    <span class="dd-tab-indicator" id="dd-tab-indicator"></span>
+    <button class="dd-toggle" id="dd-toggle-btn" onclick="toggleDDTabs()" title="Mostrar/ocultar pestañas">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+    </button>
   </div>
   <div class="dd-tabs">
     <button class="dd-tab active" onclick="setDDTab('converter',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg> Divisas</button>
@@ -1048,6 +1058,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <button class="dd-tab" onclick="setDDTab('savings',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2z"/><path d="M2 9v1a2 2 0 0 0 2 2h1"/><path d="M16 11h.01"/></svg> Bolsillos</button>
     <button class="dd-tab" onclick="setDDTab('tips',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg> Consejos</button>
     <button class="dd-tab" onclick="setDDTab('notes',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg> Notas</button>
+    <button class="dd-tab" onclick="setDDTab('nomina',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg> Nómina</button>
   </div>
   <div class="dd-content" id="dd-content"></div>
 </div>
@@ -3841,10 +3852,38 @@ function closeSB(){document.getElementById('sidebar').classList.remove('mobile-o
 // ══════════════════════════════════════════════════════════════════════════════
 //  EASY DAY TO DAY
 // ══════════════════════════════════════════════════════════════════════════════
+
+// ══ DD TABS TOGGLE ════════════════════════════════════════════════════════════
+let ddTabsCollapsed = false;
+
+function toggleDDTabs() {
+  ddTabsCollapsed = !ddTabsCollapsed;
+  const tabs = document.querySelector('.dd-tabs');
+  const btn  = document.getElementById('dd-toggle-btn');
+  const ind  = document.getElementById('dd-tab-indicator');
+  if (!tabs || !btn) return;
+  tabs.classList.toggle('collapsed', ddTabsCollapsed);
+  btn.classList.toggle('collapsed', ddTabsCollapsed);
+  if (ind) {
+    ind.classList.toggle('visible', ddTabsCollapsed);
+  }
+}
+
+function updateDDIndicator(tabName) {
+  const ind = document.getElementById('dd-tab-indicator');
+  if (!ind) return;
+  const labels = {
+    converter: 'Divisas', calc: 'Calculadora', budget: 'Presupuesto',
+    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina'
+  };
+  ind.textContent = labels[tabName] || tabName;
+}
+
 function setDDTab(tab,btn){
   ddTab=tab;
   document.querySelectorAll('.dd-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  updateDDIndicator(tab);
   renderDDTab(tab);
 }
 function renderDDTab(tab){
@@ -3855,6 +3894,335 @@ function renderDDTab(tab){
   else if(tab==='savings') renderSavings(el);
   else if(tab==='tips') renderTips(el);
   else if(tab==='notes') renderNotes(el);
+  else if(tab==='nomina') renderNomina(el);
+}
+
+
+// ══ CALCULADORA DE NÓMINA COLOMBIANA 2025 ════════════════════════════════════
+// ── TABLA ANUAL SMMLV — actualizar cada enero con el decreto vigente ──────────
+// Fuente: Ministerio de Trabajo · https://www.mintrabajo.gov.co
+const NOM_TABLA = {
+  2023: { smmlv: 1160000,  auxTrans: 140606,  decreto: '2613/2022' },
+  2024: { smmlv: 1300000,  auxTrans: 162000,  decreto: '2641/2023' },
+  2025: { smmlv: 1423500,  auxTrans: 200000,  decreto: '2637/2024' },
+  2026: { smmlv: 1750905,  auxTrans: 249095,  decreto: '1469/2025' },
+};
+// Año vigente — se detecta automáticamente, cae al más reciente si no está en tabla
+const NOM_ANO = (()=>{ const y=new Date().getFullYear(); return NOM_TABLA[y]?y:Math.max(...Object.keys(NOM_TABLA).map(Number)); })();
+const NOM_CFG = NOM_TABLA[NOM_ANO];
+const SMMLV_2025     = NOM_CFG.smmlv;    // alias para compatibilidad
+const AUX_TRANS_2025 = NOM_CFG.auxTrans; // alias para compatibilidad
+const AUX_TRANS_LIMITE = NOM_CFG.smmlv * 2;
+
+let nomModoVariable = false;
+let nomComisiones = Array(6).fill(''); // últimos 6 meses
+
+function toggleNomModo() {
+  nomModoVariable = !nomModoVariable;
+  const secFijo = document.getElementById('nom-sec-fijo');
+  const secVar  = document.getElementById('nom-sec-var');
+  const btnTxt  = document.getElementById('nom-modo-label');
+  if (secFijo) secFijo.style.display = nomModoVariable ? 'none' : 'block';
+  if (secVar)  secVar.style.display  = nomModoVariable ? 'block' : 'none';
+  if (btnTxt)  btnTxt.textContent    = nomModoVariable ? 'Salario variable (comisiones)' : 'Salario fijo';
+  calcNomina();
+}
+
+function nomComisionChange(idx, val) {
+  nomComisiones[idx] = val;
+  calcNomina();
+}
+
+function renderNomina(el) {
+  nomModoVariable = false;
+  nomComisiones = Array(6).fill('');
+  const meses3 = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const hoy = new Date();
+  const mesesLabels = Array.from({length:6},(_,i)=>{
+    const d = new Date(hoy.getFullYear(), hoy.getMonth()-5+i, 1);
+    return meses3[d.getMonth()]+' '+String(d.getFullYear()).slice(2);
+  });
+
+  const inputStyle = 'width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:9px 11px;color:var(--text);font-family:\'Nunito\',sans-serif;font-size:13px;outline:none';
+  const labelStyle = 'font-size:10px;color:var(--text3);font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em';
+
+  el.innerHTML = `
+<div style="max-width:480px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+    </div>
+    <div style="flex:1">
+      <div style="font-size:14px;font-weight:800;color:var(--text)">Liquidador de Nómina</div>
+      <div style="font-size:10px;color:var(--text3);font-family:\'DM Mono\',monospace">Colombia ${NOM_ANO} · SMMLV $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Dec. ${NOM_CFG.decreto}</div>
+    </div>
+  </div>
+
+  <!-- Modo toggle -->
+  <div style="display:flex;gap:6px;margin-bottom:12px">
+    <button onclick="if(!nomModoVariable)void 0" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer" onclick="nomModoVariable&&toggleNomModo()">
+      Salario fijo
+    </button>
+    <button onclick="!nomModoVariable&&toggleNomModo()" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer" id="nom-btn-var">
+      Variable / Comisiones
+    </button>
+  </div>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:10px">Datos del empleado</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+
+      <!-- MODO FIJO -->
+      <div id="nom-sec-fijo" style="grid-column:1/-1;display:block">
+        <label style="${labelStyle}">Salario básico mensual ($)</label>
+        <input type="number" id="nom-salario" placeholder="${NOM_CFG.smmlv}" min="0" step="1000"
+          style="${inputStyle};font-size:14px;font-weight:700" oninput="calcNomina()">
+      </div>
+
+      <!-- MODO VARIABLE -->
+      <div id="nom-sec-var" style="grid-column:1/-1;display:none">
+        <div style="background:rgba(112,112,255,.08);border:1px solid rgba(112,112,255,.2);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:10px;font-size:11px;color:var(--text2);line-height:1.6">
+          💼 <strong>Salario variable (Art. 253 CST):</strong> ingrese el total devengado (salario + comisiones) de cada mes. La base para prestaciones se calcula sobre el promedio.
+        </div>
+        <label style="${labelStyle};margin-bottom:6px">Salario básico fijo ($) — mínimo garantizado</label>
+        <input type="number" id="nom-sal-base" placeholder="${NOM_CFG.smmlv}" min="0" step="1000"
+          style="${inputStyle};margin-bottom:10px;font-weight:700" oninput="calcNomina()">
+        <label style="${labelStyle};margin-bottom:6px">Total devengado por mes (salario + comisiones)</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:4px">
+          ${mesesLabels.map((m,i)=>`
+          <div>
+            <div style="font-size:9px;color:var(--text3);font-family:\'DM Mono\',monospace;margin-bottom:2px">${m}</div>
+            <input type="number" min="0" step="1000" placeholder="0"
+              style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:7px 8px;color:var(--text);font-family:\'Nunito\',sans-serif;font-size:12px;outline:none"
+              oninput="nomComisionChange(${i},this.value)">
+          </div>`).join('')}
+        </div>
+        <div id="nom-prom-display" style="font-size:11px;color:var(--text3);text-align:right;margin-top:4px;font-family:\'DM Mono\',monospace"></div>
+      </div>
+
+      <div>
+        <label style="${labelStyle}">Días trabajados</label>
+        <input type="number" id="nom-dias" value="30" min="1" max="30"
+          style="${inputStyle}" oninput="calcNomina()">
+      </div>
+      <div>
+        <label style="${labelStyle}">Horas extras diurnas</label>
+        <input type="number" id="nom-hext" value="0" min="0"
+          style="${inputStyle}" oninput="calcNomina()">
+      </div>
+      <div>
+        <label style="${labelStyle}">Tipo de contrato</label>
+        <select id="nom-tipo" style="${inputStyle}" onchange="calcNomina()">
+          <option value="indefinido">Indefinido</option>
+          <option value="fijo">Término fijo</option>
+          <option value="obra">Obra o labor</option>
+          <option value="aprendiz">Aprendiz SENA</option>
+        </select>
+      </div>
+      <div>
+        <label style="${labelStyle}">Recargo nocturno (h)</label>
+        <input type="number" id="nom-hnoc" value="0" min="0"
+          style="${inputStyle}" oninput="calcNomina()">
+      </div>
+      <div style="grid-column:1/-1">
+        <label style="${labelStyle};margin-bottom:6px">Período a liquidar</label>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="nom-prima" onchange="calcNomina()"> Prima</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="nom-cesantias" onchange="calcNomina()"> Cesantías</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="nom-vacaciones" onchange="calcNomina()"> Vacaciones</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:12px;cursor:pointer"><input type="checkbox" id="nom-liquidacion" onchange="calcNomina()"> Liquidación</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="nom-resultado" style="display:none"></div>
+  <div style="text-align:center;padding:20px;color:var(--text3);font-size:12px" id="nom-placeholder">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 8px;display:block;opacity:.4"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+    Ingrese el salario para calcular
+  </div>
+</div>`;
+  setTimeout(calcNomina, 50);
+}
+
+function calcNomina() {
+  const dias   = parseInt(document.getElementById('nom-dias')?.value) || 30;
+  const hext   = parseInt(document.getElementById('nom-hext')?.value) || 0;
+  const hnoc   = parseInt(document.getElementById('nom-hnoc')?.value) || 0;
+  const tipo   = document.getElementById('nom-tipo')?.value || 'indefinido';
+  const prima  = document.getElementById('nom-prima')?.checked || false;
+  const ces    = document.getElementById('nom-cesantias')?.checked || false;
+  const vac    = document.getElementById('nom-vacaciones')?.checked || false;
+  const liq    = document.getElementById('nom-liquidacion')?.checked || false;
+  const resEl  = document.getElementById('nom-resultado');
+  const phEl   = document.getElementById('nom-placeholder');
+
+  // ── Determinar salario y promedio según modo ──────────────────────────────────
+  let sal, salPromedio, esVariable = false, mesesValidos = 0, notaVariable = '';
+  if (nomModoVariable) {
+    const salBase = parseFloat(document.getElementById('nom-sal-base')?.value) || 0;
+    const vals = nomComisiones.map(v => parseFloat(v) || 0).filter(v => v > 0);
+    mesesValidos = vals.length;
+    if (mesesValidos === 0 && salBase === 0) { if(phEl) phEl.style.display='block'; if(resEl) resEl.style.display='none'; return; }
+    salPromedio = mesesValidos > 0 ? Math.round(vals.reduce((a,b)=>a+b,0) / mesesValidos) : salBase;
+    sal = mesesValidos > 0 ? vals[vals.length-1] : salBase; // mes actual = último ingresado
+    esVariable = true;
+    notaVariable = mesesValidos > 0
+      ? 'Promedio '+mesesValidos+' mes'+(mesesValidos!==1?'es':'')+': $'+salPromedio.toLocaleString('es-CO')+' — base para prestaciones (Art. 253 CST)'
+      : 'Sin meses ingresados — usando salario base para promedio';
+    // Update display
+    const pd = document.getElementById('nom-prom-display');
+    if(pd && mesesValidos>0) pd.textContent = 'Promedio: $'+salPromedio.toLocaleString('es-CO')+' · '+mesesValidos+' meses';
+  } else {
+    sal = parseFloat(document.getElementById('nom-salario')?.value) || 0;
+    salPromedio = sal;
+    if (!sal || sal < 1) { if(phEl) phEl.style.display='block'; if(resEl) resEl.style.display='none'; return; }
+  }
+
+  if (!resEl) return;
+  if (phEl) phEl.style.display = 'none';
+  resEl.style.display = 'block';
+
+  // ── Cálculos base ────────────────────────────────────────────────────────────
+  const salDia      = Math.round(sal / 30);
+  const salPropDias = Math.round(salDia * dias);
+  // Aux transporte: se evalúa sobre el PROMEDIO para salario variable (Art. 253)
+  const salBaseAux  = esVariable ? salPromedio : sal;
+  const tieneAuxTrans = salBaseAux <= AUX_TRANS_LIMITE && tipo !== 'aprendiz';
+  const auxTrans    = tieneAuxTrans ? Math.round((AUX_TRANS_2025 / 30) * dias) : 0;
+
+  // Horas extras diurnas 25% + nocturnas 35% (valor hora = sal/240)
+  const valorHora   = sal / 240;
+  const valorHext   = Math.round(valorHora * 1.25 * hext);
+  const valorHnoc   = Math.round(valorHora * 0.35 * hnoc);
+
+  // ── Devengado ────────────────────────────────────────────────────────────────
+  const devengado   = salPropDias + auxTrans + valorHext + valorHnoc;
+
+  // ── Deducciones empleado ─────────────────────────────────────────────────────
+  // Base para aportes = salario sin aux de transporte
+  // Para variable: se usa el devengado del mes actual (sal), no el promedio
+  const baseSS      = salPropDias + valorHext + valorHnoc;
+  const salud       = Math.round(baseSS * 0.04);   // 4%
+  const pension     = Math.round(baseSS * 0.04);   // 4%
+  const totalDed    = salud + pension;
+
+  // ── Neto a pagar ─────────────────────────────────────────────────────────────
+  const neto        = devengado - totalDed;
+
+  // ── Aportes empleador (referencia) ───────────────────────────────────────────
+  const empSalud    = Math.round(baseSS * 0.085);  // 8.5%
+  const empPension  = Math.round(baseSS * 0.12);   // 12%
+  const empARL      = Math.round(baseSS * 0.00522);// Riesgo I (mínimo)
+  const empCCF      = Math.round(baseSS * 0.04);   // Caja compensación
+  const empICBF     = Math.round(baseSS * 0.03);   // ICBF
+  const empSENA     = Math.round(baseSS * 0.02);   // SENA
+  const totalEmp    = empSalud + empPension + empARL + empCCF + empICBF + empSENA;
+
+  // ── Prestaciones sociales ─────────────────────────────────────────────────────
+  // Para salario variable: base = PROMEDIO (Art. 253 CST). Para fijo: salario del mes.
+  const basePrest   = esVariable ? salPromedio : sal;
+  const basePrestDia = Math.round(basePrest / 30);
+  // Prima: basePrest/12 proporcional
+  const primaVal    = prima ? Math.round((basePrest + (tieneAuxTrans ? AUX_TRANS_2025 : 0)) / 12 * (dias / 30)) : 0;
+  // Cesantías: basePrest*días / 360
+  const cesVal      = ces ? Math.round((basePrest + (tieneAuxTrans ? AUX_TRANS_2025 : 0)) * dias / 360) : 0;
+  // Int. cesantías: cesantías * 12% anual proporcional
+  const intCesVal   = ces ? Math.round(cesVal * 0.12 * (dias / 360)) : 0;
+  // Vacaciones: basePrest * días / 720
+  const vacVal      = vac ? Math.round(basePrest * dias / 720) : 0;
+  // Indemnización: 30 días de salario promedio
+  const liqVal      = liq && tipo === 'indefinido' ? Math.round(basePrestDia * 30) : 0;
+
+  const totalPrest  = primaVal + cesVal + intCesVal + vacVal + liqVal;
+
+  // ── Render ────────────────────────────────────────────────────────────────────
+  function row(label, val, color='var(--text)', sub='') {
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:12px;color:var(--text2)">${label}</div>${sub ? '<div style="font-size:10px;color:var(--text3)">'+sub+'</div>' : ''}</div>
+      <div style="font-size:13px;font-weight:800;font-family:'DM Mono',monospace;color:${color}">$${val.toLocaleString('es-CO')}</div>
+    </div>`;
+  }
+  function section(title, icon, color) {
+    return `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:${color};margin:12px 0 4px;display:flex;align-items:center;gap:5px">${icon} ${title}</div>`;
+  }
+
+  const smmlvRatio = (salPromedio / NOM_CFG.smmlv).toFixed(1);
+  const salLabel = esVariable ? 'Promedio mensual' : 'Salario del mes';
+
+  resEl.innerHTML = `
+    <div style="background:linear-gradient(135deg,rgba(80,80,255,.12),rgba(136,0,204,.08));border:1px solid rgba(80,80,255,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">Neto a pagar</div>
+        <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${smmlvRatio} SMMLV · ${dias} días${esVariable?' · Promedio '+mesesValidos+' meses':''}</div>
+      </div>
+      <div style="grid-column:1/-1">
+        <div style="font-size:30px;font-weight:900;font-family:'DM Mono',monospace;color:var(--green)">$${neto.toLocaleString('es-CO')}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--radius-xs);padding:8px 10px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Devengado</div>
+        <div style="font-size:13px;font-weight:800;font-family:'DM Mono',monospace;color:var(--blue)">$${devengado.toLocaleString('es-CO')}</div>
+      </div>
+      <div style="background:var(--surface);border-radius:var(--radius-xs);padding:8px 10px">
+        <div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Deducciones</div>
+        <div style="font-size:13px;font-weight:800;font-family:'DM Mono',monospace;color:var(--red)">-$${totalDed.toLocaleString('es-CO')}</div>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+      ${section('Devengado empleado','💰','var(--green)')}
+      ${row('Salario proporcional', salPropDias, 'var(--text)', dias < 30 ? salDia.toLocaleString('es-CO')+'/día × '+dias+' días' : '')}
+      ${tieneAuxTrans ? row('Auxilio de transporte', auxTrans, 'var(--text)', 'Sal. ≤ 2 SMMLV') : ''}
+      ${hext > 0 ? row('Horas extras ('+hext+'h × 25% recargo)', valorHext, 'var(--amber)') : ''}
+      ${hnoc > 0 ? row('Recargo nocturno ('+hnoc+'h × 35%)', valorHnoc, 'var(--amber)') : ''}
+      ${esVariable && mesesValidos>0 ? '<div style="background:rgba(112,112,255,.08);border:1px solid rgba(112,112,255,.2);border-radius:5px;padding:7px 10px;font-size:10px;color:var(--text2);margin:6px 0">📊 '+notaVariable+'</div>' : ''}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:800">
+        <span style="font-size:12px">Total devengado</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--blue)">$${devengado.toLocaleString('es-CO')}</span>
+      </div>
+
+      ${section('Deducciones empleado','📉','var(--red)')}
+      ${row('Salud (4%)', salud, 'var(--red)')}
+      ${row('Pensión (4%)', pension, 'var(--red)')}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:800">
+        <span style="font-size:12px">Total deducciones</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--red)">-$${totalDed.toLocaleString('es-CO')}</span>
+      </div>
+    </div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+      ${section('Costo empleador (referencia)','🏢','var(--text3)')}
+      ${row('Salud (8.5%)', empSalud, 'var(--text3)')}
+      ${row('Pensión (12%)', empPension, 'var(--text3)')}
+      ${row('ARL (0.522% riesgo I)', empARL, 'var(--text3)')}
+      ${row('Caja compensación (4%)', empCCF, 'var(--text3)')}
+      ${row('ICBF (3%)', empICBF, 'var(--text3)')}
+      ${row('SENA (2%)', empSENA, 'var(--text3)')}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:800">
+        <span style="font-size:12px">Total aportes empleador</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--text2)">$${totalEmp.toLocaleString('es-CO')}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Costo total empresa: <strong style="color:var(--amber)">$${(devengado + totalEmp).toLocaleString('es-CO')}</strong></div>
+    </div>
+
+    ${(prima || ces || vac || liq) ? `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+      ${section('Prestaciones sociales','📋','var(--accent)')}
+      ${prima ? row('Prima de servicios', primaVal, 'var(--accent)') : ''}
+      ${ces ? row('Cesantías', cesVal, 'var(--accent)') : ''}
+      ${ces ? row('Intereses sobre cesantías (12%)', intCesVal, 'var(--accent)') : ''}
+      ${vac ? row('Vacaciones', vacVal, 'var(--accent)') : ''}
+      ${liq ? row('Indemnización (1 año, indef.)', liqVal, 'var(--amber)') : ''}
+      <div style="display:flex;justify-content:space-between;padding:7px 0;font-weight:800">
+        <span style="font-size:12px">Total prestaciones</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--accent)">$${totalPrest.toLocaleString('es-CO')}</span>
+      </div>
+    </div>` : ''}
+
+    <div style="background:rgba(61,220,132,.06);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:9px 12px;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:14px">
+      📌 Valores ${NOM_ANO} según Decreto ${NOM_CFG.decreto}. SMMLV: $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Aux. transporte: $${NOM_CFG.auxTrans.toLocaleString('es-CO')} (≤2 SMMLV). Los valores son de referencia — consulte su contador para casos especiales.
+    </div>
+  `;
 }
 
 // ── CONVERTER ─────────────────────────────────────────────────────────────────
