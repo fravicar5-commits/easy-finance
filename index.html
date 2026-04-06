@@ -64,24 +64,6 @@
   --radius:12px; --radius-sm:8px; --radius-xs:5px;
 }
 
-/* ── TEMA: SLATE NEUTRO (opción limpia para comparar) ── */
-[data-theme="slate"] {
-  --ef-pink:#0F62FE; --ef-pink2:#0F62FE; --ef-purple:#001141; --ef-purple2:#003085;
-  --ef-cyan:#00B0FF; --ef-gray:#6B7280;
-  --bg:#0D0F12; --surface:#141719; --surface2:#1C2024; --surface3:#23282D;
-  --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.12);
-  --text:#F1F3F5; --text2:#9BA3AE; --text3:#515C6A;
-  --accent:#0F62FE; --accent2:#00B0FF;
-  --green:#34C759; --green-bg:rgba(52,199,89,.1); --green-bdr:rgba(52,199,89,.25);
-  --red:#FF453A; --red-bg:rgba(255,69,58,.1); --red-bdr:rgba(255,69,58,.25);
-  --amber:#FF9F0A; --amber-bg:rgba(255,159,10,.1); --amber-bdr:rgba(255,159,10,.25);
-  --blue:#0F62FE; --blue-bg:rgba(15,98,254,.1); --blue-bdr:rgba(15,98,254,.25);
-  --grad-main:linear-gradient(135deg,#0F62FE,#0043CE);
-  --btn-main-bg:linear-gradient(135deg,#0F62FE,#0043CE);
-  --btn-main-color:#fff;
-  --radius:10px; --radius-sm:7px; --radius-xs:5px;
-}
-
 [data-theme="verde"] {
   /* ── TEMA: VERDE ESMERALDA ── */
   --ef-pink:#00a855; --ef-pink2:#00c864; --ef-purple:#002a1a; --ef-purple2:#003d24;
@@ -99,71 +81,88 @@
   --btn-main-color:#fff;
   --radius:12px; --radius-sm:8px; --radius-xs:5px;
 }
-/* ── LIGHT MODE ── */
+
+/* ── TEMA: SLATE (AZUL IBM EMPRESARIAL) ── */
+[data-theme="slate"] {
+  --ef-pink:#0F62FE; --ef-pink2:#4589FF; --ef-purple:#010A1A; --ef-purple2:#001141;
+  --ef-cyan:#08BDBA; --ef-gray:#525252;
+  --bg:#0D0F12; --surface:#13171C; --surface2:#191E25; --surface3:#1F252E;
+  --border:rgba(15,98,254,.13); --border2:rgba(15,98,254,.24);
+  --text:#F4F4F4; --text2:#A8B2C1; --text3:#525A67;
+  --accent:#4589FF; --accent2:#08BDBA;
+  --green:#34C759; --green-bg:rgba(52,199,89,.11); --green-bdr:rgba(52,199,89,.28);
+  --red:#FF453A; --red-bg:rgba(255,69,58,.11); --red-bdr:rgba(255,69,58,.28);
+  --amber:#FF9F0A; --amber-bg:rgba(255,159,10,.11); --amber-bdr:rgba(255,159,10,.28);
+  --blue:#4589FF; --blue-bg:rgba(69,137,255,.11); --blue-bdr:rgba(69,137,255,.28);
+  --grad-main:linear-gradient(135deg,#0F62FE,#6929C4);
+  --btn-main-bg:linear-gradient(135deg,#0F62FE,#6929C4);
+  --btn-main-color:#fff;
+  --radius:12px; --radius-sm:8px; --radius-xs:5px;
+}
+
+/* ── MODO CLARO MEJORADO ── */
 body.light-mode{
-  --bg:#F2F4F8; --surface:#FFFFFF; --surface2:#F5F7FA; --surface3:#EBEEf4;
-  --border:#DDE1EC; --border2:#C8CEDF;
-  --text:#0F1624; --text2:#3D4760; --text3:#7B86A0;
-  --ef-pink:#A0134A; --ef-pink2:#C2185B; --ef-purple:#1A0050; --ef-purple2:#2D0070;
-  --ef-cyan:#0088A3;
-  --accent:#3B5BDB; --accent2:#2F9E44;
-  --green:#2F9E44; --green-bg:rgba(47,158,68,.1); --green-bdr:rgba(47,158,68,.28);
-  --red:#C92A2A; --red-bg:rgba(201,42,42,.08); --red-bdr:rgba(201,42,42,.25);
-  --amber:#D97706; --amber-bg:rgba(217,119,6,.08); --amber-bdr:rgba(217,119,6,.25);
-  --blue:#1971C2; --blue-bg:rgba(25,113,194,.08); --blue-bdr:rgba(25,113,194,.25);
+  --bg:#EEF0F6; --surface:#ffffff; --surface2:#F2F4FA; --surface3:#E6E9F2;
+  --border:#CBD0E0; --border2:#A8B0CC;
+  --text:#0E1117; --text2:#3A3F54; --text3:#7A819A;
+  --green:#2F9E44; --green-bg:rgba(47,158,68,.09); --green-bdr:rgba(47,158,68,.28);
+  --red:#C92A2A; --red-bg:rgba(201,42,42,.09); --red-bdr:rgba(201,42,42,.28);
+  --amber:#E67700; --amber-bg:rgba(230,119,0,.09); --amber-bdr:rgba(230,119,0,.28);
+  --blue:#1971C2; --blue-bg:rgba(25,113,194,.09); --blue-bdr:rgba(25,113,194,.28);
   --grad-main:linear-gradient(135deg,#3B5BDB,#1971C2);
   --btn-main-bg:linear-gradient(135deg,#3B5BDB,#1971C2);
   --btn-main-color:#fff;
 }
-/* Modo claro — jerarquía visual con sombras y bordes */
-body.light-mode .sidebar{background:#FFFFFF;border-right:1px solid #DDE1EC;box-shadow:2px 0 8px rgba(15,22,36,.06)}
-body.light-mode .main-header{background:#FFFFFF;box-shadow:0 1px 4px rgba(15,22,36,.08)}
-body.light-mode .topbar{background:#FFFFFF;box-shadow:0 1px 4px rgba(15,22,36,.08)}
-body.light-mode .mc{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .modal{background:#FFFFFF;box-shadow:0 8px 40px rgba(15,22,36,.15)}
-body.light-mode .sidebar-item:hover,body.light-mode .sidebar-item.active{background:#F0F4FF}
-body.light-mode .btn{background:#FFFFFF;border:1px solid #C8CEDF;color:#0F1624;box-shadow:0 1px 2px rgba(15,22,36,.06)}
-body.light-mode .btn:hover{background:#F5F7FA;border-color:#A0AACC}
-body.light-mode .btn-pink{background:linear-gradient(135deg,#A0134A,#2D0070);color:#fff;border:none;box-shadow:0 2px 8px rgba(160,19,74,.25)}
-body.light-mode .btn-red{background:#FFF0F0;color:#C92A2A;border:1px solid rgba(201,42,42,.25)}
-body.light-mode .btn-amber{background:#FFF8F0;color:#D97706;border:1px solid rgba(217,119,6,.25)}
-body.light-mode .note-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .pocket-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .bud-section{background:#FFFFFF}
-body.light-mode .conv-box{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .tip-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
-body.light-mode .fr input,body.light-mode .fr select,body.light-mode .fr textarea{background:#F5F7FA;color:#0F1624;border:1px solid #C8CEDF}
-body.light-mode .fr input:focus,body.light-mode .fr select:focus{border-color:#3B5BDB;box-shadow:0 0 0 2px rgba(59,91,219,.12)}
-body.light-mode .calc-btn{background:#FFFFFF;color:#0F1624;border:1px solid #C8CEDF;box-shadow:0 1px 2px rgba(15,22,36,.05)}
-body.light-mode .calc-btn.op{background:rgba(59,91,219,.08);color:#1971C2}
-body.light-mode .calc-btn.eq{background:linear-gradient(135deg,#3B5BDB,#1971C2);color:#fff;border:none}
-body.light-mode .export-bar{background:#FFFFFF}
-body.light-mode .drive-bar{background:#F5F7FA}
-body.light-mode .home-card{background:rgba(255,255,255,.85);border-color:rgba(45,0,96,.2)}
-body.light-mode .home-card:hover{border-color:rgba(194,24,91,.5)}
-body.light-mode .hc-title{color:#1a1a2e}
-body.light-mode .hc-sub{color:rgba(26,26,46,.6)}
+body.light-mode .home-card{background:rgba(255,255,255,.92);border-color:rgba(59,91,219,.15);box-shadow:0 2px 12px rgba(0,0,0,.06)}
+body.light-mode .home-card:hover{border-color:rgba(59,91,219,.4);box-shadow:0 6px 20px rgba(59,91,219,.12)}
+body.light-mode .hc-title{color:#0E1117}
+body.light-mode .hc-sub{color:rgba(14,17,23,.55)}
 body.light-mode .hc-icon{filter:none}
-body.light-mode .home-tagline{color:rgba(26,26,46,.5)}
-body.light-mode .home-version{color:rgba(26,26,46,.2)}
-body.light-mode .sidebar{background:#ffffff}
-body.light-mode .main-header{background:#ffffff}
-body.light-mode .topbar{background:#ffffff}
-body.light-mode .drive-bar{background:#f0f2f8}
+body.light-mode .home-tagline{color:rgba(14,17,23,.45)}
+body.light-mode .home-version{color:rgba(14,17,23,.2)}
+body.light-mode .sidebar{background:#ffffff;box-shadow:2px 0 12px rgba(0,0,0,.07)}
+body.light-mode .main-header{background:#ffffff;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+body.light-mode .topbar{background:#ffffff;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+body.light-mode .drive-bar{background:#F2F4FA}
 body.light-mode .export-bar{background:#ffffff}
-body.light-mode .modal{background:#ffffff}
-body.light-mode .fr input,body.light-mode .fr select,body.light-mode .fr textarea{background:#f4f6fb;color:#1a1a2e}
-body.light-mode .calc-btn{background:#ffffff;color:#1a1a2e;border-color:#d0d4e8}
-body.light-mode .calc-btn.op{background:rgba(194,24,91,.08)}
-body.light-mode .tip-card{background:#ffffff}
-body.light-mode .mc{background:#ffffff}
-body.light-mode .conv-box{background:#ffffff}
-body.light-mode .conv-inp{background:#f0f2f8;color:#1a1a2e}
-body.light-mode .conv-result{background:#f0f2f8}
-body.light-mode .bud-section{background:#ffffff}
-body.light-mode .pocket-card{background:#ffffff}
-body.light-mode .note-card{background:#ffffff}
+body.light-mode .modal{background:#ffffff;box-shadow:0 8px 40px rgba(0,0,0,.14)}
+body.light-mode .fr input,body.light-mode .fr select,body.light-mode .fr textarea{background:#ffffff;color:#0E1117;border-color:#CBD0E0}
+body.light-mode .fr input:focus,body.light-mode .fr select:focus,body.light-mode .fr textarea:focus{border-color:#1971C2;box-shadow:0 0 0 2px rgba(25,113,194,.15);outline:none}
+body.light-mode .btn{border:1px solid #CBD0E0;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+body.light-mode .calc-btn{background:#ffffff;color:#0E1117;border-color:#CBD0E0;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+body.light-mode .calc-btn.op{background:rgba(59,91,219,.07)}
+body.light-mode .tip-card{background:#ffffff;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+body.light-mode .mc{background:#ffffff;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+body.light-mode .conv-box{background:#ffffff;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+body.light-mode .conv-inp{background:#F2F4FA;color:#0E1117}
+body.light-mode .conv-result{background:#F2F4FA}
+body.light-mode .bud-section{background:#ffffff;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+body.light-mode .pocket-card{background:#ffffff;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+body.light-mode .note-card{background:#ffffff;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+body.light-mode .surface-card{box-shadow:0 1px 4px rgba(0,0,0,.06)}
+body.light-mode .hdr-ico-btn{background:rgba(14,17,23,.04);border-color:#CBD0E0;color:#3A3F54}
+body.light-mode .hdr-ico-btn:hover{background:rgba(25,113,194,.08);border-color:#1971C2;color:#1971C2}
+body.light-mode .hdr-ico-btn.hdr-ico-wa{background:#25D366!important;border-color:#25D366!important;color:white!important}
+body.light-mode .hdr-ico-btn.hdr-ico-del{background:rgba(201,42,42,.07)!important;border-color:rgba(201,42,42,.25)!important;color:#C92A2A!important}
+
+/* ── BOTONES ICONO CABECERA CLIENTE ── */
+.hdr-icon-row{display:flex;gap:5px;align-items:center;flex-wrap:nowrap}
+.hdr-ico-btn{
+  width:32px;height:32px;border-radius:var(--radius-xs);
+  border:1px solid var(--border2);
+  background:var(--surface2);
+  color:var(--text2);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;flex-shrink:0;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.hdr-ico-btn:hover{background:var(--surface3);border-color:var(--border2);color:var(--text)}
+.hdr-ico-btn.hdr-ico-wa{background:#25D366!important;border-color:#25D366!important;color:white!important}
+.hdr-ico-btn.hdr-ico-del{background:var(--red-bg)!important;border-color:var(--red-bdr)!important;color:var(--red)!important}
+@media(max-width:480px){
+  .hdr-icon-row{gap:4px}
+  .hdr-ico-btn{width:30px;height:30px}
+}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
@@ -894,6 +893,98 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
       <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImportExcel(event)">
       <span class="export-info" id="export-info" style="display:none"></span>
+      <!-- Modal de Configuración de Notificaciones -->
+<div class="overlay" id="modal-config-notif">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title">🔔 Configurar Notificaciones <button class="modal-close" onclick="closeModal('modal-config-notif')">✕</button></div>
+    <div id="notif-config-content">
+      <!-- Estado permiso -->
+      <div id="notif-permiso-banner" style="border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px"></div>
+
+      <!-- Sección: Modo Prestamista -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--ef-pink2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
+          Modo Prestamista
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="notif-cobros-hoy" style="margin-top:2px;accent-color:var(--ef-pink)" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">📅 Cobros del día</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Alerta al abrir la app si hay pagos que vencen hoy</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="notif-mora" style="margin-top:2px;accent-color:var(--ef-pink)" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">⚠️ Clientes en mora</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Notificación al iniciar si hay clientes con pagos vencidos</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="notif-proximos" style="margin-top:2px;accent-color:var(--ef-pink)" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">⏰ Próximos vencimientos</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Aviso de pagos que vencen en los próximos 3 días</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Sección: Notas y Alarmas -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--amber);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Notas y Recordatorios
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="notif-notas-alarma" style="margin-top:2px;accent-color:var(--amber)" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">📅 Alarmas de notas</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Notificación del sistema cuando una nota tiene fecha programada</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="notif-notas-toast" style="margin-top:2px;accent-color:var(--amber)" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">🔔 Alertas en pantalla (toast)</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Banner emergente en la app cuando hay notas con alarma activa hoy</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Sección: Modo Cliente / Deudas -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#00BCD4;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          Modo Cliente — Mis Deudas
+        </div>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+          <input type="checkbox" id="notif-deudas-hoy" style="margin-top:2px;accent-color:#00BCD4" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">💳 Cuotas que vencen hoy</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Notificación si hay pagos de mis deudas pendientes para hoy</div>
+          </div>
+        </label>
+        <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+          <input type="checkbox" id="notif-deudas-proximas" style="margin-top:2px;accent-color:#00BCD4" onchange="guardarConfigNotif()">
+          <div>
+            <div style="font-size:12px;font-weight:700">📆 Próximas cuotas (3 días)</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">Recordatorio anticipado de pagos de mis deudas</div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Botón activar permisos -->
+      <button id="notif-permiso-btn" onclick="solicitarPermisoNotif()" style="width:100%;padding:11px;background:var(--btn-main-bg);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;margin-bottom:8px">
+        🔔 Activar permisos del sistema
+      </button>
+      <button onclick="dispararNotifPrueba()" style="width:100%;padding:9px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text2);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+        🧪 Enviar notificación de prueba
+      </button>
+    </div>
+  </div>
+</div>
+
       <!-- Socio distribution modal -->
 <div class="overlay" id="modal-socio-dist">
   <div class="modal" style="max-width:500px">
@@ -909,10 +1000,10 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
         <!-- Color theme selector -->
         <div style="padding:10px 12px 8px;border-bottom:1px solid var(--border)">
           <div style="font-size:9px;color:var(--text3);letter-spacing:.1em;font-weight:700;margin-bottom:8px;text-transform:uppercase">Paleta de color</div>
-          <div style="display:flex;gap:8px">
-            <button id="theme-btn-indigo" onclick="setColorTheme('indigo')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#5050ff,#8800cc);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:1;transition:all .2s">🟣 Índigo</button>
-            <button id="theme-btn-verde" onclick="setColorTheme('verde')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#00c864,#007a3d);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🟢 Verde</button>
-            <button id="theme-btn-slate" onclick="setColorTheme('slate')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#0F62FE,#0043CE);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🔵 Slate</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button id="theme-btn-indigo" onclick="setColorTheme('indigo')" style="flex:1;min-width:60px;padding:7px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#5050ff,#8800cc);color:white;font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;cursor:pointer;opacity:1;transition:all .2s">🟣 Índigo</button>
+            <button id="theme-btn-verde" onclick="setColorTheme('verde')" style="flex:1;min-width:60px;padding:7px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#00c864,#007a3d);color:white;font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🟢 Verde</button>
+            <button id="theme-btn-slate" onclick="setColorTheme('slate')" style="flex:1;min-width:60px;padding:7px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#0F62FE,#6929C4);color:white;font-family:'Nunito',sans-serif;font-size:10px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🔵 Slate</button>
           </div>
         </div>
         <!-- Storage indicator -->
@@ -934,6 +1025,8 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
         <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirImportExcel()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></span>Importar Excel</button>
         <div style="height:1px;background:var(--border);margin:2px 0"></div>
         <button class="gear-menu-item" onclick="toggleGearMenu(false);abrirReportes()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg></span>Ver reportes</button>
+        <div style="height:1px;background:var(--border);margin:2px 0"></div>
+        <button class="gear-menu-item" id="gear-notif-btn" onclick="toggleGearMenu(false);abrirConfigNotif()"><span class="gmi-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></span><span id="gear-notif-label">Notificaciones</span></button>
       </div>
     </main>
   </div>
@@ -953,7 +1046,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       <button onclick="syncDeudasNube()" id="btn-sync-deudas" style="display:none"></button>
       <button onclick="exportDeudasXLSX()" style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);color:#4CAF50;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer;display:flex;align-items:center" title="Exportar Excel"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg></button>
       <button onclick="recuperarDeudasNube()" id="btn-recuperar-deudas" style="display:none"></button>
-      <button onclick="activarRecordatorios()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer;display:flex;align-items:center" title="Activar recordatorios de pago"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
+      <button onclick="abrirConfigNotif()" id="btn-notif" style="background:none;border:1px solid rgba(233,30,140,.4);color:#E91E8C;border-radius:7px;padding:6px 8px;font-size:13px;cursor:pointer;display:flex;align-items:center" title="Configurar notificaciones"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg></button>
       <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center" title="Inicio"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
     </div>
   </div>
@@ -1111,6 +1204,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <button class="dd-tab" onclick="setDDTab('nomina',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg> Nómina</button>
     <button class="dd-tab" onclick="setDDTab('simulator',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Simulador</button>
     <button class="dd-tab" onclick="setDDTab('vivienda',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Vivienda</button>
+    <button class="dd-tab" onclick="setDDTab('segsocial',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Seg. Social</button>
   </div>
   <div class="dd-content" id="dd-content"></div>
 </div>
@@ -2753,14 +2847,14 @@ function renderDetail(){
     +'<div class="main-sub">'+fd(c.fecha)+' · '+c.tasa+'% · '+c.cuotas+' cuotas'
     +(c.tipocuota==='fija'?' · Cuota fija':' · Variable')
     +(c.tel?' · '+c.tel:'')+'</div></div>'
-    +'<div class="header-actions" style="gap:4px">'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="renderDashboard()" title="Inicio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="estadoCuenta('+c.id+')" title="Estado de cuenta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="compartirEstadoEnlace(parseInt(this.dataset.cid))" title="Compartir enlace"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:none;background:#25D366;color:white;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.71 3.35 2 2 0 0 1 3.7 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.69a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="openEditModal('+c.id+')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" title="Refinanciar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
-    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--red-bdr);background:var(--red-bg);color:var(--red);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="eliminarCliente('+c.id+')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>'
+    +'<div class="header-actions hdr-icon-row">'
+    +'<button class="hdr-ico-btn" onclick="renderDashboard()" title="Inicio"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
+    +'<button class="hdr-ico-btn" onclick="estadoCuenta('+c.id+')" title="Estado de cuenta"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>'
+    +'<button class="hdr-ico-btn" data-cid="'+c.id+'" onclick="compartirEstadoEnlace(parseInt(this.dataset.cid))" title="Enlace para el cliente"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>'
+    +'<button class="hdr-ico-btn hdr-ico-wa" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))" title="WhatsApp"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>'
+    +'<button class="hdr-ico-btn" onclick="openEditModal('+c.id+')" title="Editar préstamo"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+    +'<button class="hdr-ico-btn" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" title="Refinanciar"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>'
+    +'<button class="hdr-ico-btn hdr-ico-del" onclick="eliminarCliente('+c.id+')" title="Eliminar cliente"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'
     +'</div></div>'
     +'<div class="content">'
     +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
@@ -3933,7 +4027,7 @@ function updateDDIndicator(tabName) {
   if (!ind) return;
   const labels = {
     converter: 'Divisas', calc: 'Calculadora', budget: 'Presupuesto',
-    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador', vivienda: 'Vivienda'
+    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador', vivienda: 'Vivienda', segsocial: 'Seg. Social'
   };
   ind.textContent = labels[tabName] || tabName;
 }
@@ -3954,6 +4048,7 @@ function renderDDTab(tab){
   else if(tab==='tips') renderTips(el);
   else if(tab==='notes') renderNotes(el);
   else if(tab==='nomina') renderNomina(el);
+  else if(tab==='segsocial') renderSegSocial(el);
   else if(tab==='simulator') renderSimulator(el);
   else if(tab==='vivienda') renderSimVivienda(el);
 }
@@ -3978,20 +4073,530 @@ const AUX_TRANS_LIMITE = NOM_CFG.smmlv * 2;
 let nomModoVariable = false;
 let nomComisiones = Array(6).fill(''); // últimos 6 meses
 
-function toggleNomModo() {
-  nomModoVariable = !nomModoVariable;
+function toggleNomModo(forzar) {
+  if (forzar !== undefined) nomModoVariable = forzar;
+  else nomModoVariable = !nomModoVariable;
   const secFijo = document.getElementById('nom-sec-fijo');
   const secVar  = document.getElementById('nom-sec-var');
-  const btnTxt  = document.getElementById('nom-modo-label');
   if (secFijo) secFijo.style.display = nomModoVariable ? 'none' : 'block';
   if (secVar)  secVar.style.display  = nomModoVariable ? 'block' : 'none';
-  if (btnTxt)  btnTxt.textContent    = nomModoVariable ? 'Salario variable (comisiones)' : 'Salario fijo';
+  // Actualizar estilos de los botones
+  const btnF = document.getElementById('nom-btn-fijo');
+  const btnV = document.getElementById('nom-btn-var');
+  if (btnF) {
+    btnF.style.border     = nomModoVariable ? '1px solid var(--border2)' : '2px solid var(--ef-pink)';
+    btnF.style.background = nomModoVariable ? 'transparent' : 'rgba(194,24,91,.12)';
+    btnF.style.color      = nomModoVariable ? 'var(--text3)' : 'var(--ef-pink2)';
+  }
+  if (btnV) {
+    btnV.style.border     = nomModoVariable ? '2px solid var(--ef-pink)' : '1px solid var(--border2)';
+    btnV.style.background = nomModoVariable ? 'rgba(194,24,91,.12)' : 'transparent';
+    btnV.style.color      = nomModoVariable ? 'var(--ef-pink2)' : 'var(--text3)';
+  }
   calcNomina();
 }
 
 function nomComisionChange(idx, val) {
   nomComisiones[idx] = val;
   calcNomina();
+}
+
+// ══ LIQUIDADOR DE SEGURIDAD SOCIAL COLOMBIA ══════════════════════════════════
+// Marco legal: Ley 100/1993, Ley 789/2002, Decreto 780/2016, Ley 2046/2020
+// Independientes: Decreto 1273/2018 (40% IBC para ingresos > 2 SMMLV)
+// Salarios integrales: Art. 132 CST — factor prestacional 30%
+// SMMLV 2026: $1.750.905 · Decreto 1469/2025
+// ═════════════════════════════════════════════════════════════════════════════
+function renderSegSocial(el) {
+  const IS = 'width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:9px 11px;color:var(--text);font-family:\'Nunito\',sans-serif;font-size:13px;outline:none';
+  const LS = 'font-size:10px;color:var(--text3);font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em';
+  const smmlv = NOM_CFG.smmlv; // 1.750.905 en 2026
+
+  el.innerHTML = `
+<div style="max-width:500px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="width:36px;height:36px;background:linear-gradient(135deg,#1565C0,#0D47A1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <div>
+      <div style="font-size:15px;font-weight:800">Liquidador de Seguridad Social</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">Colombia ${NOM_ANO} · SMMLV $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Ley 100/1993</div>
+    </div>
+  </div>
+
+  <!-- Tipo de trabajador -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
+    <button id="ss-btn-dep" onclick="setSSModo('dependiente')" style="padding:10px 6px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
+      👔 Dependiente<br><span style="font-size:9px;font-weight:400">Empleado con contrato</span>
+    </button>
+    <button id="ss-btn-ind" onclick="setSSModo('independiente')" style="padding:10px 6px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
+      🧾 Independiente<br><span style="font-size:9px;font-weight:400">Honorarios / Prestación</span>
+    </button>
+  </div>
+
+  <!-- Inputs -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">Datos del ingreso</div>
+
+    <div style="margin-bottom:10px">
+      <label style="${LS}">Ingreso / Salario mensual ($)</label>
+      <input type="number" id="ss-salario" min="0" step="1000" placeholder="${smmlv}"
+        style="${IS};font-size:14px;font-weight:700" oninput="calcSegSocial()">
+      <div id="ss-sal-info" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+    </div>
+
+    <!-- Solo para dependientes: salario integral -->
+    <div id="ss-integral-sec">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600;margin-bottom:10px">
+        <input type="checkbox" id="ss-integral" onchange="calcSegSocial()">
+        Salario integral (Art. 132 CST — mín. 13 SMMLV)
+      </label>
+    </div>
+
+    <!-- Solo para independientes: período -->
+    <div id="ss-periodo-sec" style="display:none;margin-bottom:10px">
+      <label style="${LS}">Período de cotización</label>
+      <select id="ss-periodo" style="${IS}" onchange="calcSegSocial()">
+        <option value="mensual">Mensual</option>
+        <option value="bimestral">Bimestral</option>
+        <option value="trimestral">Trimestral</option>
+        <option value="semestral">Semestral</option>
+        <option value="anual">Anual</option>
+      </select>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">Independientes pueden cotizar en períodos superiores (Decreto 1273/2018)</div>
+    </div>
+
+    <!-- ARL solo para dependientes -->
+    <div id="ss-arl-sec">
+      <label style="${LS}">Riesgo ARL</label>
+      <select id="ss-riesgo" style="${IS}" onchange="calcSegSocial()">
+        <option value="I">I — 0.522% (oficinas, admin)</option>
+        <option value="II">II — 1.044% (talleres livianos)</option>
+        <option value="III">III — 2.436% (construcción, manufactura)</option>
+        <option value="IV">IV — 4.350% (minería, explosivos)</option>
+        <option value="V">V — 6.960% (alto riesgo)</option>
+      </select>
+    </div>
+
+    <!-- ARL y CCF solo para independientes (opcional) -->
+    <div id="ss-ind-opciones" style="display:none;margin-top:10px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;padding-top:8px;border-top:1px solid var(--border)">Aportes opcionales para independientes</div>
+      <!-- ARL independiente -->
+      <div style="background:rgba(245,166,35,.06);border:1px solid rgba(245,166,35,.2);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:700;margin-bottom:0">
+          <input type="checkbox" id="ss-ind-arl" onchange="toggleSSIndARL();calcSegSocial()" style="accent-color:var(--amber)">
+          <span>⚠️ Incluir ARL (Riesgos Laborales)</span>
+        </label>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;margin-left:24px">Aplica si tiene contrato/prestación con entidad que exige ARL (Ley 1562/2012)</div>
+        <div id="ss-ind-arl-sel" style="display:none;margin-top:8px">
+          <label style="${LS}">Nivel de riesgo ARL</label>
+          <select id="ss-ind-riesgo" style="${IS}" onchange="calcSegSocial()">
+            <option value="I">Riesgo I — 0.522% (oficinas, administrativo)</option>
+            <option value="II">Riesgo II — 1.044% (talleres, comercio liviano)</option>
+            <option value="III">Riesgo III — 2.436% (construcción, manufactura)</option>
+            <option value="IV">Riesgo IV — 4.350% (minería, explosivos)</option>
+            <option value="V">Riesgo V — 6.960% (alto riesgo)</option>
+          </select>
+        </div>
+      </div>
+      <!-- CCF independiente -->
+      <div style="background:rgba(112,112,255,.06);border:1px solid rgba(112,112,255,.2);border-radius:var(--radius-xs);padding:10px 12px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:700">
+          <input type="checkbox" id="ss-ind-ccf" onchange="calcSegSocial()" style="accent-color:var(--accent)">
+          <span>🏠 Incluir Caja de Compensación Familiar (CCF)</span>
+        </label>
+        <div style="font-size:10px;color:var(--text3);margin-top:4px;margin-left:24px">4% del IBC — aplica si desea acceder a beneficios de CCF (subsidios, recreación, créditos)</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="ss-resultado" style="display:none"></div>
+  <div id="ss-placeholder" style="text-align:center;padding:28px;color:var(--text3);font-size:12px">
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 10px;display:block;opacity:.35"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    Ingrese el salario para calcular
+  </div>
+
+  <!-- Botones de exportación -->
+  <div id="ss-export-btns" style="display:none;gap:8px;margin-top:4px">
+    <button onclick="ssExportarExcel()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#1b5e20,#2e7d32);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+      Exportar Excel
+    </button>
+    <button onclick="ssExportarPDF()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#b71c1c,#c62828);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Exportar PDF
+    </button>
+  </div>
+</div>`;
+  ssModo = 'dependiente';
+  calcSegSocial();
+}
+
+let ssModo = 'dependiente';
+
+function setSSModo(modo) {
+  ssModo = modo;
+  const btnD = document.getElementById('ss-btn-dep');
+  const btnI = document.getElementById('ss-btn-ind');
+  const integSec   = document.getElementById('ss-integral-sec');
+  const periodoSec = document.getElementById('ss-periodo-sec');
+  const arlSec     = document.getElementById('ss-arl-sec');
+  const indOpciones= document.getElementById('ss-ind-opciones');
+  const activo = 'border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2)';
+  const inactivo= 'border:1px solid var(--border2);background:transparent;color:var(--text3)';
+  if(btnD) btnD.style.cssText = btnD.style.cssText.replace(/border:[^;]+;background:[^;]+;color:[^;]+/, modo==='dependiente'?activo:inactivo);
+  if(btnI) btnI.style.cssText = btnI.style.cssText.replace(/border:[^;]+;background:[^;]+;color:[^;]+/, modo==='independiente'?activo:inactivo);
+  if(integSec)    integSec.style.display    = modo==='dependiente'?'block':'none';
+  if(periodoSec)  periodoSec.style.display  = modo==='independiente'?'block':'none';
+  if(arlSec)      arlSec.style.display      = modo==='dependiente'?'block':'none';
+  if(indOpciones) indOpciones.style.display = modo==='independiente'?'block':'none';
+  calcSegSocial();
+}
+
+function toggleSSIndARL(){
+  const checked = document.getElementById('ss-ind-arl')?.checked;
+  const sel = document.getElementById('ss-ind-arl-sel');
+  if(sel) sel.style.display = checked ? 'block' : 'none';
+}
+
+function calcSegSocial() {
+  const resEl = document.getElementById('ss-resultado');
+  const phEl  = document.getElementById('ss-placeholder');
+  const infoEl= document.getElementById('ss-sal-info');
+  const sal   = parseFloat(document.getElementById('ss-salario')?.value) || 0;
+  const smmlv = NOM_CFG.smmlv; // 1.750.905 en 2026
+
+  if (!sal || sal < 1) {
+    if(phEl) phEl.style.display='block';
+    if(resEl) resEl.style.display='none';
+    if(infoEl) infoEl.textContent='';
+    return;
+  }
+
+  if(phEl) phEl.style.display='none';
+  if(resEl) resEl.style.display='block';
+
+  // ── Tasas vigentes ─────────────────────────────────────────────────────────
+  const TASAS_ARL = {'I':0.00522,'II':0.01044,'III':0.02436,'IV':0.04350,'V':0.06960};
+  const riesgoARL = document.getElementById('ss-riesgo')?.value||'I';
+  const tasaARL   = TASAS_ARL[riesgoARL];
+
+  // ── DEPENDIENTE ────────────────────────────────────────────────────────────
+  if (ssModo === 'dependiente') {
+    const esIntegral = document.getElementById('ss-integral')?.checked || false;
+
+    // Validación salario integral: mínimo 13 SMMLV (Art. 132 CST)
+    const minIntegral = smmlv * 13;
+    if (esIntegral && sal < minIntegral) {
+      if(infoEl){infoEl.style.color='var(--red)';infoEl.textContent='⚠ Salario integral requiere mínimo '+minIntegral.toLocaleString('es-CO')+' (13 SMMLV)';}
+    } else {
+      if(infoEl){infoEl.style.color='var(--text3)';infoEl.textContent=
+        esIntegral
+          ? '📌 Salario integral: IBC = 70% (factor salarial). Factor prestacional 30% incluido.'
+          : (sal/smmlv).toFixed(2)+' SMMLV · '+(sal<=smmlv*2?'Tiene derecho a auxilio de transporte':'Sin auxilio de transporte');}
+    }
+
+    // IBC (Ingreso Base de Cotización)
+    let ibc;
+    if (esIntegral) {
+      // Art. 132 CST: cotización sobre 70% del salario integral
+      ibc = Math.round(sal * 0.70);
+      // No puede ser inferior a 1 SMMLV
+      ibc = Math.max(ibc, smmlv);
+    } else {
+      // Salario ordinario: IBC = salario, mínimo 1 SMMLV, máximo 25 SMMLV
+      ibc = Math.max(sal, smmlv);
+      ibc = Math.min(ibc, smmlv * 25);
+    }
+
+    // Aportes empleado
+    const empSalud   = Math.round(ibc * 0.04);   // 4% salud empleado
+    const empPension = Math.round(ibc * 0.04);   // 4% pensión empleado
+    const totalEmp   = empSalud + empPension;
+
+    // Aportes empleador
+    const emprSalud   = Math.round(ibc * 0.085); // 8.5% salud empleador
+    const emprPension = Math.round(ibc * 0.12);  // 12% pensión empleador
+    const emprARL     = Math.round(ibc * tasaARL);
+    const emprCCF     = Math.round(ibc * 0.04);  // 4% Caja compensación
+    const emprICBF    = Math.round(ibc * 0.03);  // 3% ICBF (si >10 empleados)
+    const emprSENA    = Math.round(ibc * 0.02);  // 2% SENA (si >10 empleados)
+    const totalEmpr   = emprSalud + emprPension + emprARL + emprCCF + emprICBF + emprSENA;
+    const totalGeneral= totalEmp + totalEmpr;
+
+    // Neto empleado (solo para referencia)
+    const netoRef = sal - totalEmp;
+
+    const pct = (v) => (v/ibc*100).toFixed(2)+'%';
+
+    resEl.innerHTML = _ssCard([
+      {label:'IBC (Base de cotización)', val:ibc, color:'var(--blue)', sub: esIntegral?'70% del salario integral':'Salario (mín. 1 SMMLV, máx. 25 SMMLV)'},
+    ], 'Base de cotización', '#1565C0')
+    + _ssDivider('👔 Aportes del EMPLEADO', 'var(--text2)')
+    + _ssCard([
+      {label:'Salud (4%)',   val:empSalud,   color:'var(--green)',  sub:pct(empSalud)},
+      {label:'Pensión (4%)', val:empPension, color:'var(--blue)',   sub:pct(empPension)},
+      {label:'Total empleado', val:totalEmp, color:'var(--red)',    sub:'Se descuenta del salario'},
+    ], '', '')
+    + _ssDivider('🏢 Aportes del EMPLEADOR', 'var(--text2)')
+    + _ssCard([
+      {label:'Salud (8.5%)',        val:emprSalud,   color:'var(--green)', sub:pct(emprSalud)},
+      {label:'Pensión (12%)',       val:emprPension, color:'var(--blue)',  sub:pct(emprPension)},
+      {label:'ARL ('+riesgoARL+' '+( tasaARL*100).toFixed(3)+'%)', val:emprARL, color:'var(--amber)', sub:pct(emprARL)},
+      {label:'Caja compensación (4%)', val:emprCCF,  color:'var(--text2)',sub:pct(emprCCF)},
+      {label:'ICBF (3%) *',         val:emprICBF,    color:'var(--text2)',sub:pct(emprICBF)},
+      {label:'SENA (2%) *',         val:emprSENA,    color:'var(--text2)',sub:pct(emprSENA)},
+      {label:'Total empleador',     val:totalEmpr,   color:'var(--red)',  sub:'Costo adicional para la empresa'},
+    ], '', '')
+    + _ssTotalBig('Costo total seguridad social', totalGeneral, 'Empleado + Empleador')
+    + _ssCard([{label:'Neto aproximado empleado', val:netoRef, color:'var(--green)', sub:'Salario − aportes del empleado'}], '', '')
+    + _ssNota('* ICBF y SENA: aplica para empresas con más de 10 empleados (Ley 789/2002). ARL riesgo '+riesgoARL+' — tasa '+( tasaARL*100).toFixed(3)+'% (Decreto 1772/1994). Salario integral: factor salarial 70% / prestacional 30% (Art. 132 CST). Pensión sin fondo de solidaridad (aplica para sal. > 4 SMMLV).');
+
+    // Guardar datos para exportar
+    window._ssLastData = { modo:'dependiente', sal, ibc, esIntegral, empSalud, empPension, totalEmp, emprSalud, emprPension, emprARL, emprCCF, emprICBF, emprSENA, totalEmpr, totalGeneral, netoRef, riesgoARL, tasaARL };
+    const exportBtns = document.getElementById('ss-export-btns');
+    if(exportBtns) exportBtns.style.display='flex';
+
+  // ── INDEPENDIENTE ──────────────────────────────────────────────────────────
+  } else {
+    const periodo = document.getElementById('ss-periodo')?.value||'mensual';
+    const periodoMeses = {mensual:1,bimestral:2,trimestral:3,semestral:6,anual:12}[periodo]||1;
+
+    // IBC independiente: Decreto 1273/2018
+    // Si ingreso > 2 SMMLV → IBC = 40% del ingreso
+    // Si 40% < 1 SMMLV → IBC = 1 SMMLV
+    // Si ingreso ≤ 2 SMMLV → IBC = ingreso (mínimo 1 SMMLV)
+    let ibc, regla, ibcBase40;
+    if (sal > smmlv * 2) {
+      ibcBase40 = Math.round(sal * 0.40);
+      if (ibcBase40 < smmlv) {
+        ibc = smmlv;
+        regla = '40% del ingreso ('+ibcBase40.toLocaleString('es-CO')+') < SMMLV → se toma SMMLV';
+      } else {
+        ibc = ibcBase40;
+        regla = '40% de $'+sal.toLocaleString('es-CO')+' (ingreso > 2 SMMLV — Decreto 1273/2018)';
+      }
+    } else {
+      ibc = Math.max(sal, smmlv);
+      regla = 'Ingreso ≤ 2 SMMLV → IBC = '+(sal<smmlv?'SMMLV (mínimo)':'ingreso');
+    }
+    // Máximo: 25 SMMLV
+    ibc = Math.min(ibc, smmlv * 25);
+
+    // Aportes por período
+    const saludMes    = Math.round(ibc * 0.1250); // 12.50% salud independiente (Ley 1753)
+    const pensionMes  = Math.round(ibc * 0.16);   // 16% pensión
+
+    // ARL opcional para independientes
+    const TASAS_ARL_IND = {'I':0.00522,'II':0.01044,'III':0.02436,'IV':0.04350,'V':0.06960};
+    const incluirARL = document.getElementById('ss-ind-arl')?.checked || false;
+    const incluirCCF = document.getElementById('ss-ind-ccf')?.checked || false;
+    const riesgoARL_ind = document.getElementById('ss-ind-riesgo')?.value || 'I';
+    const tasaARL_ind   = TASAS_ARL_IND[riesgoARL_ind];
+    const arlMes   = incluirARL ? Math.round(ibc * tasaARL_ind) : 0;
+    const ccfMes   = incluirCCF ? Math.round(ibc * 0.04) : 0;  // 4% CCF
+
+    const totalMes    = saludMes + pensionMes + arlMes + ccfMes;
+    const totalPeriodo= totalMes * periodoMeses;
+
+    if(infoEl){
+      infoEl.style.color='var(--text3)';
+      infoEl.textContent = (sal/smmlv).toFixed(2)+' SMMLV · IBC: $'+ibc.toLocaleString('es-CO')+' · '+regla;
+    }
+
+    const pct = (v) => (v/ibc*100).toFixed(2)+'%';
+
+    const rowsAportes = [
+      {label:'Salud (12.5%)',  val:saludMes,   color:'var(--green)', sub:pct(saludMes)+' del IBC'},
+      {label:'Pensión (16%)',  val:pensionMes, color:'var(--blue)',  sub:pct(pensionMes)+' del IBC'},
+    ];
+    if(incluirARL) rowsAportes.push({label:'ARL Riesgo '+riesgoARL_ind+' ('+(tasaARL_ind*100).toFixed(3)+'%)', val:arlMes, color:'var(--amber)', sub:pct(arlMes)+' del IBC'});
+    if(incluirCCF) rowsAportes.push({label:'Caja Compensación CCF (4%)', val:ccfMes, color:'var(--accent)', sub:pct(ccfMes)+' del IBC'});
+    rowsAportes.push({label:'Total mensual', val:totalMes, color:'var(--red)', sub:'Total a cargo del independiente'});
+
+    resEl.innerHTML = _ssDivider('🧾 Independiente — IBC calculado', 'var(--text2)')
+    + _ssCard([
+      {label:'Ingreso reportado',    val:sal,   color:'var(--text)',  sub:(sal/smmlv).toFixed(2)+' SMMLV'},
+      {label:'IBC (base cotización)',val:ibc,   color:'var(--blue)',  sub:regla},
+    ], '', '')
+    + _ssDivider('Aportes mensuales', 'var(--text2)')
+    + _ssCard(rowsAportes, '', '')
+    + (periodoMeses > 1
+      ? _ssTotalBig('Total período '+periodo+' ('+periodoMeses+' meses)', totalPeriodo, '$'+totalMes.toLocaleString('es-CO')+'/mes × '+periodoMeses)
+      : _ssTotalBig('Total a pagar', totalMes, 'Pago mensual')
+    )
+    + _ssCard([
+      {label:'Ingreso neto aprox.', val:sal-totalMes, color:'var(--green)', sub:'Ingreso − aportes mensuales'},
+    ], '', '')
+    + _ssNota('Independientes: 12.5% salud + 16% pensión sobre el IBC (Ley 100/1993, Ley 1753/2015). '
+      +'Ingresos > 2 SMMLV: IBC = 40% del ingreso (Decreto 1273/2018). '
+      +'Si ese 40% es < SMMLV, el IBC es el SMMLV. '
+      +(incluirARL?'ARL Riesgo '+riesgoARL_ind+': '+(tasaARL_ind*100).toFixed(3)+'% — aplica si hay contrato con entidad que exige ARL (Ley 1562/2012). ':
+        'Sin ARL (independientes sin contrato directo que lo exija). ')
+      +(incluirCCF?'CCF 4%: afiliación voluntaria para acceder a beneficios. ':'')
+      +'Pueden cotizar en períodos hasta 12 meses (Decreto 1273/2018). '
+      +'IMPORTANTE: independientes con ingresos < 1 SMMLV NO están obligados a cotizar.');
+
+    // Guardar datos para exportar
+    window._ssLastData = { modo:'independiente', sal, ibc, regla, saludMes, pensionMes, arlMes, ccfMes, totalMes, totalPeriodo, periodo, periodoMeses, incluirARL, incluirCCF, riesgoARL_ind, tasaARL_ind };
+    const exportBtns = document.getElementById('ss-export-btns');
+    if(exportBtns) exportBtns.style.display='flex';
+  }
+}
+
+// ── Helpers de render para seguridad social ───────────────────────────────────
+function _ssCard(rows, titulo, color) {
+  return (titulo?'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:'+color+';margin:10px 0 6px">'+titulo+'</div>':'')
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:8px">'
+    +rows.map(r=>'<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--border2)">'
+      +'<div><div style="font-size:12px;color:var(--text2)">'+r.label+'</div>'
+      +(r.sub?'<div style="font-size:10px;color:var(--text3)">'+r.sub+'</div>':'')+'</div>'
+      +'<div style="font-size:13px;font-weight:800;font-family:\'DM Mono\',monospace;color:'+r.color+'">$'+r.val.toLocaleString('es-CO')+'</div>'
+      +'</div>').join('')
+    +'</div>';
+}
+function _ssDivider(label, color) {
+  return '<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:'+color+';margin:12px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)">'+label+'</div>';
+}
+function _ssTotalBig(label, val, sub) {
+  return '<div style="background:linear-gradient(135deg,rgba(21,101,192,.15),rgba(13,71,161,.08));border:1px solid rgba(21,101,192,.3);border-radius:var(--radius-xs);padding:14px;margin-bottom:10px;text-align:center">'
+    +'<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">'+label+'</div>'
+    +'<div style="font-size:28px;font-weight:900;font-family:\'DM Mono\',monospace;color:var(--blue)">$'+val.toLocaleString('es-CO')+'</div>'
+    +(sub?'<div style="font-size:10px;color:var(--text3);margin-top:3px">'+sub+'</div>':'')
+    +'</div>';
+}
+function _ssNota(txt) {
+  return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;font-size:10px;color:var(--text3);line-height:1.6;margin-top:4px">'
+    +'ℹ️ '+txt+'</div>';
+}
+
+// ── Exportar Seguridad Social ────────────────────────────────────────────────
+function ssExportarExcel(){
+  const d = window._ssLastData;
+  if(!d){toast('Primero calcule la liquidación','error');return;}
+  const f=v=>'$'+Math.round(v||0).toLocaleString('es-CO');
+  const hoy=new Date().toLocaleDateString('es-CO');
+
+  let rows=[];
+  rows.push(['LIQUIDACIÓN DE SEGURIDAD SOCIAL','','','']);
+  rows.push(['Colombia '+NOM_ANO+' · SMMLV $'+NOM_CFG.smmlv.toLocaleString('es-CO'),'','','']);
+  rows.push(['Fecha de liquidación',hoy,'','']);
+  rows.push(['Tipo de trabajador',d.modo==='dependiente'?'👔 Dependiente':'🧾 Independiente','','']);
+  rows.push(['','','','']);
+  rows.push(['CONCEPTO','VALOR','% IBC','']);
+  rows.push(['Ingreso / Salario',f(d.sal),'','']);
+  rows.push(['IBC (Base de Cotización)',f(d.ibc),'100%','']);
+  rows.push(['','','','']);
+
+  if(d.modo==='dependiente'){
+    rows.push(['--- APORTES DEL EMPLEADO ---','','','']);
+    rows.push(['Salud (4%)',f(d.empSalud),(d.empSalud/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['Pensión (4%)',f(d.empPension),(d.empPension/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['TOTAL EMPLEADO',f(d.totalEmp),'','']);
+    rows.push(['','','','']);
+    rows.push(['--- APORTES DEL EMPLEADOR ---','','','']);
+    rows.push(['Salud (8.5%)',f(d.emprSalud),(d.emprSalud/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['Pensión (12%)',f(d.emprPension),(d.emprPension/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['ARL Riesgo '+d.riesgoARL+' ('+(d.tasaARL*100).toFixed(3)+'%)',f(d.emprARL),(d.emprARL/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['Caja Compensación (4%)',f(d.emprCCF),(d.emprCCF/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['ICBF (3%) *',f(d.emprICBF),(d.emprICBF/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['SENA (2%) *',f(d.emprSENA),(d.emprSENA/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['TOTAL EMPLEADOR',f(d.totalEmpr),'','']);
+    rows.push(['','','','']);
+    rows.push(['COSTO TOTAL SEGURIDAD SOCIAL',f(d.totalGeneral),'','']);
+    rows.push(['Neto estimado empleado',f(d.netoRef),'','']);
+    rows.push(['','','','']);
+    rows.push(['* ICBF y SENA aplica para empresas con más de 10 empleados','','','']);
+  } else {
+    rows.push(['--- APORTES INDEPENDIENTE ---','','','']);
+    rows.push(['Salud (12.5%)',f(d.saludMes),(d.saludMes/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['Pensión (16%)',f(d.pensionMes),(d.pensionMes/d.ibc*100).toFixed(2)+'%','']);
+    if(d.incluirARL) rows.push(['ARL Riesgo '+d.riesgoARL_ind+' ('+(d.tasaARL_ind*100).toFixed(3)+'%)',f(d.arlMes),(d.arlMes/d.ibc*100).toFixed(2)+'%','']);
+    if(d.incluirCCF) rows.push(['Caja Compensación CCF (4%)',f(d.ccfMes),(d.ccfMes/d.ibc*100).toFixed(2)+'%','']);
+    rows.push(['TOTAL MENSUAL',f(d.totalMes),'','']);
+    if(d.periodoMeses>1) rows.push(['TOTAL PERÍODO ('+d.periodo+' - '+d.periodoMeses+' meses)',f(d.totalPeriodo),'','']);
+    rows.push(['Ingreso neto estimado',f(d.sal-d.totalMes),'','']);
+    rows.push(['','','','']);
+    rows.push(['IBC calculado por: '+d.regla,'','','']);
+  }
+
+  // Generar CSV descargable (compatible con Excel)
+  const csv = rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const bom = '\uFEFF'; // BOM para Excel en español
+  const blob = new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download='Seguridad_Social_'+(d.modo==='dependiente'?'Dependiente':'Independiente')+'_'+hoy.replace(/\//g,'-')+'.csv';
+  a.click(); URL.revokeObjectURL(url);
+  toast('Exportado a Excel ✓','success');
+}
+
+function ssExportarPDF(){
+  const d = window._ssLastData;
+  if(!d){toast('Primero calcule la liquidación','error');return;}
+  const f=v=>'$'+Math.round(v||0).toLocaleString('es-CO');
+  const hoy=new Date().toLocaleDateString('es-CO');
+  const tipo = d.modo==='dependiente'?'Dependiente (Empleado)':'Independiente';
+
+  let html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Liquidación Seguridad Social</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:24px;background:#fff}
+    h1{font-size:16px;color:#1565C0;margin-bottom:2px}
+    .sub{font-size:10px;color:#666;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;margin-bottom:12px}
+    th{background:#1565C0;color:white;padding:6px 10px;text-align:left;font-size:11px}
+    td{padding:5px 10px;border-bottom:1px solid #e0e0e0;font-size:11px}
+    .total-row td{background:#e3f2fd;font-weight:bold}
+    .grand-total td{background:#1565C0;color:white;font-weight:bold;font-size:13px}
+    .footer{font-size:9px;color:#999;margin-top:12px;border-top:1px solid #ddd;padding-top:8px}
+    .tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:bold;background:#e3f2fd;color:#1565C0}
+  </style></head><body>
+  <h1>🛡️ Liquidación de Seguridad Social</h1>
+  <div class="sub">Colombia ${NOM_ANO} · SMMLV $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Ley 100/1993 · Fecha: ${hoy}</div>
+  <div style="margin-bottom:12px"><span class="tag">${tipo}</span> &nbsp; Ingreso: <b>${f(d.sal)}</b> &nbsp; IBC: <b>${f(d.ibc)}</b></div>`;
+
+  if(d.modo==='dependiente'){
+    html+=`<table>
+    <tr><th>Concepto — EMPLEADO</th><th>%</th><th>Valor</th></tr>
+    <tr><td>Salud</td><td>4%</td><td>${f(d.empSalud)}</td></tr>
+    <tr><td>Pensión</td><td>4%</td><td>${f(d.empPension)}</td></tr>
+    <tr class="total-row"><td>Total aportes empleado</td><td></td><td>${f(d.totalEmp)}</td></tr>
+    </table>
+    <table>
+    <tr><th>Concepto — EMPLEADOR</th><th>%</th><th>Valor</th></tr>
+    <tr><td>Salud</td><td>8.5%</td><td>${f(d.emprSalud)}</td></tr>
+    <tr><td>Pensión</td><td>12%</td><td>${f(d.emprPension)}</td></tr>
+    <tr><td>ARL Riesgo ${d.riesgoARL}</td><td>${(d.tasaARL*100).toFixed(3)}%</td><td>${f(d.emprARL)}</td></tr>
+    <tr><td>Caja Compensación</td><td>4%</td><td>${f(d.emprCCF)}</td></tr>
+    <tr><td>ICBF *</td><td>3%</td><td>${f(d.emprICBF)}</td></tr>
+    <tr><td>SENA *</td><td>2%</td><td>${f(d.emprSENA)}</td></tr>
+    <tr class="total-row"><td>Total aportes empleador</td><td></td><td>${f(d.totalEmpr)}</td></tr>
+    </table>
+    <table><tr class="grand-total"><td>COSTO TOTAL SEGURIDAD SOCIAL</td><td></td><td>${f(d.totalGeneral)}</td></tr>
+    <tr><td>Neto estimado empleado</td><td></td><td>${f(d.netoRef)}</td></tr></table>
+    <div class="footer">* ICBF y SENA aplica para empresas con más de 10 empleados (Ley 789/2002). ARL riesgo ${d.riesgoARL} — ${(d.tasaARL*100).toFixed(3)}% (Decreto 1772/1994).</div>`;
+  } else {
+    html+=`<table>
+    <tr><th>Concepto — INDEPENDIENTE</th><th>%</th><th>Mensual</th></tr>
+    <tr><td>Salud</td><td>12.5%</td><td>${f(d.saludMes)}</td></tr>
+    <tr><td>Pensión</td><td>16%</td><td>${f(d.pensionMes)}</td></tr>`;
+    if(d.incluirARL) html+=`<tr><td>ARL Riesgo ${d.riesgoARL_ind}</td><td>${(d.tasaARL_ind*100).toFixed(3)}%</td><td>${f(d.arlMes)}</td></tr>`;
+    if(d.incluirCCF) html+=`<tr><td>Caja Compensación (CCF)</td><td>4%</td><td>${f(d.ccfMes)}</td></tr>`;
+    html+=`<tr class="total-row"><td>Total mensual</td><td></td><td>${f(d.totalMes)}</td></tr>`;
+    if(d.periodoMeses>1) html+=`<tr class="grand-total"><td>TOTAL PERÍODO (${d.periodo} — ${d.periodoMeses} meses)</td><td></td><td>${f(d.totalPeriodo)}</td></tr>`;
+    html+=`<tr><td>Ingreso neto estimado</td><td></td><td>${f(d.sal-d.totalMes)}</td></tr>
+    </table>
+    <div class="footer">IBC: ${f(d.ibc)} — ${d.regla}. Ley 100/1993, Ley 1753/2015, Decreto 1273/2018.</div>`;
+  }
+  html+=`</body></html>`;
+
+  const w = window.open('','_blank','width=700,height=600');
+  if(!w){toast('Permita ventanas emergentes para exportar PDF','error',4000);return;}
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>{w.print();},400);
+  toast('PDF listo para imprimir ✓','success');
 }
 
 function renderNomina(el) {
@@ -4021,11 +4626,11 @@ function renderNomina(el) {
 
   <!-- Modo toggle -->
   <div style="display:flex;gap:6px;margin-bottom:12px">
-    <button onclick="if(!nomModoVariable)void 0" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer" onclick="nomModoVariable&&toggleNomModo()">
-      Salario fijo
+    <button id="nom-btn-fijo" onclick="toggleNomModo(false)" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer">
+      💼 Salario fijo
     </button>
-    <button onclick="!nomModoVariable&&toggleNomModo()" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer" id="nom-btn-var">
-      Variable / Comisiones
+    <button id="nom-btn-var" onclick="toggleNomModo(true)" style="flex:1;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:\'Nunito\',sans-serif;font-size:11px;font-weight:700;cursor:pointer">
+      📊 Variable / Comisiones
     </button>
   </div>
 
@@ -4132,10 +4737,8 @@ function calcDiasNomina() {
     if(infoEl){infoEl.style.display='block';infoEl.textContent='⚠ La fecha fin debe ser posterior al inicio';infoEl.style.color='var(--red)';}
     return;
   }
-  // Días calendario
   const diffMs = dFin - dIni + 86400000;
   const diasCal = Math.round(diffMs / 86400000);
-  // Días comerciales colombianos (sistema 30/360, Art. 134 CST)
   const meses = (dFin.getFullYear()-dIni.getFullYear())*12 + (dFin.getMonth()-dIni.getMonth());
   const diasMesD = dFin.getDate() - dIni.getDate() + 1;
   const diasCom = Math.max(1, Math.min(meses*30 + diasMesD, diasCal));
@@ -4143,7 +4746,7 @@ function calcDiasNomina() {
   if (infoEl) {
     infoEl.style.display = 'block';
     infoEl.style.color = 'var(--ef-cyan)';
-    infoEl.textContent = '📅 ' + diasCal + ' días calendario · ' + diasCom + ' días comerciales (30/360 CST)';
+    infoEl.textContent = '📅 '+diasCal+' días calendario · '+diasCom+' días comerciales (sistema 30/360 — Art. 134 CST)';
   }
   calcNomina();
 }
@@ -6511,57 +7114,9 @@ function renderReminderBanners(){
   }).join('');
 }
 
-async function requestNotificationPermission(){
-  if(!('Notification' in window)){toast('Tu navegador no soporta notificaciones','error');return false;}
-  if(Notification.permission==='granted') return true;
-  if(Notification.permission==='denied'){
-    toast('Notificaciones bloqueadas — actívalas en configuración del navegador','error',5000);
-    return false;
-  }
-  const perm = await Notification.requestPermission();
-  return perm==='granted';
-}
-
-async function activarRecordatorios(){
-  const granted = await requestNotificationPermission();
-  if(!granted) return;
-  localStorage.setItem('ef_notif_enabled','true');
-  const reminders = checkPaymentReminders();
-  if(reminders.length > 0){
-    reminders.forEach(r => {
-      const esHoy = r.diasRestantes===0;
-      try{
-        new Notification(esHoy?'🔔 Pago vence HOY':'⏰ Pago vence en 3 días', {
-          body: r.deuda.acreedor + ' — ' + fmt(r.cuota) + ' | Fecha: ' + fd(r.fechaVence.toISOString().slice(0,10)),
-          icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💳</text></svg>',
-          tag: 'reminder-' + r.deuda.id,
-          requireInteraction: esHoy
-        });
-      }catch(e){}
-    });
-    toast('Notificaciones activadas ✓','success');
-  } else {
-    toast('Notificaciones activadas ✓ — No hay vencimientos en los próximos 3 días','info',4000);
-  }
-}
-
-function initReminderCheck(){
-  setTimeout(checkNotaAlarmas, 2000);
-  if(localStorage.getItem('ef_notif_enabled')==='true' && Notification.permission==='granted'){
-    setTimeout(()=>{
-      checkPaymentReminders().forEach(r=>{
-        const esHoy = r.diasRestantes===0;
-        try{
-          new Notification(esHoy?'🔔 Pago vence HOY':'⏰ Pago vence en 3 días',{
-            body: r.deuda.acreedor+' — '+fmt(r.cuota)+' | '+fd(r.fechaVence.toISOString().slice(0,10)),
-            tag:'reminder-'+r.deuda.id,
-            requireInteraction:esHoy
-          });
-        }catch(e){}
-      });
-    },2000);
-  }
-}
+// Alias de compatibilidad — abre el panel completo de configuración
+function requestNotificationPermission(){ return solicitarPermisoNotif(); }
+function activarRecordatorios(){ abrirConfigNotif(); }
 
 // ══ MODO CLIENTE ════════════════════════════════════════════════════════════
 // Storage
@@ -10059,28 +10614,28 @@ function setColorTheme(theme){
 
 function applyColorTheme(theme){
   document.documentElement.setAttribute('data-theme', theme);
-  // Update logo gradient
-  const logoIcon = document.querySelector('.cuadre-logo-icon');
-  if(logoIcon){
-    logoIcon.style.background = theme==='verde'
-      ? 'linear-gradient(135deg,#00c864,#007a3d)'
-      : 'linear-gradient(135deg,#5050ff,#8800cc)';
-    logoIcon.style.boxShadow = theme==='verde'
-      ? '0 8px 32px rgba(0,200,100,.4)'
-      : '0 8px 32px rgba(80,80,255,.4)';
-  }
+  // Update ALL logo icons to match theme
+  document.querySelectorAll('.cuadre-logo-icon').forEach(el=>{
+    if(theme==='verde'){
+      el.style.background='linear-gradient(135deg,#00c864,#007a3d)';
+      el.style.boxShadow='0 8px 32px rgba(0,200,100,.4)';
+    } else if(theme==='slate'){
+      el.style.background='linear-gradient(135deg,#0F62FE,#6929C4)';
+      el.style.boxShadow='0 8px 32px rgba(15,98,254,.4)';
+    } else {
+      el.style.background='linear-gradient(135deg,#5050ff,#8800cc)';
+      el.style.boxShadow='0 8px 32px rgba(80,80,255,.4)';
+    }
+  });
 }
 
 function updateColorThemeUI(theme){
   const btnI = document.getElementById('theme-btn-indigo');
   const btnV = document.getElementById('theme-btn-verde');
   const btnS = document.getElementById('theme-btn-slate');
-  if(btnI) btnI.style.opacity = theme==='indigo'?'1':'0.4';
-  if(btnV) btnV.style.opacity = theme==='verde'?'1':'0.4';
-  if(btnS) btnS.style.opacity = theme==='slate'?'1':'0.4';
-  if(btnI) btnI.style.transform = theme==='indigo'?'scale(1.05)':'scale(1)';
-  if(btnV) btnV.style.transform = theme==='verde'?'scale(1.05)':'scale(1)';
-  if(btnS) btnS.style.transform = theme==='slate'?'scale(1.05)':'scale(1)';
+  if(btnI){ btnI.style.opacity=theme==='indigo'?'1':'0.4'; btnI.style.transform=theme==='indigo'?'scale(1.05)':'scale(1)'; }
+  if(btnV){ btnV.style.opacity=theme==='verde'?'1':'0.4';  btnV.style.transform=theme==='verde'?'scale(1.05)':'scale(1)';  }
+  if(btnS){ btnS.style.opacity=theme==='slate'?'1':'0.4';  btnS.style.transform=theme==='slate'?'scale(1.05)':'scale(1)';  }
 }
 
 function initColorTheme(){
@@ -10306,7 +10861,205 @@ function limpiarNotaFecha(){
 }
 
 // ── Alarmas de notas en initReminderCheck ─────────────────────────
+// ══ SISTEMA DE NOTIFICACIONES CONFIGURABLE ══════════════════════════════════
+
+const NOTIF_KEY = 'cuadre_notif_cfg';
+
+function getNotifCfg(){
+  try{ return JSON.parse(localStorage.getItem(NOTIF_KEY))||{}; }
+  catch(e){ return {}; }
+}
+function saveNotifCfg(cfg){ localStorage.setItem(NOTIF_KEY, JSON.stringify(cfg)); }
+
+function abrirConfigNotif(){
+  openModal('modal-config-notif');
+  const cfg = getNotifCfg();
+  // Carga checkboxes
+  const ids = ['notif-cobros-hoy','notif-mora','notif-proximos','notif-notas-alarma','notif-notas-toast','notif-deudas-hoy','notif-deudas-proximas'];
+  const keys= ['cobrosHoy','mora','proximos','notasAlarma','notasToast','deudasHoy','deudasProximas'];
+  ids.forEach((id,i)=>{ const el=document.getElementById(id); if(el) el.checked=!!cfg[keys[i]]; });
+  // Banner estado permiso
+  actualizarBannerPermiso();
+}
+
+function actualizarBannerPermiso(){
+  const banner = document.getElementById('notif-permiso-banner');
+  const btn    = document.getElementById('notif-permiso-btn');
+  if(!banner) return;
+  if(!('Notification' in window)){
+    banner.style.cssText='background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px';
+    banner.innerHTML='❌ Este navegador no soporta notificaciones del sistema.';
+    if(btn) btn.style.display='none';
+    return;
+  }
+  const perm = Notification.permission;
+  if(perm==='granted'){
+    banner.style.cssText='background:rgba(61,220,132,.1);border:1px solid rgba(61,220,132,.3);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px';
+    banner.innerHTML='✅ Notificaciones del sistema <strong>activadas</strong>. Configura qué alertas deseas recibir abajo.';
+    if(btn) btn.style.display='none';
+    const lbl = document.getElementById('gear-notif-label');
+    if(lbl) lbl.textContent='Notificaciones ✓';
+  } else if(perm==='denied'){
+    banner.style.cssText='background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.3);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px';
+    banner.innerHTML='🚫 Notificaciones <strong>bloqueadas</strong> por el navegador. Actívalas en Configuración del sitio.';
+    if(btn){ btn.textContent='⚙️ Abrir configuración del navegador'; btn.style.display='block'; btn.onclick=()=>{ toast('Ve a Configuración del sitio → Notificaciones → Permitir','info',5000); }; }
+  } else {
+    banner.style.cssText='background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px';
+    banner.innerHTML='⚠️ Permisos de notificación <strong>pendientes</strong>. Toca el botón para activarlos.';
+    if(btn){ btn.textContent='🔔 Activar permisos del sistema'; btn.style.display='block'; btn.onclick=solicitarPermisoNotif; }
+  }
+}
+
+async function solicitarPermisoNotif(){
+  if(!('Notification' in window)){ toast('Este navegador no soporta notificaciones','error'); return; }
+  if(Notification.permission==='denied'){ toast('Notificaciones bloqueadas — actívalas en ajustes del navegador','error',5000); return; }
+  const perm = await Notification.requestPermission();
+  if(perm==='granted'){
+    toast('¡Notificaciones activadas! ✓','success');
+    // Habilitar todas por defecto al activar por primera vez
+    const cfg = getNotifCfg();
+    if(!cfg._initialized){
+      cfg.cobrosHoy=true; cfg.mora=true; cfg.proximos=true;
+      cfg.notasAlarma=true; cfg.notasToast=true;
+      cfg.deudasHoy=true; cfg.deudasProximas=true;
+      cfg._initialized=true;
+      saveNotifCfg(cfg);
+      // Refrescar checkboxes
+      const ids =['notif-cobros-hoy','notif-mora','notif-proximos','notif-notas-alarma','notif-notas-toast','notif-deudas-hoy','notif-deudas-proximas'];
+      ids.forEach(id=>{ const el=document.getElementById(id); if(el) el.checked=true; });
+    }
+    actualizarBannerPermiso();
+  } else {
+    toast('Permiso denegado','error');
+    actualizarBannerPermiso();
+  }
+}
+
+function guardarConfigNotif(){
+  const cfg = getNotifCfg();
+  const mapa = {
+    'notif-cobros-hoy':'cobrosHoy',
+    'notif-mora':'mora',
+    'notif-proximos':'proximos',
+    'notif-notas-alarma':'notasAlarma',
+    'notif-notas-toast':'notasToast',
+    'notif-deudas-hoy':'deudasHoy',
+    'notif-deudas-proximas':'deudasProximas'
+  };
+  Object.entries(mapa).forEach(([id,key])=>{
+    const el=document.getElementById(id); if(el) cfg[key]=el.checked;
+  });
+  saveNotifCfg(cfg);
+  toast('Configuración guardada ✓','success',2000);
+}
+
+function _fireNotif(title, body, tag, requireInteraction){
+  if(!('Notification' in window) || Notification.permission!=='granted') return;
+  try{
+    new Notification(title,{
+      body, tag: tag||'cuadre-'+Date.now(),
+      icon:'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>',
+      requireInteraction:!!requireInteraction
+    });
+  }catch(e){}
+}
+
+function dispararNotifPrueba(){
+  if(!('Notification' in window)||Notification.permission!=='granted'){
+    toast('Activa primero los permisos de notificación','error'); return;
+  }
+  _fireNotif('🔔 Cuadre — Prueba','¡Las notificaciones funcionan correctamente!','prueba-cuadre',false);
+  toast('Notificación de prueba enviada ✓','success');
+}
+
+// Reemplaza la función initReminderCheck para integrar el nuevo sistema
+function initReminderCheck(){
+  const cfg = getNotifCfg();
+  // 1. Alarmas de notas (toast en pantalla)
+  if(cfg.notasToast !== false) setTimeout(checkNotaAlarmas, 2000);
+  // 2. Notificaciones del sistema
+  if(Notification.permission==='granted'){
+    setTimeout(()=>{
+      // Cobros hoy — Modo Prestamista
+      if(cfg.cobrosHoy){
+        try{
+          const hoyStr = new Date().toISOString().slice(0,10);
+          const pagosHoy = (clients||[]).filter(c=>{
+            if(!c.meses) return false;
+            return c.meses.some(m=>m===hoyStr);
+          });
+          if(pagosHoy.length>0){
+            _fireNotif('📅 Cobros de hoy — Cuadre',
+              pagosHoy.length+' cliente'+(pagosHoy.length!==1?'s':'')+(pagosHoy.length===1?' tiene':' tienen')+' pago hoy',
+              'cobros-hoy', true);
+          }
+        }catch(e){}
+      }
+      // Mora — Modo Prestamista
+      if(cfg.mora){
+        try{
+          const enMora = (clients||[]).filter(c=>diasMora&&diasMora(c)>0);
+          if(enMora.length>0){
+            _fireNotif('⚠️ Clientes en mora — Cuadre',
+              enMora.length+' cliente'+(enMora.length!==1?'s en mora':'s en mora'),
+              'mora-alert', false);
+          }
+        }catch(e){}
+      }
+      // Próximos vencimientos prestamista
+      if(cfg.proximos){
+        try{
+          checkPaymentReminders().forEach(r=>{
+            const esHoy=r.diasRestantes===0;
+            _fireNotif(
+              esHoy?'🔔 Pago vence HOY':'⏰ Pago vence en '+r.diasRestantes+' días',
+              (r.deuda?r.deuda.acreedor:r.nombre||'Cliente')+' — '+fmt(r.cuota||0),
+              'prox-'+r.deuda?.id||Date.now(), esHoy);
+          });
+        }catch(e){}
+      }
+      // Notif notas/alarmas del sistema
+      if(cfg.notasAlarma){
+        try{
+          const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+          (notes||[]).forEach(n=>{
+            const fs=Array.isArray(n.fechasProg)&&n.fechasProg.length?n.fechasProg:(n.fechaProg?[n.fechaProg]:[]);
+            const ant=n.diasAlarma||0;
+            fs.forEach(f=>{
+              const dias=Math.round((new Date(f+'T00:00:00')-hoyD)/86400000);
+              if(dias===0) _fireNotif('📅 Nota — Hoy: '+n.titulo,'Fecha programada: '+fd(f),'nota-'+n.id,true);
+              else if(dias>0&&dias<=ant) _fireNotif('⏰ Nota — En '+dias+' día'+(dias!==1?'s':'')+': '+n.titulo,'Programado: '+fd(f),'nota-prox-'+n.id,false);
+            });
+          });
+        }catch(e){}
+      }
+      // Deudas propias (modo cliente)
+      if(cfg.deudasHoy||cfg.deudasProximas){
+        try{
+          const hoyD=new Date(); hoyD.setHours(0,0,0,0);
+          (deudas||[]).filter(d=>d.estado!=='pagada').forEach(d=>{
+            if(!d.proximoPago) return;
+            const fv=new Date(d.proximoPago+'T00:00:00');
+            const dias=Math.round((fv-hoyD)/86400000);
+            if(dias===0&&cfg.deudasHoy)
+              _fireNotif('💳 Cuota HOY — '+d.acreedor,'$'+fmt(d.cuota||0)+' vence hoy','deuda-hoy-'+d.id,true);
+            else if(dias>0&&dias<=3&&cfg.deudasProximas)
+              _fireNotif('📆 Cuota en '+dias+' día'+(dias!==1?'s':'')+' — '+d.acreedor,'$'+fmt(d.cuota||0),'deuda-prox-'+d.id,false);
+          });
+        }catch(e){}
+      }
+    }, 2500);
+  }
+  // Actualizar etiqueta del botón en el gear menu
+  try{
+    const lbl=document.getElementById('gear-notif-label');
+    if(lbl&&Notification.permission==='granted') lbl.textContent='Notificaciones ✓';
+  }catch(e){}
+}
+
 function checkNotaAlarmas(){
+  const cfg = getNotifCfg();
+  if(cfg.notasToast===false) return; // Desactivado
   const hoyD=new Date(); hoyD.setHours(0,0,0,0);
   notes.forEach(n=>{
     const fs=Array.isArray(n.fechasProg)&&n.fechasProg.length?n.fechasProg:(n.fechaProg?[n.fechaProg]:[]);
