@@ -1060,6 +1060,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <button class="dd-tab" onclick="setDDTab('notes',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg> Notas</button>
     <button class="dd-tab" onclick="setDDTab('nomina',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg> Nómina</button>
     <button class="dd-tab" onclick="setDDTab('simulator',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Simulador</button>
+    <button class="dd-tab" onclick="setDDTab('vivienda',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Vivienda</button>
   </div>
   <div class="dd-content" id="dd-content"></div>
 </div>
@@ -3875,7 +3876,7 @@ function updateDDIndicator(tabName) {
   if (!ind) return;
   const labels = {
     converter: 'Divisas', calc: 'Calculadora', budget: 'Presupuesto',
-    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador'
+    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador', vivienda: 'Vivienda'
   };
   ind.textContent = labels[tabName] || tabName;
 }
@@ -3897,6 +3898,7 @@ function renderDDTab(tab){
   else if(tab==='notes') renderNotes(el);
   else if(tab==='nomina') renderNomina(el);
   else if(tab==='simulator') renderSimulator(el);
+  else if(tab==='vivienda') renderSimVivienda(el);
 }
 
 
@@ -4235,6 +4237,433 @@ const SIM_SECTORES=[
   'Construcción / Remodelaciones','Transporte / Logística','Salud / Estética',
   'Tecnología / Software','Educación / Capacitación','Manufactura','Otro'
 ];
+
+// ══ SIMULADOR DE CRÉDITO DE VIVIENDA ════════════════════════════════════════
+// Ley 546/1999 · Superfinanciera · Mi Casa Ya · Sistema francés · UVR · Leasing
+// ═════════════════════════════════════════════════════════════════════════════
+let vivTipo = 'tradicional';
+let vivAmortAnio = 1; // año activo en la tabla
+
+function renderSimVivienda(el) {
+  vivTipo = 'tradicional';
+  vivAmortAnio = 1;
+  const IS = 'width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:9px 11px;color:var(--text);font-family:\'Nunito\',sans-serif;font-size:13px;outline:none';
+  const LS = 'font-size:10px;color:var(--text3);font-weight:700;display:block;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em';
+
+  el.innerHTML = `
+<div style="max-width:520px;margin:0 auto">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+    <div style="width:36px;height:36px;background:linear-gradient(135deg,#1565C0,#0D47A1);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <div style="font-size:15px;font-weight:800">Simulador de Crédito de Vivienda</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">Sistema francés · UVR · Mi Casa Ya · Leasing · Colombia 2025</div>
+    </div>
+  </div>
+
+  <!-- TIPO DE CRÉDITO -->
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+    <button onclick="setVivTipo('tradicional')" id="viv-btn-trad" style="padding:10px 6px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
+      🏦 Tradicional<br><span style="font-size:9px;font-weight:400">Cuota fija pesos</span>
+    </button>
+    <button onclick="setVivTipo('uvr')" id="viv-btn-uvr" style="padding:10px 6px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
+      📈 En UVR<br><span style="font-size:9px;font-weight:400">Cuota variable</span>
+    </button>
+    <button onclick="setVivTipo('leasing')" id="viv-btn-leas" style="padding:10px 6px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:transparent;color:var(--text3);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
+      🔑 Leasing<br><span style="font-size:9px;font-weight:400">Canon + opción</span>
+    </button>
+  </div>
+
+  <!-- INPUTS -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">Datos del crédito</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="grid-column:1/-1">
+        <label style="${LS}">Valor del inmueble ($)</label>
+        <input type="number" id="viv-valor" min="0" step="1000000" placeholder="200000000"
+          style="${IS};font-size:14px;font-weight:700" oninput="calcViv()">
+      </div>
+      <div>
+        <label style="${LS}">Cuota inicial (%)</label>
+        <input type="number" id="viv-cuota-ini" value="30" min="10" max="90" step="1"
+          style="${IS}" oninput="calcViv()">
+      </div>
+      <div>
+        <label style="${LS}">Plazo</label>
+        <select id="viv-plazo" style="${IS}" onchange="calcViv()">
+          ${[5,10,15,20,25,30].map(y=>`<option value="${y}"${y===20?' selected':''}>${y} años (${y*12} cuotas)</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label style="${LS}">Tasa efectiva anual (%)</label>
+        <input type="number" id="viv-tasa" value="12.5" min="0" max="40" step="0.1"
+          style="${IS}" oninput="calcViv()">
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">Bancos: 11–14% EA · Mi Casa Ya: subsidio hasta 5 p.p.</div>
+      </div>
+      <div>
+        <label style="${LS}">Ingresos mensuales ($)</label>
+        <input type="number" id="viv-ingresos" min="0" step="100000" placeholder="5000000"
+          style="${IS}" oninput="calcViv()">
+        <div style="font-size:9px;color:var(--text3);margin-top:3px">Para verificar capacidad de pago (cuota ≤ 30%)</div>
+      </div>
+
+      <!-- UVR -->
+      <div id="viv-uvr-sec" style="grid-column:1/-1;display:none;background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.25);border-radius:var(--radius-xs);padding:10px">
+        <div style="font-size:10px;font-weight:700;color:#00BCD4;margin-bottom:8px">📈 Parámetros UVR</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div>
+            <label style="${LS}">Valor UVR hoy</label>
+            <input type="number" id="viv-uvr-val" value="392.10" step="0.01"
+              style="${IS};font-size:12px" oninput="calcViv()">
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">banrep.gov.co</div>
+          </div>
+          <div>
+            <label style="${LS}">Inflación anual proyectada (%)</label>
+            <input type="number" id="viv-inflacion" value="5.0" step="0.1" min="0" max="30"
+              style="${IS};font-size:12px" oninput="calcViv()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Mi Casa Ya -->
+      <div style="grid-column:1/-1">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;font-weight:600">
+          <input type="checkbox" id="viv-micasaya" onchange="calcViv()">
+          🏠 Aplicar subsidio Mi Casa Ya (cobertura tasa hasta 5 p.p.)
+        </label>
+        <div id="viv-mcy-info" style="display:none;font-size:10px;color:var(--text3);margin-top:6px;padding:8px 10px;background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:5px;line-height:1.6">
+          Aplica para VIS ≤ $150M y VIP ≤ $90M. Requiere afiliación a caja compensación y no ser propietario. Decreto 1347/2022.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="viv-resultado" style="display:none"></div>
+  <div id="viv-placeholder" style="text-align:center;padding:28px;color:var(--text3);font-size:12px">
+    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 10px;display:block;opacity:.35"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Ingrese el valor del inmueble para simular
+  </div>
+</div>`;
+  calcViv();
+}
+
+function setVivTipo(t) {
+  vivTipo = t;
+  const map = {trad:'tradicional', uvr:'uvr', leas:'leasing'};
+  ['trad','uvr','leas'].forEach(function(k) {
+    const b = document.getElementById('viv-btn-'+k);
+    if (!b) return;
+    const active = map[k] === t;
+    b.style.border  = active ? '2px solid var(--ef-pink)' : '1px solid var(--border2)';
+    b.style.background = active ? 'rgba(194,24,91,.12)' : 'transparent';
+    b.style.color   = active ? 'var(--ef-pink2)' : 'var(--text3)';
+  });
+  const uvrSec = document.getElementById('viv-uvr-sec');
+  if (uvrSec) uvrSec.style.display = t === 'uvr' ? 'block' : 'none';
+  vivAmortAnio = 1;
+  calcViv();
+}
+
+function vivNavAnio(dir) {
+  const plazoA = parseInt(document.getElementById('viv-plazo')?.value) || 20;
+  vivAmortAnio = Math.max(1, Math.min(vivAmortAnio + dir, plazoA));
+  calcViv();
+}
+
+function calcViv() {
+  const resEl = document.getElementById('viv-resultado');
+  const phEl  = document.getElementById('viv-placeholder');
+  const valor = parseFloat(document.getElementById('viv-valor')?.value) || 0;
+  if (!valor || valor < 1) {
+    if (phEl) phEl.style.display = 'block';
+    if (resEl) resEl.style.display = 'none';
+    return;
+  }
+
+  const pctIni   = parseFloat(document.getElementById('viv-cuota-ini')?.value) || 30;
+  const plazoA   = parseInt(document.getElementById('viv-plazo')?.value) || 20;
+  const tasaEA   = parseFloat(document.getElementById('viv-tasa')?.value) || 12.5;
+  const ingresos = parseFloat(document.getElementById('viv-ingresos')?.value) || 0;
+  const mcya     = document.getElementById('viv-micasaya')?.checked || false;
+  const mcyaInfo = document.getElementById('viv-mcy-info');
+  if (mcyaInfo) mcyaInfo.style.display = mcya ? 'block' : 'none';
+
+  // Tasa efectiva con subsidio Mi Casa Ya
+  const tasaEAef = mcya ? Math.max(tasaEA - 5, 3) : tasaEA;
+  const tasaMV   = Math.pow(1 + tasaEAef / 100, 1 / 12) - 1;
+  const monto    = Math.round(valor * (1 - pctIni / 100));
+  const cuotaIni = Math.round(valor * pctIni / 100);
+  const n        = plazoA * 12;
+
+  // ── Cuota sistema francés ─────────────────────────────────────────────────
+  let cuota = 0;
+  if (tasaMV > 0) {
+    const factor = Math.pow(1 + tasaMV, n);
+    cuota = Math.round(monto * tasaMV * factor / (factor - 1));
+  } else {
+    cuota = Math.round(monto / n);
+  }
+  const totalPagar = cuota * n;
+  const totalInt   = totalPagar - monto;
+
+  // ── Tabla de amortización COMPLETA ───────────────────────────────────────
+  // Genera todas las cuotas y agrupa por año para navegación
+  const todaAmort = [];
+  let saldoAm = monto;
+  for (let i = 1; i <= n; i++) {
+    const intAm  = Math.round(saldoAm * tasaMV);
+    const capAm  = Math.max(cuota - intAm, 0);
+    saldoAm      = Math.max(saldoAm - capAm, 0);
+    todaAmort.push({ num: i, cuota, int: intAm, cap: capAm, saldo: saldoAm });
+  }
+
+  // Resumen anual (para el gráfico de barras y el resumen de años)
+  const resumenAnual = [];
+  for (let a = 1; a <= plazoA; a++) {
+    const cuotasAnio = todaAmort.slice((a - 1) * 12, a * 12);
+    const intAnio  = cuotasAnio.reduce(function(s, r) { return s + r.int; }, 0);
+    const capAnio  = cuotasAnio.reduce(function(s, r) { return s + r.cap; }, 0);
+    const saldoFin = cuotasAnio[cuotasAnio.length - 1]?.saldo || 0;
+    resumenAnual.push({ anio: a, int: intAnio, cap: capAnio, saldo: saldoFin });
+  }
+  const maxCap = Math.max.apply(null, resumenAnual.map(function(r) { return r.cap; }));
+
+  // ── Cuotas del año activo (navegación) ────────────────────────────────────
+  if (vivAmortAnio > plazoA) vivAmortAnio = plazoA;
+  const cuotasAnioActivo = todaAmort.slice((vivAmortAnio - 1) * 12, vivAmortAnio * 12);
+
+  // ── Capacidad de pago ─────────────────────────────────────────────────────
+  const pctCuotaIng = ingresos > 0 ? Math.round(cuota / ingresos * 100) : 0;
+  const aprueba = ingresos > 0 ? cuota <= ingresos * 0.30 : null;
+  const ingRequerido = Math.ceil(cuota / 0.30);
+
+  // ── UVR proyección ────────────────────────────────────────────────────────
+  let uvrHtml = '';
+  if (vivTipo === 'uvr') {
+    const uvrVal   = parseFloat(document.getElementById('viv-uvr-val')?.value) || 392.1;
+    const inflPct  = parseFloat(document.getElementById('viv-inflacion')?.value) || 5;
+    const montoUVR = Math.round(monto / uvrVal);
+    const tasaReal = Math.max(tasaEAef - inflPct, 1);
+    const tasaUVRM = Math.pow(1 + tasaReal / 100, 1 / 12) - 1;
+    let cuotaUVR = 0;
+    if (tasaUVRM > 0) {
+      const f = Math.pow(1 + tasaUVRM, n);
+      cuotaUVR = Math.round(montoUVR * tasaUVRM * f / (f - 1));
+    } else {
+      cuotaUVR = Math.round(montoUVR / n);
+    }
+    const cuotaPesos1 = Math.round(cuotaUVR * uvrVal);
+    const uvrA5  = Math.round(uvrVal * Math.pow(1 + inflPct / 100, 5));
+    const uvrA10 = Math.round(uvrVal * Math.pow(1 + inflPct / 100, 10));
+    const uvrA15 = Math.round(uvrVal * Math.pow(1 + inflPct / 100, 15));
+    const cuotaA5  = Math.round(cuotaUVR * uvrA5);
+    const cuotaA10 = Math.round(cuotaUVR * uvrA10);
+    const cuotaA15 = n >= 180 ? Math.round(cuotaUVR * uvrA15) : 0;
+    uvrHtml = '<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.3);border-radius:var(--radius-xs);padding:12px;margin-bottom:10px">'
+      +'<div style="font-size:11px;font-weight:800;color:#00BCD4;margin-bottom:8px">📈 Proyección UVR — cuota variable en pesos</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+      +'<div style="background:var(--surface);border-radius:6px;padding:8px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Monto en UVR</div>'
+      +'<div style="font-size:15px;font-weight:800;color:#00BCD4">'+montoUVR.toLocaleString('es-CO')+' UVR</div></div>'
+      +'<div style="background:var(--surface);border-radius:6px;padding:8px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Cuota UVR (fija en UVR)</div>'
+      +'<div style="font-size:15px;font-weight:800;color:#00BCD4">'+cuotaUVR.toLocaleString('es-CO')+' UVR</div></div></div>'
+      +'<div style="font-size:10px;color:var(--text3);margin-bottom:6px;font-weight:700">Valor en pesos según proyección UVR (inflación '+inflPct+'%/año):</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr'+(cuotaA15?' 1fr':'')+'>;gap:6px">'
+      +'<div style="background:var(--surface);border-radius:5px;padding:7px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Hoy</div>'
+      +'<div style="font-size:12px;font-weight:800">$'+cuotaPesos1.toLocaleString('es-CO')+'</div>'
+      +'<div style="font-size:8px;color:var(--text3)">UVR '+uvrVal.toLocaleString('es-CO')+'</div></div>'
+      +'<div style="background:var(--surface);border-radius:5px;padding:7px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Año 5</div>'
+      +'<div style="font-size:12px;font-weight:800;color:var(--amber)">$'+cuotaA5.toLocaleString('es-CO')+'</div>'
+      +'<div style="font-size:8px;color:var(--text3)">UVR '+uvrA5.toLocaleString('es-CO')+'</div></div>'
+      +'<div style="background:var(--surface);border-radius:5px;padding:7px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Año 10</div>'
+      +'<div style="font-size:12px;font-weight:800;color:var(--red)">$'+cuotaA10.toLocaleString('es-CO')+'</div>'
+      +'<div style="font-size:8px;color:var(--text3)">UVR '+uvrA10.toLocaleString('es-CO')+'</div></div>'
+      +(cuotaA15?'<div style="background:var(--surface);border-radius:5px;padding:7px;text-align:center">'
+      +'<div style="font-size:9px;color:var(--text3)">Año 15</div>'
+      +'<div style="font-size:12px;font-weight:800;color:var(--red)">$'+cuotaA15.toLocaleString('es-CO')+'</div>'
+      +'<div style="font-size:8px;color:var(--text3)">UVR '+uvrA15.toLocaleString('es-CO')+'</div></div>':'')
+      +'</div></div>';
+  }
+
+  // ── Leasing ───────────────────────────────────────────────────────────────
+  const leasingHtml = vivTipo === 'leasing' ? (
+    '<div style="background:rgba(245,166,35,.08);border:1px solid var(--amber-bdr);border-radius:var(--radius-xs);padding:12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--amber);margin-bottom:6px">🔑 Leasing Habitacional</div>'
+    +'<div style="font-size:11px;color:var(--text2);line-height:1.7">'
+    +'El banco es propietario del inmueble durante el plazo. Usted paga un <strong>canon mensual</strong> (similar a cuota francesa). '
+    +'Al final del plazo, ejerce la <strong>opción de compra</strong>: ~<strong>$'+Math.round(valor*0.20).toLocaleString('es-CO')+'</strong> (20% del valor). '
+    +'Ventaja: los cánones son <strong>deducibles de renta</strong> para personas naturales.</div>'
+    +'</div>'
+  ) : '';
+
+  // ── Mi Casa Ya ────────────────────────────────────────────────────────────
+  const mcyaHtml = mcya ? (
+    '<div style="background:rgba(61,220,132,.08);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:10px">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--green);margin-bottom:4px">🏠 Mi Casa Ya aplicado</div>'
+    +'<div style="font-size:11px;color:var(--text2)">Tasa original: <strong>'+tasaEA+'%</strong> EA → Con subsidio: <strong style="color:var(--green)">'+tasaEAef.toFixed(1)+'%</strong> EA (−'+(tasaEA-tasaEAef).toFixed(1)+' p.p.)</div>'
+    +'</div>'
+  ) : '';
+
+  // ── Render resultado ─────────────────────────────────────────────────────
+  if (phEl) phEl.style.display = 'none';
+  if (resEl) resEl.style.display = 'block';
+
+  // Barras de progreso anual (capital vs interés)
+  const barrasAnuales = resumenAnual.map(function(r) {
+    const pctCap = totalPagar > 0 ? Math.round(r.cap / (cuota * 12) * 100) : 0;
+    const pctInt = 100 - pctCap;
+    const isActive = r.anio === vivAmortAnio;
+    return '<div onclick="vivAmortAnio='+r.anio+';calcViv()" style="cursor:pointer;padding:3px 0'+(isActive?';background:rgba(194,24,91,.08);border-radius:4px;margin:0 -4px;padding:3px 4px':'')+'">'
+      +'<div style="display:flex;justify-content:space-between;font-size:9px;color:'+(isActive?'var(--ef-pink2)':'var(--text3)')+';margin-bottom:2px">'
+      +'<span style="font-weight:'+(isActive?'800':'400')+'">Año '+r.anio+'</span>'
+      +'<span>$'+Math.round(r.saldo/1000000).toLocaleString('es-CO')+'M</span></div>'
+      +'<div style="height:6px;border-radius:3px;overflow:hidden;background:var(--surface3);display:flex">'
+      +'<div style="width:'+pctCap+'%;background:var(--green);opacity:.8"></div>'
+      +'<div style="width:'+pctInt+'%;background:var(--red);opacity:.6"></div>'
+      +'</div></div>';
+  }).join('');
+
+  // Tabla cuotas del año activo
+  const tablaCuotas = cuotasAnioActivo.map(function(r) {
+    const pctCap = cuota > 0 ? Math.round(r.cap / cuota * 100) : 0;
+    return '<tr style="border-bottom:1px solid var(--border2)">'
+      +'<td style="padding:5px 4px;text-align:center;color:var(--text3);font-size:11px">'+r.num+'</td>'
+      +'<td style="padding:5px 4px;text-align:right;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--green)">'+r.cap.toLocaleString('es-CO')+'</td>'
+      +'<td style="padding:5px 4px;text-align:right;font-family:\'DM Mono\',monospace;font-size:11px;color:var(--red)">'+r.int.toLocaleString('es-CO')+'</td>'
+      +'<td style="padding:5px 4px;font-size:10px">'
+      +'<div style="height:5px;border-radius:2px;overflow:hidden;background:var(--surface3);display:flex">'
+      +'<div style="width:'+pctCap+'%;background:var(--green)"></div>'
+      +'<div style="width:'+(100-pctCap)+'%;background:var(--red);opacity:.5"></div>'
+      +'</div></td>'
+      +'<td style="padding:5px 4px;text-align:right;font-family:\'DM Mono\',monospace;font-size:11px">'+r.saldo.toLocaleString('es-CO')+'</td>'
+      +'</tr>';
+  }).join('');
+
+  const resAnioActivo = resumenAnual[vivAmortAnio - 1];
+
+  resEl.innerHTML =
+    // ── Cuota principal ───────────────────────────────────────────────────
+    '<div style="background:linear-gradient(135deg,rgba(21,101,192,.15),rgba(13,71,161,.08));border:1px solid rgba(21,101,192,.3);border-radius:var(--radius);padding:16px;margin-bottom:12px">'
+    +'<div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Cuota mensual ('+(vivTipo==='leasing'?'canon':'sistema francés')+')</div>'
+    +'<div style="font-size:34px;font-weight:900;font-family:\'DM Mono\',monospace;color:var(--blue)">$'+cuota.toLocaleString('es-CO')+'</div>'
+    +(aprueba !== null
+      ? '<div style="margin-top:8px"><span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:'+(aprueba?'var(--green-bg)':'var(--red-bg)')+';color:'+(aprueba?'var(--green)':'var(--red)')+';">'
+        +(aprueba?'✓ Viable — '+pctCuotaIng+'% del ingreso':'⚠ Supera el 30% — ingreso mínimo requerido: $'+ingRequerido.toLocaleString('es-CO'))+'</span></div>'
+      : '')
+    +'</div>'
+    // ── Métricas ──────────────────────────────────────────────────────────
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px">'
+    +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Capital financiado</div>'
+    +'<div style="font-size:15px;font-weight:800;font-family:\'DM Mono\',monospace">$'+monto.toLocaleString('es-CO')+'</div></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px">'
+    +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Cuota inicial ('+pctIni+'%)</div>'
+    +'<div style="font-size:15px;font-weight:800;font-family:\'DM Mono\',monospace">$'+cuotaIni.toLocaleString('es-CO')+'</div></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px">'
+    +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Total a pagar ('+n+' cuotas)</div>'
+    +'<div style="font-size:15px;font-weight:800;font-family:\'DM Mono\',monospace;color:var(--amber)">$'+totalPagar.toLocaleString('es-CO')+'</div></div>'
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px">'
+    +'<div style="font-size:9px;color:var(--text3);text-transform:uppercase;margin-bottom:2px">Total intereses</div>'
+    +'<div style="font-size:15px;font-weight:800;font-family:\'DM Mono\',monospace;color:var(--red)">$'+totalInt.toLocaleString('es-CO')+'</div></div>'
+    +'</div>'
+    + mcyaHtml + uvrHtml + leasingHtml
+    // ── Progreso por año (barras navegables) ──────────────────────────────
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px">'
+    +'<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">📊 Progreso anual — toque un año para ver sus cuotas</div>'
+    +'<div style="font-size:9px;color:var(--text3);margin-bottom:10px;display:flex;gap:12px">'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--green);margin-right:3px"></span>Capital</span>'
+    +'<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--red);margin-right:3px"></span>Interés</span>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:repeat('+Math.min(plazoA,5)+',1fr);gap:4px">'
+    +resumenAnual.slice(0, Math.min(plazoA, 5)).map(function(r) {
+      const pctCap = totalPagar > 0 ? Math.round(r.cap / (cuota * 12) * 100) : 0;
+      const isActive = r.anio === vivAmortAnio;
+      return '<div onclick="vivAmortAnio='+r.anio+';calcViv()" style="cursor:pointer;padding:6px 4px;border-radius:6px;border:1px solid '+(isActive?'var(--ef-pink)':'transparent')+';background:'+(isActive?'rgba(194,24,91,.08)':'transparent')+'">'
+        +'<div style="font-size:9px;font-weight:'+(isActive?800:600)+';color:'+(isActive?'var(--ef-pink2)':'var(--text3)')+';margin-bottom:4px;text-align:center">Año '+r.anio+'</div>'
+        +'<div style="height:50px;border-radius:3px;overflow:hidden;background:var(--surface3);display:flex;flex-direction:column-reverse">'
+        +'<div style="height:'+pctCap+'%;background:var(--green);opacity:.8"></div>'
+        +'<div style="height:'+(100-pctCap)+'%;background:var(--red);opacity:.55"></div>'
+        +'</div>'
+        +'<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:3px">$'+Math.round(r.saldo/1000000*10)/10+'M</div>'
+        +'</div>';
+    }).join('')
+    +'</div>'
+    // Segunda fila si plazo > 5
+    +(plazoA > 5 ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(plazoA-5,5)+',1fr);gap:4px;margin-top:4px">'
+      +resumenAnual.slice(5, Math.min(plazoA, 10)).map(function(r) {
+        const pctCap = totalPagar > 0 ? Math.round(r.cap / (cuota * 12) * 100) : 0;
+        const isActive = r.anio === vivAmortAnio;
+        return '<div onclick="vivAmortAnio='+r.anio+';calcViv()" style="cursor:pointer;padding:6px 4px;border-radius:6px;border:1px solid '+(isActive?'var(--ef-pink)':'transparent')+';background:'+(isActive?'rgba(194,24,91,.08)':'transparent')+'">'
+          +'<div style="font-size:9px;font-weight:'+(isActive?800:600)+';color:'+(isActive?'var(--ef-pink2)':'var(--text3)')+';margin-bottom:4px;text-align:center">Año '+r.anio+'</div>'
+          +'<div style="height:50px;border-radius:3px;overflow:hidden;background:var(--surface3);display:flex;flex-direction:column-reverse">'
+          +'<div style="height:'+pctCap+'%;background:var(--green);opacity:.8"></div>'
+          +'<div style="height:'+(100-pctCap)+'%;background:var(--red);opacity:.55"></div>'
+          +'</div>'
+          +'<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:3px">$'+Math.round(r.saldo/1000000*10)/10+'M</div>'
+          +'</div>';
+      }).join('')
+      +'</div>' : '')
+    // Filas 3 y 4 para plazos de 25-30 años
+    +(plazoA > 10 ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(plazoA-10,5)+',1fr);gap:4px;margin-top:4px">'
+      +resumenAnual.slice(10, Math.min(plazoA, 15)).map(function(r) {
+        const pctCap = totalPagar > 0 ? Math.round(r.cap / (cuota * 12) * 100) : 0;
+        const isActive = r.anio === vivAmortAnio;
+        return '<div onclick="vivAmortAnio='+r.anio+';calcViv()" style="cursor:pointer;padding:6px 4px;border-radius:6px;border:1px solid '+(isActive?'var(--ef-pink)':'transparent')+';background:'+(isActive?'rgba(194,24,91,.08)':'transparent')+'">'
+          +'<div style="font-size:9px;font-weight:'+(isActive?800:600)+';color:'+(isActive?'var(--ef-pink2)':'var(--text3)')+';margin-bottom:4px;text-align:center">Año '+r.anio+'</div>'
+          +'<div style="height:50px;border-radius:3px;overflow:hidden;background:var(--surface3);display:flex;flex-direction:column-reverse">'
+          +'<div style="height:'+pctCap+'%;background:var(--green);opacity:.8"></div>'
+          +'<div style="height:'+(100-pctCap)+'%;background:var(--red);opacity:.55"></div>'
+          +'</div>'
+          +'<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:3px">$'+Math.round(r.saldo/1000000*10)/10+'M</div>'
+          +'</div>';
+      }).join('')
+      +'</div>' : '')
+    +(plazoA > 15 ? '<div style="display:grid;grid-template-columns:repeat('+Math.min(plazoA-15, plazoA>20?10:5)+',1fr);gap:4px;margin-top:4px">'
+      +resumenAnual.slice(15).map(function(r) {
+        const pctCap = totalPagar > 0 ? Math.round(r.cap / (cuota * 12) * 100) : 0;
+        const isActive = r.anio === vivAmortAnio;
+        return '<div onclick="vivAmortAnio='+r.anio+';calcViv()" style="cursor:pointer;padding:6px 4px;border-radius:6px;border:1px solid '+(isActive?'var(--ef-pink)':'transparent')+';background:'+(isActive?'rgba(194,24,91,.08)':'transparent')+'">'
+          +'<div style="font-size:9px;font-weight:'+(isActive?800:600)+';color:'+(isActive?'var(--ef-pink2)':'var(--text3)')+';margin-bottom:4px;text-align:center">Año '+r.anio+'</div>'
+          +'<div style="height:50px;border-radius:3px;overflow:hidden;background:var(--surface3);display:flex;flex-direction:column-reverse">'
+          +'<div style="height:'+pctCap+'%;background:var(--green);opacity:.8"></div>'
+          +'<div style="height:'+(100-pctCap)+'%;background:var(--red);opacity:.55"></div>'
+          +'</div>'
+          +'<div style="font-size:9px;color:var(--text3);text-align:center;margin-top:3px">$'+Math.round(r.saldo/1000000*10)/10+'M</div>'
+          +'</div>';
+      }).join('')
+      +'</div>' : '')
+    +'</div>'
+    // ── Tabla cuotas año activo ────────────────────────────────────────────
+    +'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
+    +'<div>'
+    +'<div style="font-size:11px;font-weight:800">📋 Año '+vivAmortAnio+' — cuotas '+(((vivAmortAnio-1)*12)+1)+' a '+(vivAmortAnio*12)+'</div>'
+    +(resAnioActivo?'<div style="font-size:10px;color:var(--text3)">Capital pagado: $'+resAnioActivo.cap.toLocaleString('es-CO')+' · Intereses: $'+resAnioActivo.int.toLocaleString('es-CO')+' · Saldo restante: $'+resAnioActivo.saldo.toLocaleString('es-CO')+'</div>':'')
+    +'</div>'
+    +'<div style="display:flex;gap:4px">'
+    +(vivAmortAnio>1?'<button onclick="vivAmortAnio--;calcViv()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-xs);padding:4px 10px;cursor:pointer;font-size:12px">‹</button>':'')
+    +(vivAmortAnio<plazoA?'<button onclick="vivAmortAnio++;calcViv()" style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-xs);padding:4px 10px;cursor:pointer;font-size:12px">›</button>':'')
+    +'</div></div>'
+    +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr style="border-bottom:2px solid var(--border)">'
+    +'<th style="text-align:center;padding:5px 4px;font-size:10px;color:var(--text3);font-weight:700">#</th>'
+    +'<th style="text-align:right;padding:5px 4px;font-size:10px;color:var(--green);font-weight:700">Capital</th>'
+    +'<th style="text-align:right;padding:5px 4px;font-size:10px;color:var(--red);font-weight:700">Interés</th>'
+    +'<th style="padding:5px 4px;font-size:10px;color:var(--text3);font-weight:700;min-width:60px">%</th>'
+    +'<th style="text-align:right;padding:5px 4px;font-size:10px;color:var(--text3);font-weight:700">Saldo</th>'
+    +'</tr></thead><tbody>'+tablaCuotas+'</tbody></table></div></div>'
+    // ── Nota legal ────────────────────────────────────────────────────────
+    +'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;font-size:10px;color:var(--text3);line-height:1.6">'
+    +'ℹ️ Simulación orientativa. Condiciones definitivas las fija la entidad. Sistema francés: cuota constante, amortización creciente. '
+    +'UVR indexada a IPC mensual (Ley 546/1999). Mi Casa Ya: Decreto 1347/2022. Superfinanciera regula tasas máximas.'
+    +'</div>';
+}
+
 
 function renderSimulator(el){
   el.innerHTML=`
