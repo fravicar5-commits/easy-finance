@@ -64,6 +64,24 @@
   --radius:12px; --radius-sm:8px; --radius-xs:5px;
 }
 
+/* ── TEMA: SLATE NEUTRO (opción limpia para comparar) ── */
+[data-theme="slate"] {
+  --ef-pink:#0F62FE; --ef-pink2:#0F62FE; --ef-purple:#001141; --ef-purple2:#003085;
+  --ef-cyan:#00B0FF; --ef-gray:#6B7280;
+  --bg:#0D0F12; --surface:#141719; --surface2:#1C2024; --surface3:#23282D;
+  --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.12);
+  --text:#F1F3F5; --text2:#9BA3AE; --text3:#515C6A;
+  --accent:#0F62FE; --accent2:#00B0FF;
+  --green:#34C759; --green-bg:rgba(52,199,89,.1); --green-bdr:rgba(52,199,89,.25);
+  --red:#FF453A; --red-bg:rgba(255,69,58,.1); --red-bdr:rgba(255,69,58,.25);
+  --amber:#FF9F0A; --amber-bg:rgba(255,159,10,.1); --amber-bdr:rgba(255,159,10,.25);
+  --blue:#0F62FE; --blue-bg:rgba(15,98,254,.1); --blue-bdr:rgba(15,98,254,.25);
+  --grad-main:linear-gradient(135deg,#0F62FE,#0043CE);
+  --btn-main-bg:linear-gradient(135deg,#0F62FE,#0043CE);
+  --btn-main-color:#fff;
+  --radius:10px; --radius-sm:7px; --radius-xs:5px;
+}
+
 [data-theme="verde"] {
   /* ── TEMA: VERDE ESMERALDA ── */
   --ef-pink:#00a855; --ef-pink2:#00c864; --ef-purple:#002a1a; --ef-purple2:#003d24;
@@ -83,14 +101,45 @@
 }
 /* ── LIGHT MODE ── */
 body.light-mode{
-  --bg:#f4f6fb; --surface:#ffffff; --surface2:#f0f2f8; --surface3:#e8eaf2;
-  --border:#d0d4e8; --border2:#bcc2dc;
-  --text:#1a1a2e; --text2:#4a4a6a; --text3:#8888aa;
-  --green:#1b7a3e; --green-bg:rgba(27,122,62,.1); --green-bdr:rgba(27,122,62,.3);
-  --red:#c0392b; --red-bg:rgba(192,57,43,.1); --red-bdr:rgba(192,57,43,.3);
-  --amber:#b7600a; --amber-bg:rgba(183,96,10,.1); --amber-bdr:rgba(183,96,10,.3);
-  --blue:#1a5fa8; --blue-bg:rgba(26,95,168,.1); --blue-bdr:rgba(26,95,168,.3);
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface2:#F5F7FA; --surface3:#EBEEf4;
+  --border:#DDE1EC; --border2:#C8CEDF;
+  --text:#0F1624; --text2:#3D4760; --text3:#7B86A0;
+  --ef-pink:#A0134A; --ef-pink2:#C2185B; --ef-purple:#1A0050; --ef-purple2:#2D0070;
+  --ef-cyan:#0088A3;
+  --accent:#3B5BDB; --accent2:#2F9E44;
+  --green:#2F9E44; --green-bg:rgba(47,158,68,.1); --green-bdr:rgba(47,158,68,.28);
+  --red:#C92A2A; --red-bg:rgba(201,42,42,.08); --red-bdr:rgba(201,42,42,.25);
+  --amber:#D97706; --amber-bg:rgba(217,119,6,.08); --amber-bdr:rgba(217,119,6,.25);
+  --blue:#1971C2; --blue-bg:rgba(25,113,194,.08); --blue-bdr:rgba(25,113,194,.25);
+  --grad-main:linear-gradient(135deg,#3B5BDB,#1971C2);
+  --btn-main-bg:linear-gradient(135deg,#3B5BDB,#1971C2);
+  --btn-main-color:#fff;
 }
+/* Modo claro — jerarquía visual con sombras y bordes */
+body.light-mode .sidebar{background:#FFFFFF;border-right:1px solid #DDE1EC;box-shadow:2px 0 8px rgba(15,22,36,.06)}
+body.light-mode .main-header{background:#FFFFFF;box-shadow:0 1px 4px rgba(15,22,36,.08)}
+body.light-mode .topbar{background:#FFFFFF;box-shadow:0 1px 4px rgba(15,22,36,.08)}
+body.light-mode .mc{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .modal{background:#FFFFFF;box-shadow:0 8px 40px rgba(15,22,36,.15)}
+body.light-mode .sidebar-item:hover,body.light-mode .sidebar-item.active{background:#F0F4FF}
+body.light-mode .btn{background:#FFFFFF;border:1px solid #C8CEDF;color:#0F1624;box-shadow:0 1px 2px rgba(15,22,36,.06)}
+body.light-mode .btn:hover{background:#F5F7FA;border-color:#A0AACC}
+body.light-mode .btn-pink{background:linear-gradient(135deg,#A0134A,#2D0070);color:#fff;border:none;box-shadow:0 2px 8px rgba(160,19,74,.25)}
+body.light-mode .btn-red{background:#FFF0F0;color:#C92A2A;border:1px solid rgba(201,42,42,.25)}
+body.light-mode .btn-amber{background:#FFF8F0;color:#D97706;border:1px solid rgba(217,119,6,.25)}
+body.light-mode .note-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .pocket-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .bud-section{background:#FFFFFF}
+body.light-mode .conv-box{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .tip-card{background:#FFFFFF;border:1px solid #DDE1EC;box-shadow:0 1px 4px rgba(15,22,36,.05)}
+body.light-mode .fr input,body.light-mode .fr select,body.light-mode .fr textarea{background:#F5F7FA;color:#0F1624;border:1px solid #C8CEDF}
+body.light-mode .fr input:focus,body.light-mode .fr select:focus{border-color:#3B5BDB;box-shadow:0 0 0 2px rgba(59,91,219,.12)}
+body.light-mode .calc-btn{background:#FFFFFF;color:#0F1624;border:1px solid #C8CEDF;box-shadow:0 1px 2px rgba(15,22,36,.05)}
+body.light-mode .calc-btn.op{background:rgba(59,91,219,.08);color:#1971C2}
+body.light-mode .calc-btn.eq{background:linear-gradient(135deg,#3B5BDB,#1971C2);color:#fff;border:none}
+body.light-mode .export-bar{background:#FFFFFF}
+body.light-mode .drive-bar{background:#F5F7FA}
 body.light-mode .home-card{background:rgba(255,255,255,.85);border-color:rgba(45,0,96,.2)}
 body.light-mode .home-card:hover{border-color:rgba(194,24,91,.5)}
 body.light-mode .hc-title{color:#1a1a2e}
@@ -863,6 +912,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
           <div style="display:flex;gap:8px">
             <button id="theme-btn-indigo" onclick="setColorTheme('indigo')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#5050ff,#8800cc);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:1;transition:all .2s">🟣 Índigo</button>
             <button id="theme-btn-verde" onclick="setColorTheme('verde')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#00c864,#007a3d);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🟢 Verde</button>
+            <button id="theme-btn-slate" onclick="setColorTheme('slate')" style="flex:1;padding:8px 4px;border-radius:8px;border:none;background:linear-gradient(135deg,#0F62FE,#0043CE);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;opacity:0.4;transition:all .2s">🔵 Slate</button>
           </div>
         </div>
         <!-- Storage indicator -->
@@ -2703,8 +2753,15 @@ function renderDetail(){
     +'<div class="main-sub">'+fd(c.fecha)+' · '+c.tasa+'% · '+c.cuotas+' cuotas'
     +(c.tipocuota==='fija'?' · Cuota fija':' · Variable')
     +(c.tel?' · '+c.tel:'')+'</div></div>'
-    +'<div class="header-actions">'
-    +'<button class="btn" onclick="renderDashboard()" data-tip="Volver al panel principal" style="font-weight:700"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Inicio</button>'    +'<button class="btn btn-purple" onclick="estadoCuenta('+c.id+')" data-tip="Generar estado de cuenta (PDF/WhatsApp)">Estado</button>'    +'<button class="btn" style="background:rgba(61,220,132,.15);color:var(--green);border:1px solid var(--green-bdr);font-size:11px" data-cid="'+c.id+'" onclick="compartirEstadoEnlace(parseInt(this.dataset.cid))" title="Mini-página para el cliente">🔗 Enlace</button>'    +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))">📱 WA</button>'+'<button class="btn btn-amber" onclick="openEditModal('+c.id+')" data-tip="Editar datos del préstamo">✏ Editar</button>'    +'<button class="btn" style="background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3);font-size:11px" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" data-tip="Calcular nueva cuota si se amplía el plazo">🔄 Refinanciar</button>'    +'<button class="btn btn-red" onclick="eliminarCliente('+c.id+')" data-tip="Eliminar cliente">🗑 Eliminar</button>'    +'</div></div>'
+    +'<div class="header-actions" style="gap:4px">'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="renderDashboard()" title="Inicio"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="estadoCuenta('+c.id+')" title="Estado de cuenta"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="compartirEstadoEnlace(parseInt(this.dataset.cid))" title="Compartir enlace"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:none;background:#25D366;color:white;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))" title="WhatsApp"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.71 3.35 2 2 0 0 1 3.7 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.69a16 16 0 0 0 6 6l1.06-1.06a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="openEditModal('+c.id+')" title="Editar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface2);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" data-cid="'+c.id+'" onclick="abrirRefinanciacion(parseInt(this.dataset.cid))" title="Refinanciar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg></button>'
+    +'<button style="padding:6px 8px;border-radius:var(--radius-xs);border:1px solid var(--red-bdr);background:var(--red-bg);color:var(--red);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s" onclick="eliminarCliente('+c.id+')" title="Eliminar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>'
+    +'</div></div>'
     +'<div class="content">'
     +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
     +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
@@ -4004,10 +4061,24 @@ function renderNomina(el) {
         <div id="nom-prom-display" style="font-size:11px;color:var(--text3);text-align:right;margin-top:4px;font-family:\'DM Mono\',monospace"></div>
       </div>
 
-      <div>
-        <label style="${labelStyle}">Días trabajados</label>
-        <input type="number" id="nom-dias" value="30" min="1" max="30"
-          style="${inputStyle}" oninput="calcNomina()">
+      <div style="grid-column:1/-1">
+        <label style="${labelStyle};margin-bottom:6px">Período de liquidación</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px">FECHA INICIO LABORAL</div>
+            <input type="date" id="nom-fecha-ini" style="${inputStyle};font-size:12px" onchange="calcDiasNomina()">
+          </div>
+          <div>
+            <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px">FECHA FIN / CORTE</div>
+            <input type="date" id="nom-fecha-fin" style="${inputStyle};font-size:12px" onchange="calcDiasNomina()">
+          </div>
+        </div>
+        <div id="nom-dias-info" style="font-size:10px;color:var(--ef-cyan);text-align:center;margin-bottom:6px;display:none"></div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);font-family:'DM Mono',monospace;margin-bottom:3px">DÍAS TRABAJADOS <span style="font-weight:400;opacity:.6">(o calcular con fechas arriba)</span></div>
+          <input type="number" id="nom-dias" value="30" min="1" max="360"
+            style="${inputStyle}" oninput="calcNomina()">
+        </div>
       </div>
       <div>
         <label style="${labelStyle}">Horas extras diurnas</label>
@@ -4047,6 +4118,34 @@ function renderNomina(el) {
   </div>
 </div>`;
   setTimeout(calcNomina, 50);
+}
+
+function calcDiasNomina() {
+  const ini = document.getElementById('nom-fecha-ini')?.value;
+  const fin = document.getElementById('nom-fecha-fin')?.value;
+  const infoEl = document.getElementById('nom-dias-info');
+  const diasEl = document.getElementById('nom-dias');
+  if (!ini || !fin) { if(infoEl) infoEl.style.display='none'; return; }
+  const dIni = new Date(ini+'T00:00:00');
+  const dFin = new Date(fin+'T00:00:00');
+  if (dFin < dIni) {
+    if(infoEl){infoEl.style.display='block';infoEl.textContent='⚠ La fecha fin debe ser posterior al inicio';infoEl.style.color='var(--red)';}
+    return;
+  }
+  // Días calendario
+  const diffMs = dFin - dIni + 86400000;
+  const diasCal = Math.round(diffMs / 86400000);
+  // Días comerciales colombianos (sistema 30/360, Art. 134 CST)
+  const meses = (dFin.getFullYear()-dIni.getFullYear())*12 + (dFin.getMonth()-dIni.getMonth());
+  const diasMesD = dFin.getDate() - dIni.getDate() + 1;
+  const diasCom = Math.max(1, Math.min(meses*30 + diasMesD, diasCal));
+  if (diasEl) diasEl.value = Math.min(diasCom, 360);
+  if (infoEl) {
+    infoEl.style.display = 'block';
+    infoEl.style.color = 'var(--ef-cyan)';
+    infoEl.textContent = '📅 ' + diasCal + ' días calendario · ' + diasCom + ' días comerciales (30/360 CST)';
+  }
+  calcNomina();
 }
 
 function calcNomina() {
@@ -9975,10 +10074,13 @@ function applyColorTheme(theme){
 function updateColorThemeUI(theme){
   const btnI = document.getElementById('theme-btn-indigo');
   const btnV = document.getElementById('theme-btn-verde');
+  const btnS = document.getElementById('theme-btn-slate');
   if(btnI) btnI.style.opacity = theme==='indigo'?'1':'0.4';
   if(btnV) btnV.style.opacity = theme==='verde'?'1':'0.4';
+  if(btnS) btnS.style.opacity = theme==='slate'?'1':'0.4';
   if(btnI) btnI.style.transform = theme==='indigo'?'scale(1.05)':'scale(1)';
   if(btnV) btnV.style.transform = theme==='verde'?'scale(1.05)':'scale(1)';
+  if(btnS) btnS.style.transform = theme==='slate'?'scale(1.05)':'scale(1)';
 }
 
 function initColorTheme(){
