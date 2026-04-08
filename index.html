@@ -414,8 +414,9 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .cn-tag{font-size:8px;font-weight:800;text-align:center;color:var(--text3);letter-spacing:.04em;margin-top:3px}
 @keyframes cn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(102,187,106,.5)}60%{box-shadow:0 0 0 7px rgba(102,187,106,0)}}
 .cn-cuadre{animation:cn-pulse 2.2s ease-in-out infinite}
-@keyframes ln-draw{to{stroke-dashoffset:0}}
-.cn-line{stroke-dasharray:120;stroke-dashoffset:120;animation:ln-draw .5s ease forwards}
+@keyframes ln-draw{from{stroke-dashoffset:var(--dl,150)}to{stroke-dashoffset:0}}
+.cn-line{stroke-dasharray:150;stroke-dashoffset:150;animation:none}
+.cn-line.play{animation:ln-draw .55s ease forwards}
 .cn-intro-label{font-size:11px;color:var(--text3);margin-top:10px;text-align:center;font-style:italic}
 /* Cards observaciones */
 .obs-section-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);display:flex;align-items:center;gap:5px;margin:14px 0 7px}
@@ -911,7 +912,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 <!-- ════════════════════════════════
      CUADRE ASESOR SCREEN
 ════════════════════════════════ -->
-<div class="screen" id="cuadre-screen">
+<div class="screen" id="cuadre">
   <div class="cuadre-topbar">
     <div class="cuadre-topbar-title">
       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#66bb6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
@@ -2699,8 +2700,9 @@ function generarObservaciones(){
   }
 
   // Presupuesto: gastos variables
-  if(budgets&&budgets.length){
-    const bActual=budgets[budgets.length-1];
+  const _bArr=loadBudgets();
+  if(_bArr&&_bArr.length){
+    const bActual=_bArr[_bArr.length-1];
     const gv=allTotal(bActual,'gastosVar');
     const ing=budMonthIngresos(bActual);
     const pct=ing>0?Math.round(gv/ing*100):0;
@@ -2762,75 +2764,64 @@ function _obsCardHTML(o){
 
 let _cuadreAnimDone=false;
 function renderCuadre(){
-  const obs=generarObservaciones();
-  const total=obs.negocio.length+obs.personal.length+obs.cruce.length;
-  const r=cajaResumen();
-  loadDeudas();
-
-  // ── Resumen cruzado ──────────────────────────────────────────────────────
-  const totalDeudaP=deudas.reduce((s,d)=>s+saldoDeuda(d),0);
-  const ingPres=budgets&&budgets.length?budMonthIngresos(budgets[budgets.length-1]):0;
-  const sfPres=budgets&&budgets.length?(ingPres-allTotal(budgets[budgets.length-1],'gastosFijos')-allTotal(budgets[budgets.length-1],'gastosVar')):0;
-
-  const resumenHTML='<div class="cuadre-resumen">'
-    +'<div class="cr-card"><div class="cr-tag" style="color:var(--ef-pink2)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg>Negocio</div>'
-    +'<div class="cr-row"><span class="cr-lbl">Capital en calle</span><span class="cr-val c-amber">'+fmtS(r.capitalEnCalle)+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Clientes activos</span><span class="cr-val">'+clients.filter(c=>!isLiquidado(c)).length+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Ganancias</span><span class="cr-val c-green">'+fmtS(r.ganancias)+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Saldo caja</span><span class="cr-val '+(r.saldoDisponible>=0?'c-green':'c-red')+'">'+fmtS(r.saldoDisponible)+'</span></div>'
-    +'</div>'
-    +'<div class="cr-card"><div class="cr-tag" style="color:#00BCD4"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Personal</div>'
-    +'<div class="cr-row"><span class="cr-lbl">Total deudas</span><span class="cr-val c-red">'+fmtS(totalDeudaP)+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Deudas activas</span><span class="cr-val">'+deudas.filter(d=>saldoDeuda(d)>0).length+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Ingresos mes</span><span class="cr-val c-green">'+fmtS(ingPres)+'</span></div>'
-    +'<div class="cr-row"><span class="cr-lbl">Saldo libre</span><span class="cr-val '+(sfPres>=0?'c-green':'c-red')+'">'+fmtS(sfPres)+'</span></div>'
-    +'</div>'
-    +'</div>';
-
-  // ── Nodos animados ───────────────────────────────────────────────────────
-  const animHTML='<div class="cuadre-intro">'
-    +'<div class="cuadre-nodes-wrap">'
-    // Líneas SVG
-    +'<svg class="cn-svg" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg">'
-    +'<line class="cn-line" x1="40" y1="20" x2="120" y2="20" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.1s"/>'
-    +'<line class="cn-line" x1="40" y1="20" x2="40" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.25s"/>'
-    +'<line class="cn-line" x1="120" y1="20" x2="120" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.4s"/>'
-    +'<line class="cn-line" x1="40" y1="90" x2="120" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.55s"/>'
-    +'<line class="cn-line" x1="40" y1="20" x2="120" y2="90" stroke="rgba(102,187,106,.25)" stroke-width="1" style="animation-delay:.7s"/>'
-    +'<line class="cn-line" x1="120" y1="20" x2="40" y2="90" stroke="rgba(102,187,106,.25)" stroke-width="1" style="animation-delay:.85s"/>'
-    +'</svg>'
-    // Nodos
-    +'<div class="cn-node cn-prestamo" style="top:1px;left:1px" title="Préstamo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg></div>'
-    +'<div class="cn-node cn-cliente" style="top:1px;right:1px" title="Cliente"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>'
-    +'<div class="cn-node cn-day" style="bottom:1px;left:1px" title="Day to Day"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>'
-    +'<div class="cn-node cn-cuadre" style="bottom:1px;right:1px" title="Cuadre"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>'
-    +'</div>'
-    +'<div class="cn-intro-label">'+total+' observación'+(total!==1?'es':'')+'  · actualizado ahora</div>'
-    +'</div>';
-
-  // ── Secciones de observaciones ───────────────────────────────────────────
-  let negHTML='',perHTML='',cruHTML='';
-
-  if(obs.negocio.length){
-    negHTML='<div class="obs-world"><span>💼 Negocio — Préstamo</span></div>'
-      +obs.negocio.map(_obsCardHTML).join('');
+  try{
+    loadDeudas();
+    const obs=generarObservaciones();
+    const total=obs.negocio.length+obs.personal.length+obs.cruce.length;
+    const r=cajaResumen();
+    const totalDeudaP=deudas.reduce(function(s,d){return s+saldoDeuda(d);},0);
+    const _bArr2=loadBudgets();
+    const bAct=_bArr2&&_bArr2.length?_bArr2[_bArr2.length-1]:null;
+    const ingPres=bAct?budMonthIngresos(bAct):0;
+    const sfPres=bAct?(ingPres-allTotal(bAct,'gastosFijos')-allTotal(bAct,'gastosVar')):0;
+    const el=document.getElementById('cuadre-body');
+    if(!el) return;
+    var html='';
+    // Animacion nodos
+    html+='<div class="cuadre-intro"><div class="cuadre-nodes-wrap">';
+    html+='<svg class="cn-svg" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg">';
+    html+='<line class="cn-line" x1="40" y1="20" x2="120" y2="20" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>';
+    html+='<line class="cn-line" x1="40" y1="20" x2="40" y2="90" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>';
+    html+='<line class="cn-line" x1="120" y1="20" x2="120" y2="90" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>';
+    html+='<line class="cn-line" x1="40" y1="90" x2="120" y2="90" stroke="rgba(255,255,255,.15)" stroke-width="1.5"/>';
+    html+='<line class="cn-line" x1="40" y1="20" x2="120" y2="90" stroke="rgba(102,187,106,.3)" stroke-width="1"/>';
+    html+='<line class="cn-line" x1="120" y1="20" x2="40" y2="90" stroke="rgba(102,187,106,.3)" stroke-width="1"/>';
+    html+='</svg>';
+    html+='<div class="cn-node cn-prestamo" style="top:1px;left:1px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg></div>';
+    html+='<div class="cn-node cn-cliente" style="top:1px;right:1px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>';
+    html+='<div class="cn-node cn-day" style="bottom:1px;left:1px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>';
+    html+='<div class="cn-node cn-cuadre" style="bottom:1px;right:1px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>';
+    html+='</div><div class="cn-intro-label">'+total+' observaci\xf3n'+(total!==1?'es':'')+' \xb7 actualizado ahora</div></div>';
+    // Resumen
+    html+='<div class="cuadre-resumen">';
+    html+='<div class="cr-card"><div class="cr-tag" style="color:var(--ef-pink2)">\u{1f4b0} Negocio</div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Capital en calle</span><span class="cr-val c-amber">'+fmtS(r.capitalEnCalle)+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Clientes activos</span><span class="cr-val">'+clients.filter(function(c){return !isLiquidado(c);}).length+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Ganancias</span><span class="cr-val c-green">'+fmtS(r.ganancias)+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Saldo caja</span><span class="cr-val '+(r.saldoDisponible>=0?'c-green':'c-red')+'">'+fmtS(r.saldoDisponible)+'</span></div></div>';
+    html+='<div class="cr-card"><div class="cr-tag" style="color:#00BCD4">\u{1f464} Personal</div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Total deudas</span><span class="cr-val c-red">'+fmtS(totalDeudaP)+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Deudas activas</span><span class="cr-val">'+deudas.filter(function(d){return saldoDeuda(d)>0;}).length+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Ingresos mes</span><span class="cr-val c-green">'+fmtS(ingPres)+'</span></div>';
+    html+='<div class="cr-row"><span class="cr-lbl">Saldo libre</span><span class="cr-val '+(sfPres>=0?'c-green':'c-red')+'">'+fmtS(sfPres)+'</span></div></div>';
+    html+='</div>';
+    // Observaciones
+    if(obs.negocio.length){html+='<div class="obs-world"><span>Negocio</span></div>';obs.negocio.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(obs.personal.length){html+='<div class="obs-world"><span>Personal</span></div>';obs.personal.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(obs.cruce.length){html+='<div class="obs-world"><span>Cruce</span></div>';obs.cruce.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(total===0){html+='<div class="cuadre-empty" style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px">Todo en orden \u2714<br><span style="font-size:11px;opacity:.6">Sin alertas por ahora.</span></div>';}
+    el.innerHTML=html;
+    requestAnimationFrame(function(){requestAnimationFrame(function(){
+      var lns=document.querySelectorAll('#cuadre-body .cn-line');
+      var dl=[0,.15,.3,.45,.6,.75];
+      lns.forEach(function(l,i){l.style.animationDelay=(dl[i]||0)+'s';l.classList.add('play');});
+    });});
+  }catch(e){
+    var eb=document.getElementById('cuadre-body');
+    if(eb) eb.innerHTML='<div style="padding:20px;color:var(--red);font-size:12px">Error: '+e.message+'</div>';
+    console.error('renderCuadre:',e);
   }
-  if(obs.personal.length){
-    perHTML='<div class="obs-world"><span>👤 Personal — Cliente</span></div>'
-      +obs.personal.map(_obsCardHTML).join('');
-  }
-  if(obs.cruce.length){
-    cruHTML='<div class="obs-world"><span>⚖️ Cruce · Negocio vs Personal</span></div>'
-      +obs.cruce.map(_obsCardHTML).join('');
-  }
-
-  const emptyHTML=total===0
-    ?'<div class="cuadre-empty"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3;margin-bottom:10px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><br>Todo está en orden.<br><span style="font-size:10px;opacity:.6">No hay alertas ni sugerencias por ahora.</span></div>'
-    :'';
-
-  document.getElementById('cuadre-body').innerHTML=animHTML+resumenHTML+negHTML+perHTML+cruHTML+emptyHTML;
 }
-
 // ══ CAJA SIDEBAR ══════════════════════════════════════════════════════════════
 function renderCajaSidebar(){
   const el=document.getElementById('sidebar-list');
