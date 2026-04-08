@@ -274,8 +274,8 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .home-logo-text .easy{font-size:38px;font-weight:800;color:white;letter-spacing:-.5px}
 .home-logo-text .finance{font-size:38px;font-weight:800;color:var(--ef-pink2);letter-spacing:-.5px}
 .home-tagline{font-size:13px;color:rgba(255,255,255,.5);text-align:center;margin-bottom:48px;letter-spacing:.05em}
-.home-cards{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:400px}
-.home-cards .home-card:last-child:nth-child(odd){grid-column:1 / -1;max-width:calc(50% - 8px);margin:0 auto;width:100%}
+.home-cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;width:100%;max-width:400px}
+.home-cards .home-card:last-child:nth-child(odd){grid-column:unset;max-width:unset;margin:unset;width:auto}
 .home-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius);padding:24px 16px;text-align:center;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
 .home-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(194,24,91,.15),transparent);opacity:0;transition:opacity .2s}
 .home-card:hover::before,.home-card:active::before{opacity:1}
@@ -395,6 +395,66 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .caja-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);font-size:13px}
 .caja-row:last-child{border-bottom:none}
 .caja-entrada{color:var(--green)}.caja-salida{color:var(--red)}
+
+/* ── Módulo Cuadre ─────────────────────────────────────────────────────────── */
+#cuadre-screen{background:var(--bg);flex-direction:column;overflow:hidden}
+.cuadre-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:11px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.cuadre-topbar-title{font-size:15px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
+.cuadre-body{flex:1;overflow-y:auto;padding:14px 14px 80px}
+/* Nodos animados */
+.cuadre-intro{display:flex;flex-direction:column;align-items:center;padding:20px 0 18px}
+.cuadre-nodes-wrap{position:relative;width:160px;height:110px}
+.cn-node{position:absolute;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center}
+.cn-node svg{width:18px;height:18px;stroke-width:1.8}
+.cn-prestamo{top:0;left:0;background:rgba(194,24,91,.15);border:1.5px solid rgba(194,24,91,.45);color:var(--ef-pink2)}
+.cn-cliente{top:0;right:0;background:rgba(0,188,212,.12);border:1.5px solid rgba(0,188,212,.4);color:#00BCD4}
+.cn-day{bottom:0;left:0;background:rgba(100,100,255,.12);border:1.5px solid rgba(100,100,255,.35);color:#7878ff}
+.cn-cuadre{bottom:0;right:0;background:rgba(102,187,106,.12);border:1.5px solid rgba(102,187,106,.45);color:#66bb6a}
+.cn-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.cn-tag{font-size:8px;font-weight:800;text-align:center;color:var(--text3);letter-spacing:.04em;margin-top:3px}
+@keyframes cn-pulse{0%,100%{box-shadow:0 0 0 0 rgba(102,187,106,.5)}60%{box-shadow:0 0 0 7px rgba(102,187,106,0)}}
+.cn-cuadre{animation:cn-pulse 2.2s ease-in-out infinite}
+@keyframes ln-draw{to{stroke-dashoffset:0}}
+.cn-line{stroke-dasharray:120;stroke-dashoffset:120;animation:ln-draw .5s ease forwards}
+.cn-intro-label{font-size:11px;color:var(--text3);margin-top:10px;text-align:center;font-style:italic}
+/* Cards observaciones */
+.obs-section-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);display:flex;align-items:center;gap:5px;margin:14px 0 7px}
+.obs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 12px 10px;margin-bottom:8px;position:relative;overflow:hidden}
+.obs-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3.5px}
+.obs-red::before{background:var(--red)}
+.obs-amber::before{background:var(--amber)}
+.obs-green::before{background:var(--green)}
+.obs-blue::before{background:#42a5f5}
+.obs-row{display:flex;gap:9px;align-items:flex-start;margin-bottom:6px}
+.obs-ico{width:30px;height:30px;border-radius:9px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.obs-ico svg{width:15px;height:15px;stroke-width:1.8}
+.obs-red .obs-ico{background:rgba(239,83,80,.12);color:var(--red)}
+.obs-amber .obs-ico{background:rgba(255,167,38,.12);color:var(--amber)}
+.obs-green .obs-ico{background:rgba(102,187,106,.12);color:var(--green)}
+.obs-blue .obs-ico{background:rgba(66,165,245,.12);color:#42a5f5}
+.obs-text{flex:1}
+.obs-title{font-size:12px;font-weight:700;color:var(--text);line-height:1.3}
+.obs-desc{font-size:11px;color:var(--text2);line-height:1.45;margin-top:2px}
+.obs-btns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.obs-btn{padding:5px 10px;border-radius:6px;font-size:11px;font-weight:700;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:.15s}
+.obs-btn-main{background:rgba(194,24,91,.15);color:var(--ef-pink2);border:1px solid rgba(194,24,91,.3)}
+.obs-btn-sec{background:var(--surface2);color:var(--text2);border:1px solid var(--border2)}
+.obs-btn:active{opacity:.7}
+/* Resumen cruzado */
+.cuadre-resumen{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
+.cr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 12px}
+.cr-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:7px;display:flex;align-items:center;gap:5px}
+.cr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.cr-lbl{font-size:10px;color:var(--text2)}
+.cr-val{font-size:11px;font-weight:700;font-family:'DM Mono',monospace}
+.cr-card-full{grid-column:1/-1}
+/* Separador mundo */
+.obs-world{display:flex;align-items:center;gap:8px;margin:16px 0 8px}
+.obs-world::before,.obs-world::after{content:'';flex:1;height:1px;background:var(--border)}
+.obs-world span{font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;white-space:nowrap}
+/* Home card cuadre */
+.hc-cuadre{border-color:rgba(102,187,106,.35)!important;background:linear-gradient(135deg,rgba(15,40,15,.45),rgba(30,60,30,.25))!important}
+.hc-cuadre .hc-title{color:#81c784!important}
 
 /* Top / Drive bars */
 .topbar{display:none;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);align-items:center;gap:10px;position:sticky;top:0;z-index:20}
@@ -816,23 +876,55 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
   <div class="home-tagline">Tu solución financiera personal</div>
   <div class="home-cards">
     <div class="home-card" id="card-prestamista" onclick="goTo('loans')">
-      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
-      <div class="hc-title">Modo Prestamista</div>
-      <div class="hc-sub">Clientes, pagos, caja y reportes</div>
+      <div class="hc-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg>
+      </div>
+      <div class="hc-title">Préstamo</div>
+      <div class="hc-sub">Clientes, cobros y caja</div>
     </div>
     <div class="home-card" onclick="goTo('cliente')" style="border-color:rgba(0,188,212,.3);background:linear-gradient(135deg,rgba(0,51,68,.4),rgba(0,96,100,.2))">
-      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg></div>
-      <div class="hc-title" style="color:#00BCD4">Modo Cliente</div>
-      <div class="hc-sub">Control de mis deudas y pagos</div>
+      <div class="hc-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      </div>
+      <div class="hc-title" style="color:#00BCD4">Cliente</div>
+      <div class="hc-sub">Mis deudas y pagos</div>
     </div>
     <div class="home-card" onclick="goTo('dayday')">
-      <div class="hc-icon"><svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
-      <div class="hc-title">Cuadre Day to Day</div>
-      <div class="hc-sub">Calculadora, divisas, ahorros y más</div>
+      <div class="hc-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01"/></svg>
+      </div>
+      <div class="hc-title">Day to Day</div>
+      <div class="hc-sub">Herramientas y presupuesto</div>
+    </div>
+    <div class="home-card hc-cuadre" onclick="goTo('cuadre')">
+      <div class="hc-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      </div>
+      <div class="hc-title">Cuadre</div>
+      <div class="hc-sub">Tu asesor financiero</div>
     </div>
   </div>
-  <div class="home-version">v2.0 · Cuadre</div>
+  <div class="home-version">v2.1 · Cuadre</div>
   <button id="theme-toggle-btn" onclick="toggleTheme()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px">🌙 Oscuro</button>
+</div>
+
+<!-- ════════════════════════════════
+     CUADRE ASESOR SCREEN
+════════════════════════════════ -->
+<div class="screen" id="cuadre-screen">
+  <div class="cuadre-topbar">
+    <div class="cuadre-topbar-title">
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#66bb6a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg>
+      Cuadre
+    </div>
+    <button onclick="goTo('home')" style="background:none;border:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;font-family:'Nunito',sans-serif">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Inicio
+    </button>
+  </div>
+  <div class="cuadre-body" id="cuadre-body">
+    <!-- Renderizado por renderCuadre() -->
+  </div>
 </div>
 
 <!-- ════════════════════════════════
@@ -1092,8 +1184,24 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       <div class="fr"><label>Cuotas</label><input type="number" id="nd-cuotas" min="1" placeholder="12" oninput="ndCalcTodo()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fr"><label>Tipo de cuota</label><select id="nd-tipocuota"><option value="fija">Fija</option><option value="variable">Variable</option><option value="libre">Sin plazo fijo</option></select></div>
+      <div class="fr"><label>Tipo de cuota</label><select id="nd-tipocuota" onchange="ndToggleCuotaPersonalizada()"><option value="fija">Fija</option><option value="variable">Variable</option><option value="libre">Sin plazo fijo</option></select></div>
       <div class="fr"><label>Fecha del préstamo</label><input type="date" id="nd-fecha" onchange="ndCheckFechaAnterior()"></div>
+    </div>
+    <!-- Toggle cuota personalizada Modo Cliente -->
+    <div id="nd-cp-wrap" style="display:none;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        <div id="nd-cp-toggle" onclick="toggleCuotaPersonalizada('nd')"
+          style="width:36px;height:20px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);cursor:pointer;position:relative;transition:.2s">
+          <div id="nd-cp-knob" style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:.2s"></div>
+        </div>
+        <label style="font-size:12px;color:var(--text2);margin:0;cursor:pointer" onclick="toggleCuotaPersonalizada('nd')">🎯 Calcular cuotas según lo que puedo pagar</label>
+      </div>
+      <div id="nd-cp-fields" style="display:none">
+        <div class="fr"><label>Cuota máxima que puedo pagar ($)</label>
+          <input type="number" id="nd-cp-cuota" min="0" placeholder="Ej: 500000" oninput="ndCalcTodo()">
+        </div>
+        <div id="nd-cp-result" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;font-size:12px;color:var(--text2)"></div>
+      </div>
     </div>
     <!-- Tasa -->
     <div class="tasa-box-form">
@@ -1261,6 +1369,22 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
         </select></div>
     </div>
     <div id="n-cuota-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;margin-bottom:11px;font-size:12px;color:var(--ef-cyan);text-align:center"></div>
+    <!-- Toggle cuota personalizada por capacidad de pago -->
+    <div id="n-cp-wrap" style="display:none;margin-bottom:11px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        <div id="n-cp-toggle" onclick="toggleCuotaPersonalizada('n')"
+          style="width:36px;height:20px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);cursor:pointer;position:relative;transition:.2s">
+          <div id="n-cp-knob" style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:.2s"></div>
+        </div>
+        <label style="font-size:12px;color:var(--text2);margin:0;cursor:pointer" onclick="toggleCuotaPersonalizada('n')">🎯 Adaptar al máximo que puede pagar el cliente</label>
+      </div>
+      <div id="n-cp-fields" style="display:none">
+        <div class="fr"><label>Cuota máxima que puede pagar ($)</label>
+          <input type="number" id="n-cp-cuota" min="0" placeholder="Ej: 500000" oninput="prev('n')">
+        </div>
+        <div id="n-cp-result" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;font-size:12px;color:var(--text2)"></div>
+      </div>
+    </div>
     <div class="fr"><label>Método de entrega</label>
       <select id="n-metodo-tipo" onchange="onMetodoChange()">
         <option value="Efectivo">💵 Efectivo</option>
@@ -1352,6 +1476,22 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
         </select></div>
     </div>
     <div id="e-cuota-preview" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;margin-bottom:11px;font-size:12px;color:var(--ef-cyan);text-align:center"></div>
+    <!-- Toggle cuota personalizada edición -->
+    <div id="e-cp-wrap" style="display:none;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
+        <div id="e-cp-toggle" onclick="toggleCuotaPersonalizada('e')"
+          style="width:36px;height:20px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);cursor:pointer;position:relative;transition:.2s">
+          <div id="e-cp-knob" style="position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--text3);transition:.2s"></div>
+        </div>
+        <label style="font-size:12px;color:var(--text2);margin:0;cursor:pointer" onclick="toggleCuotaPersonalizada('e')">🎯 Adaptar al máximo que puede pagar el cliente</label>
+      </div>
+      <div id="e-cp-fields" style="display:none">
+        <div class="fr"><label>Cuota máxima que puede pagar ($)</label>
+          <input type="number" id="e-cp-cuota" min="0" placeholder="Ej: 500000" oninput="prev('e')">
+        </div>
+        <div id="e-cp-result" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;font-size:12px;color:var(--text2)"></div>
+      </div>
+    </div>
     <div class="fr"><label>Notas</label><textarea id="e-notas"></textarea></div>
     <div class="form-actions">
       <button class="btn" onclick="closeModal('modal-edit')">Cancelar</button>
@@ -2220,6 +2360,7 @@ function goTo(id){
   }
   if(id==='loans'){renderSidebar();renderDashboard();}
   if(id==='dayday'){renderDDTab(ddTab);}
+  if(id==='cuadre'){loadDeudas();renderCuadre();}
   // Registrar en historial de navegación para botón atrás
   if(typeof _pushNav==='function') _pushNav(id);
 }
@@ -2269,6 +2410,24 @@ function calcCuotaFija(capital,tasaMensual,numCuotas){
   const r=tasaMensual;
   if(r===0) return capital/numCuotas;
   return capital*r*Math.pow(1+r,numCuotas)/(Math.pow(1+r,numCuotas)-1);
+}
+// ── Cuota personalizada por capacidad de pago ─────────────────────────────────
+// Fórmula inversa: n = -log(1 - Capital*r/cuota) / log(1+r)
+// Q1 = interés del saldo actual; Q2 = resto abona capital
+function calcCuotasDesdeCapacidad(capital, tasaMensual, cuotaMax){
+  const r = tasaMensual;
+  if(r<=0||cuotaMax<=0) return null;
+  const interesPrimerMes = capital * r;
+  if(cuotaMax <= interesPrimerMes) return null; // no alcanza ni a cubrir interés
+  const ratio = 1 - (capital * r / cuotaMax);
+  if(ratio <= 0) return null;
+  const n = -Math.log(ratio) / Math.log(1 + r);
+  return { n: Math.ceil(n), q1: Math.round(interesPrimerMes), q2: Math.round(cuotaMax - interesPrimerMes), valida: true };
+}
+function calcQ1Q2(saldoCapital, tasaMensual, cuotaFijaMonto){
+  const interes = Math.round(saldoCapital * tasaMensual);
+  const abonoK  = Math.max(Math.round(cuotaFijaMonto - interes), 0);
+  return { q1: interes, q2: abonoK };
 }
 function isLiquidado(c){
   if(!c.liquidado) return false;
@@ -2413,6 +2572,266 @@ function gananciasDisponibles(){
   const rein=caja.filter(m=>m.cat==='ganancia_reinvertir').reduce((s,m)=>s+m.valor,0);
   return Math.max(ti-rein,0);
 }
+
+// ══ CUADRE ASESOR ═════════════════════════════════════════════════════════════
+
+function _obsIcon(tipo){
+  const icons={
+    mora:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    dinero:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg>',
+    gasto:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
+    calendario:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><circle cx="12" cy="16" r="1" fill="currentColor"/></svg>',
+    cohete:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m3.29 15 1.42 1.42"/><path d="M17.5 2.5l-7 7m5.5-1.5 2 2-8 8-4-1 8.5-16.5z"/></svg>',
+    check:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    deuda:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>',
+    balanza:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M3 9l4-4 4 4M17 15l4 4-4 4"/><line x1="3" y1="9" x2="9" y2="9"/><line x1="15" y1="19" x2="21" y2="19"/></svg>',
+    info:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+  return icons[tipo]||icons.info;
+}
+
+function generarObservaciones(){
+  const obs={negocio:[],personal:[],cruce:[]};
+  const hoy=new Date();
+  const r=cajaResumen();
+  loadDeudas();
+
+  // ── NEGOCIO ───────────────────────────────────────────────────────────────
+  // Clientes activos con mora
+  const enMora=clients.filter(c=>!isLiquidado(c)&&diasMora(c)>0);
+  if(enMora.length>0){
+    const totalMora=enMora.reduce((s,c)=>s+saldoPendiente(c),0);
+    enMora.slice(0,3).forEach(c=>{
+      const dm=diasMora(c);
+      obs.negocio.push({
+        nivel:'red',icono:'mora',
+        titulo:c.nombre+' — '+dm+' días sin pagar',
+        desc:'Saldo pendiente: '+fmt(saldoPendiente(c))+'. '+
+             (dm>30?'Mora crítica — considera una gestión de cobro directa.':'Contacta al cliente para acordar el pago.'),
+        acciones:[
+          {lbl:'📱 WhatsApp',fn:'abrirWhatsApp('+c.id+')'},
+          {lbl:'Ver cliente',fn:'goTo(\'loans\');setTimeout(()=>openClient('+c.id+'),300)',sec:true}
+        ]
+      });
+    });
+    if(enMora.length>3) obs.negocio.push({
+      nivel:'amber',icono:'mora',
+      titulo:enMora.length+' clientes en mora · '+fmt(totalMora)+' en riesgo',
+      desc:'Revisa el panel de mora para ver el detalle completo.',
+      acciones:[{lbl:'Ver mora',fn:'goTo(\'loans\');setTimeout(()=>setNav(\'mora\',document.querySelector(\'.snav-btn:nth-child(2)\')),300)',sec:true}]
+    });
+  }
+
+  // Capital sin trabajar
+  const capitalLibre=r.saldoDisponible-r.capitalEnCalle;
+  if(capitalLibre>=500000){
+    obs.negocio.push({
+      nivel:'amber',icono:'cohete',
+      titulo:'Tienes '+fmt(capitalLibre)+' sin trabajar',
+      desc:'Ese capital parado no genera nada. Con tu tasa promedio podría producir '+fmt(Math.round(capitalLibre*(clients.length?clients.reduce((s,c)=>s+c.tasa,0)/clients.length/100:0.08)))+'/mes.',
+      acciones:[{lbl:'+ Nuevo préstamo',fn:'goTo(\'loans\');setTimeout(()=>openModal(\'modal-new\'),400)'}]
+    });
+  }
+
+  // Cliente próximo a liquidar
+  const proximosLiquidar=clients.filter(c=>!isLiquidado(c)&&c.tipocuota==='fija'&&saldoPendiente(c)>0).filter(c=>{
+    const sp=saldoPendiente(c);
+    const cuota=Math.round(calcCuotaFija(c.monto,c.tasa/100,c.cuotas));
+    return sp<=cuota*1.5&&sp>0;
+  });
+  proximosLiquidar.forEach(c=>{
+    obs.negocio.push({
+      nivel:'green',icono:'check',
+      titulo:c.nombre+' está por liquidar',
+      desc:'Saldo restante: '+fmt(saldoPendiente(c))+'. Cuando liquide, ese capital queda disponible para reinvertir.',
+      acciones:[{lbl:'Ver cliente',fn:'goTo(\'loans\');setTimeout(()=>openClient('+c.id+'),300)',sec:true}]
+    });
+  });
+
+  // Rentabilidad: ganancias disponibles
+  const gd=gananciasDisponibles();
+  if(gd>=200000){
+    obs.negocio.push({
+      nivel:'green',icono:'dinero',
+      titulo:'Ganancias disponibles: '+fmt(gd),
+      desc:'Puedes reinvertirlas para aumentar tu capital en calle o retirarlas.',
+      acciones:[
+        {lbl:'Reinvertir',fn:'reinvertirGanancias()'},
+        {lbl:'Ver caja',fn:'goTo(\'loans\');setTimeout(()=>verCajaCompleta(),400)',sec:true}
+      ]
+    });
+  }
+
+  // ── PERSONAL ──────────────────────────────────────────────────────────────
+  // Cuotas que vencen pronto
+  const hoy7=new Date(hoy.getTime()+7*864e5);
+  deudas.filter(d=>!d.liquidada).forEach(d=>{
+    const pagos=d.pagos||[];
+    const ultimoPago=pagos.length?new Date(pagos[pagos.length-1].fecha+'T12:00:00'):null;
+    // Check next payment window
+    const mesStr=hoy.getFullYear()+'-'+String(hoy.getMonth()+1).padStart(2,'0');
+    const pagadoEsteMes=pagos.some(p=>p.fecha&&p.fecha.startsWith(mesStr));
+    if(!pagadoEsteMes&&saldoDeuda(d)>0){
+      const diasAlMes=new Date(hoy.getFullYear(),hoy.getMonth()+1,0).getDate();
+      const diasRestantes=diasAlMes-hoy.getDate();
+      if(diasRestantes<=7){
+        const cuotaMes=d.tipocuota==='fija'?Math.round(calcCuotaFija(d.monto,d.tasa/100,d.cuotas)):(d.cuotaLibre||0);
+        if(cuotaMes>0) obs.personal.push({
+          nivel:'amber',icono:'calendario',
+          titulo:'Cuota con '+d.acreedor+' vence en '+diasRestantes+'d',
+          desc:'Debes pagar aprox. '+fmt(cuotaMes)+'. Saldo restante: '+fmt(saldoDeuda(d))+'.',
+          acciones:[{lbl:'Ver deuda',fn:'goTo(\'cliente\')',sec:true}]
+        });
+      }
+    }
+  });
+
+  // Deuda más cara — conviene atacarla
+  const deudasActivas=deudas.filter(d=>saldoDeuda(d)>0);
+  if(deudasActivas.length>1){
+    const masCara=deudasActivas.reduce((a,b)=>((b.tasa||0)>(a.tasa||0)?b:a));
+    obs.personal.push({
+      nivel:'amber',icono:'deuda',
+      titulo:'Tu deuda más cara: '+masCara.acreedor,
+      desc:'Tasa '+masCara.tasa.toFixed(2)+'%/mes. Pagas más intereses aquí que en cualquier otra. Priorizar su pago te ahorra dinero.',
+      acciones:[{lbl:'Ver deuda',fn:'goTo(\'cliente\')',sec:true}]
+    });
+  }
+
+  // Presupuesto: gastos variables
+  if(budgets&&budgets.length){
+    const bActual=budgets[budgets.length-1];
+    const gv=allTotal(bActual,'gastosVar');
+    const ing=budMonthIngresos(bActual);
+    const pct=ing>0?Math.round(gv/ing*100):0;
+    if(pct>30){
+      obs.personal.push({
+        nivel:'red',icono:'gasto',
+        titulo:'Gastos variables al '+pct+'% de tus ingresos',
+        desc:'La regla 50/30/20 sugiere máximo 30%. Llevas '+fmt(gv)+' en variables este mes.',
+        acciones:[{lbl:'Ver presupuesto',fn:'goTo(\'dayday\');setTimeout(()=>switchDTD(\'budget\'),300)',sec:true}]
+      });
+    } else if(pct>0){
+      obs.personal.push({
+        nivel:'green',icono:'check',
+        titulo:'Gastos variables bajo control ('+pct+'%)',
+        desc:'Bien distribuido. Tu saldo libre real este mes es aprox. '+fmt(ing-allTotal(bActual,'gastosFijos')-gv)+'.',
+        acciones:[]
+      });
+    }
+  }
+
+  // ── CRUCE NEGOCIO vs PERSONAL ─────────────────────────────────────────────
+  const ingNegocio=clients.reduce((s,c)=>s+totalIntereses(c),0);
+  const totalDeudaPersonal=deudas.reduce((s,d)=>s+saldoDeuda(d),0);
+  const cuotasMesPersonal=deudas.filter(d=>saldoDeuda(d)>0&&d.tipocuota==='fija').reduce((s,d)=>s+Math.round(calcCuotaFija(d.monto,d.tasa/100,d.cuotas)),0);
+
+  if(ingNegocio>0&&cuotasMesPersonal>0){
+    const cubre=ingNegocio>=cuotasMesPersonal;
+    obs.cruce.push({
+      nivel:cubre?'green':'red',icono:'balanza',
+      titulo:cubre?'Tu negocio cubre tus cuotas personales':'Tu negocio no cubre tus cuotas personales',
+      desc:'Ganancias generadas: '+fmt(ingNegocio)+' · Cuotas mensuales: '+fmt(cuotasMesPersonal)+'. '+(cubre?'Buen balance.':'Necesitas reforzar ingresos o reducir deuda.'),
+      acciones:[]
+    });
+  }
+
+  if(r.capitalEnCalle>0&&totalDeudaPersonal>0){
+    const ratio=Math.round(r.capitalEnCalle/totalDeudaPersonal*100);
+    obs.cruce.push({
+      nivel:ratio>=150?'green':ratio>=80?'amber':'red',icono:'info',
+      titulo:'Capital en calle vs deuda personal: '+ratio+'%',
+      desc:'Tienes '+fmt(r.capitalEnCalle)+' colocado y '+fmt(totalDeudaPersonal)+' en deudas propias. '+(ratio>=150?'Posición sólida.':ratio>=80?'Posición ajustada — cuida la liquidez.':'El negocio no alcanza a cubrir tus deudas.'),
+      acciones:[]
+    });
+  }
+
+  return obs;
+}
+
+function _obsCardHTML(o){
+  const btns=(o.acciones||[]).map(a=>'<button class="obs-btn '+(a.sec?'obs-btn-sec':'obs-btn-main')+'" onclick="'+a.fn+'">'+a.lbl+'</button>').join('');
+  return '<div class="obs-card obs-'+o.nivel+'">'
+    +'<div class="obs-row">'
+    +'<div class="obs-ico">'+_obsIcon(o.icono)+'</div>'
+    +'<div class="obs-text"><div class="obs-title">'+o.titulo+'</div><div class="obs-desc">'+o.desc+'</div></div>'
+    +'</div>'
+    +(btns?'<div class="obs-btns">'+btns+'</div>':'')
+    +'</div>';
+}
+
+let _cuadreAnimDone=false;
+function renderCuadre(){
+  const obs=generarObservaciones();
+  const total=obs.negocio.length+obs.personal.length+obs.cruce.length;
+  const r=cajaResumen();
+  loadDeudas();
+
+  // ── Resumen cruzado ──────────────────────────────────────────────────────
+  const totalDeudaP=deudas.reduce((s,d)=>s+saldoDeuda(d),0);
+  const ingPres=budgets&&budgets.length?budMonthIngresos(budgets[budgets.length-1]):0;
+  const sfPres=budgets&&budgets.length?(ingPres-allTotal(budgets[budgets.length-1],'gastosFijos')-allTotal(budgets[budgets.length-1],'gastosVar')):0;
+
+  const resumenHTML='<div class="cuadre-resumen">'
+    +'<div class="cr-card"><div class="cr-tag" style="color:var(--ef-pink2)"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg>Negocio</div>'
+    +'<div class="cr-row"><span class="cr-lbl">Capital en calle</span><span class="cr-val c-amber">'+fmtS(r.capitalEnCalle)+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Clientes activos</span><span class="cr-val">'+clients.filter(c=>!isLiquidado(c)).length+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Ganancias</span><span class="cr-val c-green">'+fmtS(r.ganancias)+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Saldo caja</span><span class="cr-val '+(r.saldoDisponible>=0?'c-green':'c-red')+'">'+fmtS(r.saldoDisponible)+'</span></div>'
+    +'</div>'
+    +'<div class="cr-card"><div class="cr-tag" style="color:#00BCD4"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Personal</div>'
+    +'<div class="cr-row"><span class="cr-lbl">Total deudas</span><span class="cr-val c-red">'+fmtS(totalDeudaP)+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Deudas activas</span><span class="cr-val">'+deudas.filter(d=>saldoDeuda(d)>0).length+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Ingresos mes</span><span class="cr-val c-green">'+fmtS(ingPres)+'</span></div>'
+    +'<div class="cr-row"><span class="cr-lbl">Saldo libre</span><span class="cr-val '+(sfPres>=0?'c-green':'c-red')+'">'+fmtS(sfPres)+'</span></div>'
+    +'</div>'
+    +'</div>';
+
+  // ── Nodos animados ───────────────────────────────────────────────────────
+  const animHTML='<div class="cuadre-intro">'
+    +'<div class="cuadre-nodes-wrap">'
+    // Líneas SVG
+    +'<svg class="cn-svg" viewBox="0 0 160 110" xmlns="http://www.w3.org/2000/svg">'
+    +'<line class="cn-line" x1="40" y1="20" x2="120" y2="20" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.1s"/>'
+    +'<line class="cn-line" x1="40" y1="20" x2="40" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.25s"/>'
+    +'<line class="cn-line" x1="120" y1="20" x2="120" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.4s"/>'
+    +'<line class="cn-line" x1="40" y1="90" x2="120" y2="90" stroke="rgba(255,255,255,.12)" stroke-width="1.5" style="animation-delay:.55s"/>'
+    +'<line class="cn-line" x1="40" y1="20" x2="120" y2="90" stroke="rgba(102,187,106,.25)" stroke-width="1" style="animation-delay:.7s"/>'
+    +'<line class="cn-line" x1="120" y1="20" x2="40" y2="90" stroke="rgba(102,187,106,.25)" stroke-width="1" style="animation-delay:.85s"/>'
+    +'</svg>'
+    // Nodos
+    +'<div class="cn-node cn-prestamo" style="top:1px;left:1px" title="Préstamo"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg></div>'
+    +'<div class="cn-node cn-cliente" style="top:1px;right:1px" title="Cliente"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>'
+    +'<div class="cn-node cn-day" style="bottom:1px;left:1px" title="Day to Day"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>'
+    +'<div class="cn-node cn-cuadre" style="bottom:1px;right:1px" title="Cuadre"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z"/></svg></div>'
+    +'</div>'
+    +'<div class="cn-intro-label">'+total+' observación'+(total!==1?'es':'')+'  · actualizado ahora</div>'
+    +'</div>';
+
+  // ── Secciones de observaciones ───────────────────────────────────────────
+  let negHTML='',perHTML='',cruHTML='';
+
+  if(obs.negocio.length){
+    negHTML='<div class="obs-world"><span>💼 Negocio — Préstamo</span></div>'
+      +obs.negocio.map(_obsCardHTML).join('');
+  }
+  if(obs.personal.length){
+    perHTML='<div class="obs-world"><span>👤 Personal — Cliente</span></div>'
+      +obs.personal.map(_obsCardHTML).join('');
+  }
+  if(obs.cruce.length){
+    cruHTML='<div class="obs-world"><span>⚖️ Cruce · Negocio vs Personal</span></div>'
+      +obs.cruce.map(_obsCardHTML).join('');
+  }
+
+  const emptyHTML=total===0
+    ?'<div class="cuadre-empty"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:.3;margin-bottom:10px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><br>Todo está en orden.<br><span style="font-size:10px;opacity:.6">No hay alertas ni sugerencias por ahora.</span></div>'
+    :'';
+
+  document.getElementById('cuadre-body').innerHTML=animHTML+resumenHTML+negHTML+perHTML+cruHTML+emptyHTML;
+}
+
+// ══ CAJA SIDEBAR ══════════════════════════════════════════════════════════════
 function renderCajaSidebar(){
   const el=document.getElementById('sidebar-list');
   const r=cajaResumen();
@@ -2831,6 +3250,26 @@ function renderDetail(){
   }
   const cfCard=c.tipocuota==='fija'?(()=>{
     const cf2=Math.round(calcCuotaFija(c.monto,c.tasa/100,c.cuotas));
+    if(c.cuotaPersonalizada&&c.cuotaFijaMonto){
+      const t=c.tasa/100;
+      let saldoCap=c.monto;
+      for(let i=0;i<c.cuotas;i++){
+        const m=c.meses[i]||{};
+        const paid=(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0);
+        if(paid===0) break;
+        const intMes=Math.round(saldoCap*t);
+        saldoCap=Math.max(saldoCap-(paid-intMes),0);
+      }
+      const qq=calcQ1Q2(saldoCap,t,c.cuotaFijaMonto);
+      return'<div class="card cf-card" data-cid="'+c.id+'" onclick="verAmortizacion(parseInt(this.dataset.cid))">'
+        +'<div><div class="mc-label" style="color:var(--amber)">🎯 Cuota Personalizada — toque para tabla</div>'
+        +'<div style="font-size:12px;color:var(--text2)">'+c.cuotas+' cuotas · '+fmt(c.cuotaFijaMonto)+'/mes</div></div>'
+        +'<div style="text-align:right;display:flex;flex-direction:column;gap:2px">'
+        +'<div style="display:flex;gap:10px;justify-content:flex-end">'
+        +'<div><div class="mc-label">Q1 Interés</div><div style="font-size:14px;font-weight:700;color:var(--red)">'+fmt(qq.q1)+'</div></div>'
+        +'<div><div class="mc-label">Q2 Capital</div><div style="font-size:14px;font-weight:700;color:var(--green)">'+fmt(qq.q2)+'</div></div>'
+        +'</div></div></div>';
+    }
     return'<div class="card cf-card" data-cid="'+c.id+'" onclick="verAmortizacion(parseInt(this.dataset.cid))">'
       +'<div><div class="mc-label" style="color:var(--amber)">▶ Cuota Fija — toque para tabla</div>'
       +'<div style="font-size:12px;color:var(--text2)">'+c.cuotas+' cuotas</div></div>'
@@ -3202,14 +3641,19 @@ function generarRecibo(c,mesIdx,pagoKey){
 // ══ AMORTIZACIÓN ═════════════════════════════════════════════════════════════
 function buildAmortRows(c, cfOverride){
   const t=c.tasa/100;
-  const cfR=cfOverride||Math.round(calcCuotaFija(c.monto,t,c.cuotas));
+  const usaCP=!cfOverride&&c.cuotaPersonalizada&&c.cuotaFijaMonto;
+  const cfR=cfOverride||(usaCP?c.cuotaFijaMonto:Math.round(calcCuotaFija(c.monto,t,c.cuotas)));
   let s=c.monto;
   let rows='<thead><tr style="background:#2D0060;color:white">'
     +'<th style="padding:6px 8px;text-align:center">Cuota</th>'
     +'<th style="padding:6px 8px;text-align:right">Saldo Inicio</th>'
-    +'<th style="padding:6px 8px;text-align:right">Cuota</th>'
-    +'<th style="padding:6px 8px;text-align:right">Interés</th>'
-    +'<th style="padding:6px 8px;text-align:right">Abono Cap.</th>'
+    +(usaCP
+      ?'<th style="padding:6px 8px;text-align:right;color:#ffb74d">Q1 Interés</th>'
+       +'<th style="padding:6px 8px;text-align:right;color:#81c784">Q2 Capital</th>'
+      :'<th style="padding:6px 8px;text-align:right">Cuota</th>'
+       +'<th style="padding:6px 8px;text-align:right">Interés</th>'
+       +'<th style="padding:6px 8px;text-align:right">Abono Cap.</th>'
+    )
     +'<th style="padding:6px 8px;text-align:right">Saldo Final</th>'
     +'<th style="padding:6px 8px;text-align:center">Estado</th>'
     +'</tr></thead><tbody>';
@@ -3217,28 +3661,32 @@ function buildAmortRows(c, cfOverride){
   for(let i=0;i<48;i++){
     const sIni=Math.round(s*(1+t));
     const interes=Math.round(s*t);
-    // Payment for this month: use actual registered payment if available, else cuota
     const mes=c.meses[i]||{};
     const paid=(mes.pq1a||0)+(mes.pq1b||0)+(mes.pq2a||0)+(mes.pq2b||0);
-    // Use actual paid if registered, else use cuota as expected
     const pagoEfectivo=paid>0?paid:cfR;
     const aK=Math.max(pagoEfectivo-interes,0);
     const sFin=Math.max(sIni-pagoEfectivo,0);
     const isPaid=paid>=cfR*0.95;
     const isPartial=paid>0&&paid<cfR*0.95;
-    const isFuture=paid===0&&sIni>0;
     const bg=i%2===0?'var(--surface2)':'var(--surface)';
     const est=isPaid
       ?'<span class="badge b-pagado">✓ Pagada</span>'
       :isPartial
       ?'<span class="badge b-activo">Parcial</span>'
       :'<span style="background:var(--surface3);color:var(--text3);padding:1px 6px;border-radius:20px;font-size:10px">Pendiente</span>';
+    // Q1 quincena interés / Q2 quincena capital
+    const q1Real=paid>0?Math.min(paid,interes):interes;
+    const q2Real=paid>0?Math.max(paid-interes,0):aK;
     rows+='<tr style="background:'+bg+';border-bottom:1px solid var(--border)">'
       +'<td style="padding:6px 8px;text-align:center;font-family:monospace;font-size:11px">'+(i+1)+'</td>'
       +'<td style="padding:6px 8px;text-align:right;font-family:monospace">'+fmt(sIni)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;font-weight:700;font-family:monospace;color:'+(paid>cfR?'var(--green)':'var(--amber)')+'">'+fmt(paid>0?paid:cfR)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--red)">'+fmt(interes)+'</td>'
-      +'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--green)">'+fmt(aK)+'</td>'
+      +(usaCP
+        ?'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--amber)">'+fmt(paid>0?q1Real:interes)+'</td>'
+         +'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--green)">'+fmt(paid>0?q2Real:aK)+'</td>'
+        :'<td style="padding:6px 8px;text-align:right;font-weight:700;font-family:monospace;color:'+(paid>cfR?'var(--green)':'var(--amber)')+'">'+fmt(paid>0?paid:cfR)+'</td>'
+         +'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--red)">'+fmt(interes)+'</td>'
+         +'<td style="padding:6px 8px;text-align:right;font-family:monospace;color:var(--green)">'+fmt(aK)+'</td>'
+      )
       +'<td style="padding:6px 8px;text-align:right;font-weight:700;font-family:monospace">'+(sFin<=0?'<span style="color:var(--green)">PAGADO</span>':fmt(sFin))+'</td>'
       +'<td style="padding:6px 8px;text-align:center">'+est+'</td></tr>';
     s=Math.max(s-aK,0);
@@ -3571,7 +4019,11 @@ function crearCliente(){
   if(tieneSocio&&(socioTasa+miaTasa)===0){toast('Ingrese las tasas del socio','error');return;}
   const id=clients.length?Math.max(...clients.map(c=>c.id))+1:1;
   const socio=tieneSocio?{nombre:socioNombre,tasa:socioTasa,tasaMia:miaTasa}:null;
-  clients.push({id,nombre,fecha,monto,tasa,cuotas,tipocuota,metodo,banco,tel,cedula,notas,socio,meses:calcFechas(fecha)});
+  // Cuota personalizada por capacidad de pago
+  const cpActive=document.getElementById('n-cp-fields')?.style.display!=='none';
+  const cuotaPersonalizada=tipocuota==='fija'&&cpActive;
+  const cuotaFijaMonto=cuotaPersonalizada?(parseFloat(document.getElementById('n-cp-cuota')?.value)||0):0;
+  clients.push({id,nombre,fecha,monto,tasa,cuotas,tipocuota,metodo,banco,tel,cedula,notas,socio,cuotaPersonalizada:cuotaPersonalizada||undefined,cuotaFijaMonto:cuotaFijaMonto||undefined,meses:calcFechas(fecha)});
   caja.push({id:Date.now(),cat:'prestamo_salida',tipo:'salida',fecha,valor:monto,metodo,concepto:'Préstamo — '+nombre});
   save();closeModal('modal-new');openClient(id);
   toast('Préstamo creado · Salida registrada en caja');
@@ -3587,6 +4039,24 @@ function openEditModal(id){
   document.getElementById('e-cuotas').value=c.cuotas;
   document.getElementById('e-tipocuota').value=c.tipocuota||'variable';
   document.getElementById('e-cuota-preview').style.display='none';
+  // Restaurar toggle cuota personalizada
+  const eCpWrap=document.getElementById('e-cp-wrap');
+  const eCpFields=document.getElementById('e-cp-fields');
+  const eCpToggle=document.getElementById('e-cp-toggle');
+  const eCpKnob=document.getElementById('e-cp-knob');
+  const eCpCuota=document.getElementById('e-cp-cuota');
+  if(eCpWrap) eCpWrap.style.display=(c.tipocuota==='fija')?'block':'none';
+  if(c.cuotaPersonalizada&&c.cuotaFijaMonto){
+    if(eCpFields){eCpFields.style.display='block';}
+    if(eCpToggle){eCpToggle.style.background='var(--ef-cyan)';}
+    if(eCpKnob){eCpKnob.style.left='20px';eCpKnob.style.background='#fff';}
+    if(eCpCuota) eCpCuota.value=c.cuotaFijaMonto;
+  } else {
+    if(eCpFields){eCpFields.style.display='none';}
+    if(eCpToggle){eCpToggle.style.background='var(--surface3)';}
+    if(eCpKnob){eCpKnob.style.left='2px';eCpKnob.style.background='var(--text3)';}
+    if(eCpCuota) eCpCuota.value='';
+  }
   prev('e');
   document.getElementById('modal-edit').dataset.cid=id;
   openModal('modal-edit');
@@ -3605,7 +4075,11 @@ function guardarEdicion(){
     nm.forEach((m,i)=>{if(c.meses[i]){Object.assign(m,{pq1a:c.meses[i].pq1a,pq1b:c.meses[i].pq1b,pq2a:c.meses[i].pq2a,pq2b:c.meses[i].pq2b,dpq1a:c.meses[i].dpq1a,dpq1b:c.meses[i].dpq1b,dpq2a:c.meses[i].dpq2a,dpq2b:c.meses[i].dpq2b,mpq1a:c.meses[i].mpq1a,mpq1b:c.meses[i].mpq1b,mpq2a:c.meses[i].mpq2a,mpq2b:c.meses[i].mpq2b});}});
     c.meses=nm;
   }
-  Object.assign(c,{nombre,fecha,monto,tasa,cuotas,tipocuota:document.getElementById('e-tipocuota').value,tel:document.getElementById('e-tel').value.trim(),cedula:(document.getElementById('e-cedula')?document.getElementById('e-cedula').value.trim():c.cedula||''),notas:document.getElementById('e-notas').value.trim()});
+  const _eTipocuota=document.getElementById('e-tipocuota').value;
+  const _eCpActive=document.getElementById('e-cp-fields')?.style.display!=='none';
+  const _eCuotaP=_eTipocuota==='fija'&&_eCpActive;
+  const _eCuotaFM=_eCuotaP?(parseFloat(document.getElementById('e-cp-cuota')?.value)||0):0;
+  Object.assign(c,{nombre,fecha,monto,tasa,cuotas,tipocuota:_eTipocuota,tel:document.getElementById('e-tel').value.trim(),cedula:(document.getElementById('e-cedula')?document.getElementById('e-cedula').value.trim():c.cedula||''),notas:document.getElementById('e-notas').value.trim(),cuotaPersonalizada:_eCuotaP||undefined,cuotaFijaMonto:_eCuotaFM||undefined});
   save();closeModal('modal-edit');renderDetail();toast('Préstamo actualizado');
 }
 
@@ -3619,11 +4093,64 @@ function prev(p){
   const prevEl=document.getElementById(p+'-cuota-preview');
   if(!tipoEl||!prevEl) return;
   const n=parseInt(document.getElementById(p+'-cuotas')?.value)||0;
+  // Cuota personalizada por capacidad de pago
+  const cpWrap=document.getElementById(p+'-cp-wrap');
+  if(cpWrap) cpWrap.style.display=(tipoEl.value==='fija')?'block':'none';
+  const cpFields=document.getElementById(p+'-cp-fields');
+  const cpActive=cpFields&&cpFields.style.display!=='none';
+  if(cpActive&&m&&t){
+    const cuotaMax=parseFloat(document.getElementById(p+'-cp-cuota')?.value)||0;
+    const resultEl=document.getElementById(p+'-cp-result');
+    if(cuotaMax&&resultEl){
+      const res=calcCuotasDesdeCapacidad(m,t/100,cuotaMax);
+      if(!res){
+        resultEl.innerHTML='<span style="color:var(--red)">⚠ La cuota debe ser mayor al interés del primer mes ('+fmt(Math.round(m*t/100))+')</span>';
+      } else {
+        resultEl.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center">'
+          +'<div><div style="font-size:10px;color:var(--text3)">Cuotas necesarias</div><div style="font-weight:700;font-size:15px;color:var(--ef-cyan)">'+res.n+'</div></div>'
+          +'<div><div style="font-size:10px;color:var(--text3)">Q1 — Interés</div><div style="font-weight:700;color:var(--amber)">'+fmt(res.q1)+'</div></div>'
+          +'<div><div style="font-size:10px;color:var(--text3)">Q2 — Capital</div><div style="font-weight:700;color:var(--green)">'+fmt(res.q2)+'</div></div>'
+          +'</div><div style="font-size:10px;color:var(--text3);margin-top:5px;text-align:center">Total: '+fmt(Math.round(cuotaMax*res.n))+' · cuotas automáticas calculadas</div>';
+        // Auto-fill cuotas field
+        const cuotasEl=document.getElementById(p+'-cuotas');
+        if(cuotasEl) cuotasEl.value=res.n;
+        prevEl.style.display='none';
+        return;
+      }
+    }
+  }
   if(tipoEl.value==='fija'&&m&&t&&n){
     const cf=calcCuotaFija(m,t/100,n);
     prevEl.style.display='block';
     prevEl.innerHTML='<strong>Cuota fija: '+fmt(Math.round(cf))+'</strong> · '+n+' cuotas · Total: '+fmt(Math.round(cf*n));
   } else {prevEl.style.display='none';}
+}
+function toggleCuotaPersonalizada(p){
+  const toggle=document.getElementById(p+'-cp-toggle');
+  const knob=document.getElementById(p+'-cp-knob');
+  const fields=document.getElementById(p+'-cp-fields');
+  if(!toggle||!fields) return;
+  const active=fields.style.display!=='none';
+  fields.style.display=active?'none':'block';
+  toggle.style.background=active?'var(--surface3)':'var(--ef-cyan)';
+  knob.style.left=active?'2px':'20px';
+  knob.style.background=active?'var(--text3)':'#fff';
+  if(!active) document.getElementById(p+'-cp-cuota')?.focus();
+  prev(p);
+}
+function ndToggleCuotaPersonalizada(){
+  const cpWrap=document.getElementById('nd-cp-wrap');
+  const tipocuota=document.getElementById('nd-tipocuota')?.value;
+  if(cpWrap) cpWrap.style.display=(tipocuota==='fija')?'block':'none';
+  // Reset toggle if switching away from fija
+  if(tipocuota!=='fija'){
+    const fields=document.getElementById('nd-cp-fields');
+    const toggle=document.getElementById('nd-cp-toggle');
+    const knob=document.getElementById('nd-cp-knob');
+    if(fields) fields.style.display='none';
+    if(toggle) toggle.style.background='var(--surface3)';
+    if(knob){knob.style.left='2px';knob.style.background='var(--text3)';}
+  }
 }
 
 // ══ ELIMINAR ══════════════════════════════════════════════════════════════════
@@ -8218,6 +8745,33 @@ function ndCalcTodo(){
     resultEl.style.display='none';
   }
 
+  // Toggle visibilidad cuota personalizada
+  const tipocuota=document.getElementById('nd-tipocuota')?.value;
+  const ndCpWrap=document.getElementById('nd-cp-wrap');
+  if(ndCpWrap) ndCpWrap.style.display=(tipocuota==='fija')?'block':'none';
+
+  // Cuota personalizada por capacidad de pago (Modo Cliente)
+  const ndCpFields=document.getElementById('nd-cp-fields');
+  const ndCpActive=ndCpFields&&ndCpFields.style.display!=='none';
+  if(ndCpActive&&monto&&tm){
+    const cuotaMax=parseFloat(document.getElementById('nd-cp-cuota')?.value)||0;
+    const ndCpResult=document.getElementById('nd-cp-result');
+    if(cuotaMax&&ndCpResult){
+      const res=calcCuotasDesdeCapacidad(monto,tm,cuotaMax);
+      if(!res){
+        ndCpResult.innerHTML='<span style="color:var(--red)">⚠ La cuota debe ser mayor al interés del primer mes ('+fmt(Math.round(monto*tm))+')</span>';
+      } else {
+        ndCpResult.innerHTML='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;text-align:center">'
+          +'<div><div style="font-size:10px;color:var(--text3)">Cuotas necesarias</div><div style="font-weight:700;font-size:15px;color:var(--ef-cyan)">'+res.n+'</div></div>'
+          +'<div><div style="font-size:10px;color:var(--text3)">Q1 — Interés</div><div style="font-weight:700;color:var(--amber)">'+fmt(res.q1)+'</div></div>'
+          +'<div><div style="font-size:10px;color:var(--text3)">Q2 — Capital</div><div style="font-weight:700;color:var(--green)">'+fmt(res.q2)+'</div></div>'
+          +'</div><div style="font-size:10px;color:var(--text3);margin-top:5px;text-align:center">Total: '+fmt(Math.round(cuotaMax*res.n))+'</div>';
+        const cuotasEl=document.getElementById('nd-cuotas');
+        if(cuotasEl) cuotasEl.value=res.n;
+      }
+    }
+  }
+
   // Seguro
   if(ndSeguroTipo!=='no'&&monto>0){
     const sv=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
@@ -8328,9 +8882,14 @@ function guardarDeuda(){
   if(ndSeguroTipo!=='no') seguroVal=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
   // Historical payments
   const pagosHistoricos=ndHistPagos.map(p=>({...p,esHistorico:true}));
+  // Cuota personalizada por capacidad de pago
+  const ndCpFieldsG=document.getElementById('nd-cp-fields');
+  const ndCpActiveG=tipocuota==='fija'&&ndCpFieldsG&&ndCpFieldsG.style.display!=='none';
+  const ndCuotaPersonalizada=ndCpActiveG||undefined;
+  const ndCuotaFijaMonto=ndCpActiveG?(parseFloat(document.getElementById('nd-cp-cuota')?.value)||0):undefined;
   loadDeudas();
   const id=deudas.length?Math.max(...deudas.map(d=>d.id))+1:1;
-  deudas.push({id,acreedor,tipo,tipocredito,monto,tasa:tasaMensual,tasaOriginal:parseFloat(document.getElementById('nd-tasa')?.value)||0,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,uvrData,pagos:pagosHistoricos});
+  deudas.push({id,acreedor,tipo,tipocredito,monto,tasa:tasaMensual,tasaOriginal:parseFloat(document.getElementById('nd-tasa')?.value)||0,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,uvrData,cuotaPersonalizada:ndCuotaPersonalizada,cuotaFijaMonto:ndCuotaFijaMonto,pagos:pagosHistoricos});
   saveDeudas();
   closeModal('modal-nueva-deuda');
   renderClienteDeudas();
@@ -8529,6 +9088,24 @@ function editarDeuda(did){
   // Show hist box always in edit mode
   const histBox=document.getElementById('nd-hist-box');
   if(histBox) histBox.style.display='block';
+  // Restaurar toggle cuota personalizada
+  const ndCpWrapE=document.getElementById('nd-cp-wrap');
+  const ndCpFieldsE2=document.getElementById('nd-cp-fields');
+  const ndCpToggleE=document.getElementById('nd-cp-toggle');
+  const ndCpKnobE=document.getElementById('nd-cp-knob');
+  const ndCpCuotaE=document.getElementById('nd-cp-cuota');
+  if(ndCpWrapE) ndCpWrapE.style.display=(d.tipocuota==='fija')?'block':'none';
+  if(d.cuotaPersonalizada&&d.cuotaFijaMonto){
+    if(ndCpFieldsE2) ndCpFieldsE2.style.display='block';
+    if(ndCpToggleE) ndCpToggleE.style.background='var(--ef-cyan)';
+    if(ndCpKnobE){ndCpKnobE.style.left='20px';ndCpKnobE.style.background='#fff';}
+    if(ndCpCuotaE) ndCpCuotaE.value=d.cuotaFijaMonto;
+  } else {
+    if(ndCpFieldsE2) ndCpFieldsE2.style.display='none';
+    if(ndCpToggleE) ndCpToggleE.style.background='var(--surface3)';
+    if(ndCpKnobE){ndCpKnobE.style.left='2px';ndCpKnobE.style.background='var(--text3)';}
+    if(ndCpCuotaE) ndCpCuotaE.value='';
+  }
   ndCalcTodo();
   // Change modal title and save button to indicate edit mode
   const title=document.querySelector('#modal-nueva-deuda .modal-title');
@@ -8561,8 +9138,13 @@ function guardarEdicionDeuda(did){
   let seguroTipo=ndSeguroTipo;
   let seguroVal=0;
   if(ndSeguroTipo!=='no') seguroVal=parseFloat(document.getElementById('nd-seguro-val')?.value)||0;
+  // Cuota personalizada
+  const ndCpFieldsE=document.getElementById('nd-cp-fields');
+  const ndCpActiveE=tipocuota==='fija'&&ndCpFieldsE&&ndCpFieldsE.style.display!=='none';
+  const ndCpE=ndCpActiveE||undefined;
+  const ndCfmE=ndCpActiveE?(parseFloat(document.getElementById('nd-cp-cuota')?.value)||0):undefined;
   // Update deuda keeping existing payments
-  Object.assign(d,{acreedor,tipo,monto,tasa:tasaMensual,tasaOriginal,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,pagos:ndHistPagos});
+  Object.assign(d,{acreedor,tipo,monto,tasa:tasaMensual,tasaOriginal,tasaTipo:ndTasaTipo,cuotas,tipocuota,fecha,notas,seguroTipo,seguroVal,cuotaPersonalizada:ndCpE,cuotaFijaMonto:ndCfmE,pagos:ndHistPagos});
   saveDeudas();
   closeModal('modal-nueva-deuda');
   // Reset modal for future new entries
