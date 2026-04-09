@@ -2748,9 +2748,73 @@ function generarObservaciones(){
     });
   }
 
+  // ── OPCIÓN 3: Ganancias del negocio → sugerir añadir al presupuesto ───────
+  const hoyObj=new Date();
+  const mesKey=hoyObj.getFullYear()+'-'+String(hoyObj.getMonth()+1).padStart(2,'0');
+  // Calcular intereses cobrados este mes
+  let interesesMes=0;
+  clients.forEach(function(c){
+    const t=c.tasa/100;
+    c.meses.forEach(function(m,i){
+      const fq2=new Date(m.fq2+'T23:59:59');
+      const fq1=new Date(m.fq1+'T00:00:00');
+      const esMesActual=m.fq1.slice(0,7)===mesKey||m.fq2.slice(0,7)===mesKey;
+      if(!esMesActual) return;
+      const paid=(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0);
+      if(paid>0){
+        const rr=calcMes(c,i);
+        if(rr) interesesMes+=rr.interes;
+      }
+    });
+  });
+  // Verificar si ya está registrado en el presupuesto este mes
+  const _bArrOp3=loadBudgets();
+  const bMesActual=_bArrOp3.find(function(b){return b.key===mesKey;});
+  const yaRegistrado=bMesActual?(
+    (bMesActual.q1.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Préstamos');}) ||
+    (bMesActual.q2.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Préstamos');})
+  ):false;
+  if(interesesMes>=10000&&!yaRegistrado){
+    obs.cruce.push({
+      nivel:'green',icono:'cohete',
+      titulo:'Tu negocio generó '+fmt(interesesMes)+' este mes',
+      desc:'Esas ganancias aún no están en tu presupuesto personal. ¿Las agregas como ingreso extra para ver tu realidad financiera completa?',
+      acciones:[
+        {lbl:'✓ Sí, agregar al presupuesto',fn:'cuadreAgregarIngresoNegocio('+interesesMes+')'},
+        {lbl:'Ahora no',fn:'',sec:true}
+      ]
+    });
+  }
+  if(interesesMes>=10000&&yaRegistrado){
+    obs.cruce.push({
+      nivel:'blue',icono:'check',
+      titulo:'Ganancias del negocio ya incluidas',
+      desc:'Registraste '+fmt(interesesMes)+' de intereses este mes en tu presupuesto. Tu panorama financiero está completo.',
+      acciones:[]
+    });
+  }
+
   return obs;
 }
 
+function cuadreAgregarIngresoNegocio(valor){
+  const hoyObj=new Date();
+  const mesKey=hoyObj.getFullYear()+'-'+String(hoyObj.getMonth()+1).padStart(2,'0');
+  const arr=loadBudgets();
+  let b=arr.find(function(x){return x.key===mesKey;});
+  if(!b){
+    // Crear mes si no existe
+    const [y,m]=mesKey.split('-').map(Number);
+    b={key:mesKey,mes:m-1,anio:y,
+      q1:{ingresos:[],otrosIngresos:[],gastosFijos:[],gastosVar:[]},
+      q2:{ingresos:[],otrosIngresos:[],gastosFijos:[],gastosVar:[]}};
+    arr.push(b);
+  }
+  b.q1.otrosIngresos.push({nombre:'Cuadre Préstamos — Intereses del mes',valor:Math.round(valor)});
+  saveBudgets(arr);
+  toast('✓ '+fmt(Math.round(valor))+' agregados al presupuesto como ingreso extra','success',3000);
+  renderCuadre();
+}
 function _obsCardHTML(o){
   const btns=(o.acciones||[]).map(a=>'<button class="obs-btn '+(a.sec?'obs-btn-sec':'obs-btn-main')+'" onclick="'+a.fn+'">'+a.lbl+'</button>').join('');
   return '<div class="obs-card obs-'+o.nivel+'">'
@@ -5117,6 +5181,171 @@ function ssExportarPDF(){
   toast('PDF listo para imprimir ✓','success');
 }
 
+// ── Exportar Nómina PDF ───────────────────────────────────────────────────────
+function nomExportarPDF(){
+  const d=window._nomLastData;
+  if(!d){toast('Primero calcule la nómina','error');return;}
+  const f=v=>'$'+Math.round(v||0).toLocaleString('es-CO');
+  const hoy=new Date().toLocaleDateString('es-CO');
+  const tipoContrato={indefinido:'Indefinido',fijo:'Término fijo',aprendiz:'Aprendiz'};
+  const tc=tipoContrato[d.tipo]||d.tipo;
+
+  let html=`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+  <title>Liquidación de Nómina</title>
+  <style>
+    body{font-family:Arial,sans-serif;font-size:12px;color:#222;margin:28px;background:#fff}
+    h1{font-size:17px;color:#2D0060;margin-bottom:2px}
+    .sub{font-size:10px;color:#666;margin-bottom:16px}
+    table{width:100%;border-collapse:collapse;margin-bottom:12px}
+    th{background:#2D0060;color:white;padding:7px 10px;text-align:left;font-size:11px}
+    td{padding:6px 10px;border-bottom:1px solid #e0e0e0;font-size:11px}
+    tr:nth-child(even) td{background:#f9f6ff}
+    .total-row td{background:#ede7f6;font-weight:bold;font-size:12px}
+    .neto-row td{background:#2D0060;color:white;font-weight:bold;font-size:14px}
+    .section-title{font-size:10px;font-weight:bold;text-transform:uppercase;color:#5050ff;padding:8px 0 2px;letter-spacing:.06em}
+    .footer{font-size:9px;color:#999;margin-top:14px;border-top:1px solid #ddd;padding-top:8px;line-height:1.6}
+    @media print{body{margin:12px}.no-print{display:none}}
+  </style></head><body>
+  <h1>📋 Liquidación de Nómina</h1>
+  <div class="sub">Colombia ${NOM_ANO} · SMMLV $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Decreto ${NOM_CFG.decreto} · Fecha: ${hoy}</div>
+  <div style="margin-bottom:14px;display:flex;gap:24px;flex-wrap:wrap">
+    <div><span style="color:#666">Tipo de contrato:</span> <b>${tc}</b></div>
+    <div><span style="color:#666">Días liquidados:</span> <b>${d.dias}</b></div>
+    <div><span style="color:#666">Modo:</span> <b>${d.esVariable?'Variable / Comisiones':'Salario fijo'}</b></div>
+    ${d.fechaIni?'<div><span style="color:#666">Período:</span> <b>'+d.fechaIni+' al '+d.fechaFin+'</b></div>':''}
+  </div>
+
+  <table>
+    <tr><th>DEVENGADO</th><th>Detalle</th><th style="text-align:right">Valor</th></tr>
+    <tr><td>${d.esVariable?'Promedio mensual':'Salario del mes'}</td><td>${d.smmlvRatio} SMMLV · ${d.salDia.toLocaleString('es-CO')}/día × ${d.dias} días</td><td style="text-align:right">${f(d.salPropDias)}</td></tr>
+    ${d.tieneAuxTrans?'<tr><td>Auxilio de transporte</td><td>Salario ≤ 2 SMMLV</td><td style="text-align:right">'+f(d.auxTrans)+'</td></tr>':''}
+    ${d.hext>0?'<tr><td>Horas extras diurnas ('+d.hext+'h)</td><td>25% recargo</td><td style="text-align:right">'+f(d.valorHext)+'</td></tr>':''}
+    ${d.hnoc>0?'<tr><td>Recargo nocturno ('+d.hnoc+'h)</td><td>35% recargo</td><td style="text-align:right">'+f(d.valorHnoc)+'</td></tr>':''}
+    ${d.esVariable&&d.mesesValidos>0?'<tr><td colspan="2" style="font-style:italic;color:#666">'+d.notaVariable+'</td><td></td></tr>':''}
+    <tr class="total-row"><td colspan="2">Total devengado</td><td style="text-align:right">${f(d.devengado)}</td></tr>
+  </table>
+
+  <table>
+    <tr><th>DEDUCCIONES EMPLEADO</th><th>%</th><th style="text-align:right">Valor</th></tr>
+    <tr><td>Salud</td><td>4%</td><td style="text-align:right">${f(d.salud)}</td></tr>
+    <tr><td>Pensión</td><td>4%</td><td style="text-align:right">${f(d.pension)}</td></tr>
+    <tr class="total-row"><td colspan="2">Total deducciones</td><td style="text-align:right">-${f(d.totalDed)}</td></tr>
+  </table>
+
+  <table>
+    <tr class="neto-row"><td colspan="2">NETO A PAGAR</td><td style="text-align:right">${f(d.neto)}</td></tr>
+  </table>
+
+  <table>
+    <tr><th>APORTES EMPLEADOR (referencia)</th><th>%</th><th style="text-align:right">Valor</th></tr>
+    <tr><td>Salud</td><td>8.5%</td><td style="text-align:right">${f(d.empSalud)}</td></tr>
+    <tr><td>Pensión</td><td>12%</td><td style="text-align:right">${f(d.empPension)}</td></tr>
+    <tr><td>ARL (Riesgo I)</td><td>0.522%</td><td style="text-align:right">${f(d.empARL)}</td></tr>
+    <tr><td>Caja Compensación</td><td>4%</td><td style="text-align:right">${f(d.empCCF)}</td></tr>
+    <tr><td>ICBF *</td><td>3%</td><td style="text-align:right">${f(d.empICBF)}</td></tr>
+    <tr><td>SENA *</td><td>2%</td><td style="text-align:right">${f(d.empSENA)}</td></tr>
+    <tr class="total-row"><td colspan="2">Total aportes empleador</td><td style="text-align:right">${f(d.totalEmp)}</td></tr>
+    <tr><td colspan="2"><b>Costo total empresa</b></td><td style="text-align:right"><b>${f(d.devengado+d.totalEmp)}</b></td></tr>
+  </table>`;
+
+  if(d.prima||d.ces||d.vac||d.liq){
+    html+=`<table>
+    <tr><th>PRESTACIONES SOCIALES</th><th>Base</th><th style="text-align:right">Valor</th></tr>
+    ${d.prima?'<tr><td>Prima de servicios</td><td>Proporcional '+d.dias+' días</td><td style="text-align:right">'+f(d.primaVal)+'</td></tr>':''}
+    ${d.ces?'<tr><td>Cesantías</td><td>'+d.dias+' días / 360</td><td style="text-align:right">'+f(d.cesVal)+'</td></tr>':''}
+    ${d.ces?'<tr><td>Intereses sobre cesantías</td><td>12% anual proporcional</td><td style="text-align:right">'+f(d.intCesVal)+'</td></tr>':''}
+    ${d.vac?'<tr><td>Vacaciones</td><td>'+d.dias+' días / 720</td><td style="text-align:right">'+f(d.vacVal)+'</td></tr>':''}
+    ${d.liq?'<tr><td>Indemnización (contrato indefinido)</td><td>30 días</td><td style="text-align:right">'+f(d.liqVal)+'</td></tr>':''}
+    <tr class="total-row"><td colspan="2">Total prestaciones</td><td style="text-align:right">${f(d.totalPrest)}</td></tr>
+    </table>`;
+  }
+
+  html+=`<div class="footer">
+    * ICBF y SENA aplica para empresas con más de 10 empleados (Ley 789/2002).<br>
+    Valores ${NOM_ANO} según Decreto ${NOM_CFG.decreto}. SMMLV: $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Aux. transporte: $${NOM_CFG.auxTrans.toLocaleString('es-CO')} (≤2 SMMLV).<br>
+    Documento de referencia — consulte su contador para casos especiales. Generado por Cuadre · ${hoy}
+  </div>
+  <div class="no-print" style="margin-top:16px;text-align:center">
+    <button onclick="window.print()" style="padding:10px 28px;background:#2D0060;color:white;border:none;border-radius:8px;font-size:13px;cursor:pointer">🖨 Imprimir / Guardar PDF</button>
+  </div>
+  </body></html>`;
+
+  const w=window.open('','_blank','width=780,height=700');
+  if(!w){toast('Permita ventanas emergentes para exportar PDF','error',4000);return;}
+  w.document.write(html);w.document.close();
+  setTimeout(()=>{w.focus();},300);
+  toast('PDF listo para imprimir ✓','success');
+}
+
+// ── Exportar Nómina Excel (CSV) ───────────────────────────────────────────────
+function nomExportarExcel(){
+  const d=window._nomLastData;
+  if(!d){toast('Primero calcule la nómina','error');return;}
+  const f=v=>'$'+Math.round(v||0).toLocaleString('es-CO');
+  const hoy=new Date().toLocaleDateString('es-CO');
+  const tipoContrato={indefinido:'Indefinido',fijo:'Término fijo',aprendiz:'Aprendiz'};
+
+  let rows=[];
+  rows.push(['LIQUIDACIÓN DE NÓMINA — CUADRE','','']);
+  rows.push(['Colombia '+NOM_ANO+' · SMMLV $'+NOM_CFG.smmlv.toLocaleString('es-CO'),'','']);
+  rows.push(['Fecha',hoy,'']);
+  rows.push(['Tipo de contrato',tipoContrato[d.tipo]||d.tipo,'']);
+  rows.push(['Días liquidados',d.dias,'']);
+  rows.push(['Modo',d.esVariable?'Variable / Comisiones':'Salario fijo','']);
+  if(d.fechaIni) rows.push(['Período',d.fechaIni+' al '+d.fechaFin,'']);
+  rows.push(['','','']);
+
+  rows.push(['DEVENGADO','','VALOR']);
+  rows.push([d.esVariable?'Promedio mensual':'Salario del mes','',f(d.salPropDias)]);
+  if(d.tieneAuxTrans) rows.push(['Auxilio de transporte','',f(d.auxTrans)]);
+  if(d.hext>0) rows.push(['Horas extras ('+d.hext+'h × 25%)','',f(d.valorHext)]);
+  if(d.hnoc>0) rows.push(['Recargo nocturno ('+d.hnoc+'h × 35%)','',f(d.valorHnoc)]);
+  rows.push(['TOTAL DEVENGADO','',f(d.devengado)]);
+  rows.push(['','','']);
+
+  rows.push(['DEDUCCIONES EMPLEADO','%','VALOR']);
+  rows.push(['Salud','4%',f(d.salud)]);
+  rows.push(['Pensión','4%',f(d.pension)]);
+  rows.push(['TOTAL DEDUCCIONES','',f(d.totalDed)]);
+  rows.push(['','','']);
+  rows.push(['NETO A PAGAR','',f(d.neto)]);
+  rows.push(['','','']);
+
+  rows.push(['APORTES EMPLEADOR (referencia)','%','VALOR']);
+  rows.push(['Salud','8.5%',f(d.empSalud)]);
+  rows.push(['Pensión','12%',f(d.empPension)]);
+  rows.push(['ARL (Riesgo I)','0.522%',f(d.empARL)]);
+  rows.push(['Caja Compensación','4%',f(d.empCCF)]);
+  rows.push(['ICBF *','3%',f(d.empICBF)]);
+  rows.push(['SENA *','2%',f(d.empSENA)]);
+  rows.push(['TOTAL EMPLEADOR','',f(d.totalEmp)]);
+  rows.push(['Costo total empresa','',f(d.devengado+d.totalEmp)]);
+  rows.push(['','','']);
+
+  if(d.prima||d.ces||d.vac||d.liq){
+    rows.push(['PRESTACIONES SOCIALES','','VALOR']);
+    if(d.prima) rows.push(['Prima de servicios','',f(d.primaVal)]);
+    if(d.ces) rows.push(['Cesantías','',f(d.cesVal)]);
+    if(d.ces) rows.push(['Intereses sobre cesantías (12%)','',f(d.intCesVal)]);
+    if(d.vac) rows.push(['Vacaciones','',f(d.vacVal)]);
+    if(d.liq) rows.push(['Indemnización','',f(d.liqVal)]);
+    rows.push(['TOTAL PRESTACIONES','',f(d.totalPrest)]);
+    rows.push(['','','']);
+  }
+
+  rows.push(['* ICBF y SENA aplica para empresas con más de 10 empleados','','']);
+  rows.push(['Valores de referencia — consulte su contador para casos especiales','','']);
+  rows.push(['Generado por Cuadre · '+hoy,'','']);
+
+  const csv=rows.map(r=>r.map(c=>'"'+(c||'').toString().replace(/"/g,'""')+'"').join(',')).join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='Nomina_'+hoy.replace(/\//g,'-')+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('Exportado a Excel ✓','success');
+}
+
 function renderNomina(el) {
   nomModoVariable = false;
   nomComisiones = Array(6).fill('');
@@ -5443,10 +5672,34 @@ function calcNomina() {
       </div>
     </div>` : ''}
 
-    <div style="background:rgba(61,220,132,.06);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:9px 12px;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:14px">
+    <div style="background:rgba(61,220,132,.06);border:1px solid var(--green-bdr);border-radius:var(--radius-xs);padding:9px 12px;font-size:10px;color:var(--text3);line-height:1.6;margin-bottom:10px">
       📌 Valores ${NOM_ANO} según Decreto ${NOM_CFG.decreto}. SMMLV: $${NOM_CFG.smmlv.toLocaleString('es-CO')} · Aux. transporte: $${NOM_CFG.auxTrans.toLocaleString('es-CO')} (≤2 SMMLV). Los valores son de referencia — consulte su contador para casos especiales.
     </div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button onclick="nomExportarPDF()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#b71c1c,#c62828);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Exportar PDF
+      </button>
+      <button onclick="nomExportarExcel()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#1b5e20,#2e7d32);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        Exportar Excel
+      </button>
+    </div>
   `;
+
+  // Guardar datos para exportación
+  window._nomLastData = {
+    sal, salPromedio, esVariable, dias, tipo,
+    devengado, totalDed, neto,
+    salud, pension, valorHext, valorHnoc, auxTrans, tieneAuxTrans, hext, hnoc,
+    empSalud, empPension, empARL, empCCF, empICBF, empSENA, totalEmp,
+    prima, ces, vac, liq,
+    primaVal, cesVal, intCesVal, vacVal, liqVal, totalPrest,
+    smmlvRatio, salDia, salPropDias, baseSS, notaVariable, mesesValidos,
+    fechaIni: document.getElementById('nom-fecha-ini')?.value||'',
+    fechaFin: document.getElementById('nom-fecha-fin')?.value||''
+  };
 }
 
 // ── SIMULADOR DE NEGOCIO ──────────────────────────────────────────────────────
@@ -6223,37 +6476,105 @@ function calcEqual(){
 // ── SAVINGS POCKETS ────────────────────────────────────────────────────────────
 let activePocketId=null;
 function renderSavings(el){
-  const total=pockets.reduce((s,p)=>s+p.ahorrado,0);
-  el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
+  const total=pockets.reduce(function(s,p){return s+p.ahorrado;},0);
+  // Obtener saldo libre del presupuesto para sugerencias
+  const _bArrSav=loadBudgets();
+  const bAct=_bArrSav&&_bArrSav.length?_bArrSav[_bArrSav.length-1]:null;
+  const ingPres=bAct?budMonthIngresos(bAct):0;
+  const sfPres=bAct?Math.max(ingPres-allTotal(bAct,'gastosFijos')-allTotal(bAct,'gastosVar'),0):0;
+  const totalMensualComprometido=pockets.reduce(function(s,p){return s+(p.mensual||0);},0);
+  const sfDisponibleAhorro=Math.max(sfPres-totalMensualComprometido,0);
+
+  let html='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
     +'<div><div class="sec-label">Bolsillos de Ahorro</div>'
     +'<div style="font-size:22px;font-weight:700;color:var(--green)">'+fmt(total)+' ahorrado</div></div>'
     +'<button class="btn btn-pink" onclick="abrirNuevoPocket()">+ Nuevo bolsillo</button>'
-    +'</div>'
-    +pockets.map(p=>{
-      const pct=p.meta>0?Math.min(p.ahorrado/p.meta*100,100):0;
-      const meses=p.mensual>0?Math.ceil((p.meta-p.ahorrado)/p.mensual):0;
-      const clr=pct>=100?'var(--green)':pct>=50?'var(--amber)':'var(--ef-pink2)';
-      return'<div class="pocket-card">'
-        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-        +'<div><div style="font-size:22px">'+(p.emoji||'🐷')+'</div>'
-        +'<div style="font-size:14px;font-weight:700;margin-top:4px">'+p.nombre+'</div></div>'
-        +'<div style="text-align:right">'
-        +'<div style="font-size:18px;font-weight:700;color:var(--green)">'+fmt(p.ahorrado)+'</div>'
-        +'<div style="font-size:11px;color:var(--text3)">de '+fmt(p.meta)+'</div></div>'
-        +'</div>'
-        +'<div class="pocket-progress"><div class="pocket-bar" style="width:'+pct+'%;background:'+clr+'"></div></div>'
-        +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">'
-        +'<span>'+pct.toFixed(1)+'% completado</span>'
-        +(pct<100&&meses>0?'<span>~'+meses+' mes'+(meses!==1?'es':'')+' restantes</span>':'')
-        +(pct>=100?'<span style="color:var(--green);font-weight:700">🎉 Meta alcanzada!</span>':'')
-        +'</div>'
-        +'<div class="pocket-actions">'
-        +'<button class="btn btn-green" style="flex:1" onclick="abrirDeposito('+p.id+')">+ Ahorrar</button>'
-        +'<button class="btn btn-amber" onclick="editarPocket('+p.id+')">✏</button>'
-        +'<button class="btn btn-red" onclick="eliminarPocket('+p.id+')">✕</button>'
-        +'</div></div>';
-    }).join('')
-    +(pockets.length===0?'<div class="empty-state"><div class="empty-icon">🐷</div><div style="font-size:14px;font-weight:600;color:var(--text2)">Sin bolsillos</div><div style="font-size:12px;color:var(--text3)">Crea tu primer bolsillo de ahorro</div></div>':'');
+    +'</div>';
+
+  // Banner de saldo libre si hay presupuesto
+  if(sfPres>0){
+    html+='<div style="background:rgba(102,187,106,.08);border:1px solid rgba(102,187,106,.25);border-radius:var(--radius);padding:10px 12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div><div style="font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.05em">Saldo libre disponible</div>'
+      +'<div style="font-size:15px;font-weight:800;color:var(--text)">'+fmt(sfPres)+'<span style="font-size:10px;color:var(--text3);font-weight:400">/mes</span></div></div>'
+      +(sfDisponibleAhorro>0
+        ?'<div style="text-align:right"><div style="font-size:10px;color:var(--text3)">Libre para nuevos bolsillos</div><div style="font-size:13px;font-weight:700;color:var(--amber)">'+fmt(sfDisponibleAhorro)+'</div></div>'
+        :'<div style="font-size:10px;color:var(--amber)">Todo el saldo libre ya está<br>comprometido en bolsillos</div>')
+      +'</div>';
+  }
+
+  if(pockets.length===0){
+    html+='<div class="empty-state"><div class="empty-icon">🐷</div><div style="font-size:14px;font-weight:600;color:var(--text2)">Sin bolsillos</div><div style="font-size:12px;color:var(--text3)">Crea tu primer bolsillo de ahorro</div></div>';
+    el.innerHTML=html; return;
+  }
+
+  html+=pockets.map(function(p){
+    const pct=p.meta>0?Math.min(p.ahorrado/p.meta*100,100):0;
+    const falta=Math.max(p.meta-p.ahorrado,0);
+    const clr=pct>=100?'var(--green)':pct>=50?'var(--amber)':'var(--ef-pink2)';
+
+    // ── Inteligencia dinámica ───────────────────────────────────────────────
+    let smartLines='';
+    if(pct<100&&falta>0){
+      // 1. Tiempo con aporte actual
+      const mesesActual=p.mensual>0?Math.ceil(falta/p.mensual):null;
+      // 2. Sugerir aporte óptimo si hay saldo libre
+      const aporteSugerido=sfDisponibleAhorro>0?Math.min(sfDisponibleAhorro,falta):0;
+      const mesesOptimo=aporteSugerido>0?Math.ceil(falta/aporteSugerido):null;
+      // 3. Fecha estimada con aporte actual
+      let fechaEst='';
+      if(mesesActual){
+        const fe=new Date();fe.setMonth(fe.getMonth()+mesesActual);
+        const ms=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        fechaEst=ms[fe.getMonth()]+' '+fe.getFullYear();
+      }
+      // 4. Velocidad mínima para llegar antes del año
+      const mesesRestantesAnio=12-new Date().getMonth();
+      const aporteMinimoAnio=mesesRestantesAnio>0?Math.ceil(falta/mesesRestantesAnio):null;
+
+      smartLines+='<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:8px 10px;margin:8px 0;font-size:11px">';
+      if(p.mensual>0){
+        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+          +'<span style="color:var(--text3)">Con tu aporte actual</span>'
+          +'<span style="font-weight:700;color:var(--text)">'+fmt(p.mensual)+'/mes → ~'+mesesActual+' mes'+(mesesActual!==1?'es':'')+''+(fechaEst?' ('+fechaEst+')':'')+'</span></div>';
+      }
+      if(aporteSugerido>0&&aporteSugerido!==p.mensual){
+        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+          +'<span style="color:var(--green)">💡 Aportando saldo libre</span>'
+          +'<span style="font-weight:700;color:var(--green)">'+fmt(aporteSugerido)+'/mes → ~'+mesesOptimo+' mes'+(mesesOptimo!==1?'es':'')+'</span></div>';
+      }
+      if(aporteMinimoAnio&&(!p.mensual||p.mensual<aporteMinimoAnio)){
+        smartLines+='<div style="display:flex;justify-content:space-between">'
+          +'<span style="color:var(--amber)">🎯 Para llegar este año</span>'
+          +'<span style="font-weight:700;color:var(--amber)">'+fmt(aporteMinimoAnio)+'/mes</span></div>';
+      }
+      if(!p.mensual&&sfDisponibleAhorro===0&&!aporteSugerido){
+        smartLines+='<div style="color:var(--text3)">Define un aporte mensual o libera saldo en tu presupuesto para ver proyecciones.</div>';
+      }
+      smartLines+='</div>';
+    }
+
+    return '<div class="pocket-card">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+      +'<div><div style="font-size:22px">'+(p.emoji||'🐷')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:4px">'+p.nombre+'</div></div>'
+      +'<div style="text-align:right">'
+      +'<div style="font-size:18px;font-weight:700;color:var(--green)">'+fmt(p.ahorrado)+'</div>'
+      +'<div style="font-size:11px;color:var(--text3)">de '+fmt(p.meta)+'</div></div>'
+      +'</div>'
+      +'<div class="pocket-progress"><div class="pocket-bar" style="width:'+pct+'%;background:'+clr+'"></div></div>'
+      +'<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3)">'
+      +'<span>'+pct.toFixed(1)+'% completado</span>'
+      +(pct>=100?'<span style="color:var(--green);font-weight:700">🎉 Meta alcanzada!</span>':'<span>Faltan '+fmt(falta)+'</span>')
+      +'</div>'
+      +smartLines
+      +'<div class="pocket-actions">'
+      +'<button class="btn btn-green" style="flex:1" onclick="abrirDeposito('+p.id+')">+ Ahorrar</button>'
+      +'<button class="btn btn-amber" onclick="editarPocket('+p.id+')">✏</button>'
+      +'<button class="btn btn-red" onclick="eliminarPocket('+p.id+')">✕</button>'
+      +'</div></div>';
+  }).join('');
+
+  el.innerHTML=html;
 }
 function abrirNuevoPocket(){
   activePocketId=null;
