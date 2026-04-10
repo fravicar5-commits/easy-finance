@@ -7555,6 +7555,9 @@ async function doLogin(){
 
     // Cargar datos propios desde Firestore
     toast('Cargando tus datos ☁...','info',2000);
+    // Ofrecer registro de huella si no está registrada aún
+    const storedBio = localStorage.getItem(BIOMETRIC_KEY);
+    if(!storedBio){ setTimeout(()=>registerBiometric(email),2500); }
     await _loadFromFirestore(uid);
     load(); // también desde localStorage como respaldo
     renderSidebar();
@@ -7584,9 +7587,93 @@ async function doLogin(){
 }
 
 // ── Recuperar contraseña ──────────────────────────────────────────────────────
+// ── Biometría / WebAuthn ───────────────────────────────────────────────────────
+const BIOMETRIC_KEY = 'ef_biometric_cred';
+
+function isBiometricAvailable(){
+  return window.PublicKeyCredential && typeof PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable === 'function';
+}
+
+async function initBiometricButton(){
+  if(!isBiometricAvailable()) return;
+  try{
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    const stored = localStorage.getItem(BIOMETRIC_KEY);
+    if(available && stored){
+      document.getElementById('biometric-btn-wrap').style.display='block';
+    }
+  }catch(e){}
+}
+
+async function registerBiometric(email){
+  if(!isBiometricAvailable()) return;
+  try{
+    const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    if(!available) return;
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    const userId = new TextEncoder().encode(email);
+    const cred = await navigator.credentials.create({
+      publicKey:{
+        challenge,
+        rp:{ name:'Cuadre', id: location.hostname },
+        user:{ id: userId, name: email, displayName: email },
+        pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],
+        authenticatorSelection:{ authenticatorAttachment:'platform', userVerification:'required' },
+        timeout: 60000
+      }
+    });
+    if(cred){
+      localStorage.setItem(BIOMETRIC_KEY, JSON.stringify({ email, credId: btoa(String.fromCharCode(...new Uint8Array(cred.rawId))) }));
+      document.getElementById('biometric-btn-wrap').style.display='block';
+      toast('Huella registrada — la próxima vez podrás usarla 🔐','success',3000);
+    }
+  }catch(e){
+    // Usuario canceló o no disponible, silencioso
+  }
+}
+
+async function doLoginBiometric(){
+  const stored = localStorage.getItem(BIOMETRIC_KEY);
+  if(!stored){ toast('No hay huella registrada','error'); return; }
+  const { email } = JSON.parse(stored);
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+  try{
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    await navigator.credentials.get({
+      publicKey:{
+        challenge,
+        userVerification:'required',
+        timeout:60000
+      }
+    });
+    // Autenticación biométrica exitosa — rellenar email y pedir contraseña guardada
+    document.getElementById('login-user').value = email;
+    // Intentar login automático con credencial guardada en el gestor del navegador
+    const passEl = document.getElementById('login-pass');
+    passEl.focus();
+    // Si el navegador tiene la contraseña guardada, se autocompleta y el usuario solo confirma
+    toast('Identidad verificada ✅ — confirma con tu contraseña guardada','success',3000);
+  }catch(e){
+    if(e.name !== 'NotAllowedError'){
+      errEl.textContent='No se pudo verificar la huella';
+      errEl.style.display='block';
+    }
+  }
+}
+
+// Mostrar botón biométrico al cargar
+document.addEventListener('DOMContentLoaded', initBiometricButton);
+
 async function doResetPassword(){
-  const email=document.getElementById('login-user').value.trim();
-  if(!email){toast('Ingrese su correo primero','error');return;}
+  let email=document.getElementById('login-user').value.trim();
+  if(!email){
+    email = prompt('Ingresa tu correo electrónico para recuperar la contraseña:');
+    if(!email||!email.trim()){return;}
+    email=email.trim();
+  }
   if(!window._firebaseReady){toast('Sin conexión','error');return;}
   try{
     await window._fbResetPassword(window._auth,email);
@@ -12269,6 +12356,11 @@ window.addEventListener('DOMContentLoaded',()=>{
         <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+      <div id="biometric-btn-wrap" style="display:none;margin-top:12px">
+        <button onclick="doLoginBiometric()" style="width:100%;padding:13px;border-radius:12px;border:1.5px solid rgba(120,100,255,0.4);background:rgba(80,80,255,0.08);color:#a0a0ff;font-family:'Nunito',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+          <span style="font-size:20px">🔐</span> Ingresar con huella / Face ID
+        </button>
+      </div>
       <div style="text-align:center;margin-top:10px">
         <button onclick="doResetPassword()" style="background:none;border:none;color:#8888aa;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:underline">¿Olvidó su contraseña?</button>
       </div>
@@ -12280,7 +12372,11 @@ window.addEventListener('DOMContentLoaded',()=>{
       <div id="register-pending" class="login-pending" style="display:none">
         <div class="login-pending-icon">⏳</div>
         <div class="login-pending-title">Solicitud enviada</div>
-        <div class="login-pending-sub">Tu cuenta está en revisión.<br>El administrador te notificará cuando esté aprobada.</div>
+        <div class="login-pending-sub">Tu cuenta está en revisión y será activada pronto.<br><br>
+          <strong style="color:#FFB300">Para activar tu acceso:</strong><br>
+          Realiza tu pago por <strong style="color:#FFB300">Nequi o Bancolombia</strong> a nombre de <strong style="color:#FFB300">Fran Viloria</strong> y envía el comprobante por WhatsApp al <strong style="color:#FFB300">+57 300 851 4699</strong>.<br><br>
+          Una vez confirmado el pago, tu cuenta será aprobada en minutos. 🚀
+        </div>
       </div>
       <div id="register-form">
         <div class="login-fr">
