@@ -21,11 +21,11 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyBzg8gnYGHz712oMC8YtzH-ZQsT97D0eXc",
+    apiKey: "AIzaSyBzgBgnYGHz712oMC8YtzH-ZQsT97D0eXc",
     authDomain: "cuadre-app-59c7f.firebaseapp.com",
     projectId: "cuadre-app-59c7f",
     storageBucket: "cuadre-app-59c7f.firebasestorage.app",
@@ -37,11 +37,16 @@
   window._db = getFirestore(app);
   window._auth = getAuth(app);
   window._fbSignIn = signInWithEmailAndPassword;
+  window._fbCreateUser = createUserWithEmailAndPassword;
   window._fbSignOut = signOut;
   window._fbDoc = doc;
   window._fbSetDoc = setDoc;
   window._fbGetDoc = getDoc;
+  window._fbCollection = collection;
+  window._fbGetDocs = getDocs;
+  window._fbUpdateDoc = updateDoc;
   window._fbOnAuthStateChanged = onAuthStateChanged;
+  window._fbResetPassword = sendPasswordResetEmail;
   window._firebaseReady = true;
   window.dispatchEvent(new Event('firebaseReady'));
 </script>
@@ -750,6 +755,25 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .rb-cobrador{background:rgba(255,179,0,.15);color:#FFB300;border:1px solid rgba(255,179,0,.3)}
 .rb-lectura{background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3)}
 .login-footer{text-align:center;font-size:10px;color:#444;margin-top:16px}
+/* Registro y panel admin */
+.login-tab-bar{display:flex;gap:0;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1px solid #2a2a45}
+.login-tab{flex:1;padding:9px;background:transparent;border:none;color:#8888aa;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.login-tab.active{background:rgba(194,24,91,.2);color:var(--ef-pink2)}
+.login-pending{background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.3);border-radius:10px;padding:16px;text-align:center;margin-top:8px}
+.login-pending-icon{font-size:32px;margin-bottom:8px}
+.login-pending-title{font-size:14px;font-weight:800;color:#FFB300;margin-bottom:4px}
+.login-pending-sub{font-size:11px;color:#8888aa;line-height:1.5}
+/* Admin panel usuarios */
+.admin-user-row{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px}
+.admin-user-row:last-child{border-bottom:none}
+.admin-user-info{flex:1;min-width:0}
+.admin-user-name{font-weight:700;color:var(--text);font-size:13px}
+.admin-user-email{font-size:10px;color:var(--text3);margin-top:1px}
+.admin-user-badge{font-size:9px;font-weight:800;padding:2px 7px;border-radius:10px}
+.badge-pendiente{background:rgba(255,167,38,.15);color:#FFB300;border:1px solid rgba(255,167,38,.3)}
+.badge-activo{background:rgba(102,187,106,.15);color:#66bb6a;border:1px solid rgba(102,187,106,.3)}
+.badge-suspendido{background:rgba(239,83,80,.15);color:var(--red);border:1px solid rgba(239,83,80,.3)}
+.admin-btn-sm{padding:4px 8px;border-radius:6px;font-size:10px;font-weight:700;border:none;cursor:pointer;font-family:'Nunito',sans-serif}
 .tc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;font-family:'Nunito',sans-serif}
 .tc-modal{background:#16162a;border:1px solid #2a2a45;border-radius:20px 20px 0 0;width:100%;max-width:520px;max-height:92vh;display:flex;flex-direction:column}
 .tc-header{padding:20px 20px 12px;border-bottom:1px solid #2a2a45;flex-shrink:0}
@@ -2870,11 +2894,20 @@ function renderCuadre(){
     html+='<div class="cr-row"><span class="cr-lbl">Saldo libre</span><span class="cr-val '+(sfPres>=0?'c-green':'c-red')+'">'+fmtS(sfPres)+'</span></div></div>';
     html+='</div>';
     // Observaciones
-    if(obs.negocio.length){html+='<div class="obs-world"><span>Negocio</span></div>';obs.negocio.forEach(function(o){html+=_obsCardHTML(o);});}
-    if(obs.personal.length){html+='<div class="obs-world"><span>Personal</span></div>';obs.personal.forEach(function(o){html+=_obsCardHTML(o);});}
-    if(obs.cruce.length){html+='<div class="obs-world"><span>Cruce</span></div>';obs.cruce.forEach(function(o){html+=_obsCardHTML(o);});}
-    if(total===0){html+='<div class="cuadre-empty" style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px">Todo en orden \u2714<br><span style="font-size:11px;opacity:.6">Sin alertas por ahora.</span></div>';}
+    if(obs.negocio.length){html+='<div class="obs-world"><span>💼 Negocio</span></div>';obs.negocio.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(obs.personal.length){html+='<div class="obs-world"><span>👤 Personal</span></div>';obs.personal.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(obs.cruce.length){html+='<div class="obs-world"><span>⚖️ Cruce</span></div>';obs.cruce.forEach(function(o){html+=_obsCardHTML(o);});}
+    if(total===0){html+='<div class="cuadre-empty" style="text-align:center;padding:40px 20px;color:var(--text3);font-size:13px">Todo en orden ✔<br><span style="font-size:11px;opacity:.6">Sin alertas por ahora.</span></div>';}
+    // Panel admin — solo visible para admin
+    if(currentUser&&currentUser.rol==='admin'){
+      html+='<div class="obs-world"><span>🔐 Panel Admin</span></div>';
+      html+='<div id="cuadre-admin-usuarios" style="margin-bottom:10px"><div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">Cargando usuarios...</div></div>';
+    }
     el.innerHTML=html;
+    // Cargar panel admin si corresponde
+    if(currentUser&&currentUser.rol==='admin'){
+      renderAdminUsuarios(document.getElementById('cuadre-admin-usuarios'));
+    }
     requestAnimationFrame(function(){requestAnimationFrame(function(){
       var lns=document.querySelectorAll('#cuadre-body .cn-line');
       var dl=[0,.15,.3,.45,.6,.75];
@@ -7346,153 +7379,245 @@ function confirmarImportExcel(){
 
 // ══ AUTH / LOGIN ══════════════════════════════════════════════════════════════
 // Users config — edit here to add/change users
-const EF_USERS = [
-  {
-    user: 'admin',
-    pass: 'easy2026',
-    nombre: 'Administrador',
-    rol: 'admin',
-    // Admin: full access to everything
-    permisos: {
-      crearPrestamo: true, editarPrestamo: true, eliminarCliente: true,
-      registrarPago: true, eliminarPago: true, verCaja: true,
-      exportar: true, importar: true, negociarCartera: true,
-      verReportes: true, configurarNube: true, gestionarNotas: true,
-      presupuesto: true, bolsillos: true, whatsapp: true
-    }
+// ══ AUTH — SISTEMA MULTIUSUARIO FIREBASE ══════════════════════════════════════
+// Permisos por rol
+const ROL_PERMISOS = {
+  admin: {
+    crearPrestamo:true,editarPrestamo:true,eliminarCliente:true,
+    registrarPago:true,eliminarPago:true,verCaja:true,
+    exportar:true,importar:true,negociarCartera:true,
+    verReportes:true,configurarNube:true,gestionarNotas:true,
+    presupuesto:true,bolsillos:true,whatsapp:true,
+    modoCliente:true,dayToDay:true,panelAdmin:true
   },
-  {
-    user: 'cobrador',
-    pass: 'cobro2026',
-    nombre: 'Cobrador',
-    rol: 'cobrador',
-    // Cobrador: can register payments and view clients, cannot create or delete
-    permisos: {
-      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
-      registrarPago: true, eliminarPago: false, verCaja: false,
-      exportar: false, importar: false, negociarCartera: false,
-      verReportes: false, configurarNube: false, gestionarNotas: false,
-      presupuesto: false, bolsillos: false, whatsapp: true
-    }
+  cobrador: {
+    crearPrestamo:false,editarPrestamo:false,eliminarCliente:false,
+    registrarPago:true,eliminarPago:false,verCaja:false,
+    exportar:false,importar:false,negociarCartera:false,
+    verReportes:false,configurarNube:false,gestionarNotas:false,
+    presupuesto:false,bolsillos:false,whatsapp:true,
+    modoCliente:false,dayToDay:false,panelAdmin:false
   },
-  {
-    user: 'socio',
-    pass: 'socio2026',
-    nombre: 'Socio/Lectura',
-    rol: 'lectura',
-    permisos: {
-      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
-      registrarPago: false, eliminarPago: false, verCaja: true,
-      exportar: true, importar: false, negociarCartera: false,
-      verReportes: true, configurarNube: false, gestionarNotas: false,
-      presupuesto: false, bolsillos: false, whatsapp: false
-    }
+  lectura: {
+    crearPrestamo:false,editarPrestamo:false,eliminarCliente:false,
+    registrarPago:false,eliminarPago:false,verCaja:true,
+    exportar:true,importar:false,negociarCartera:false,
+    verReportes:true,configurarNube:false,gestionarNotas:false,
+    presupuesto:false,bolsillos:false,whatsapp:false,
+    modoCliente:false,dayToDay:false,panelAdmin:false
   },
-  {
-    user: 'invitado',
-    pass: 'invitado2026',
-    nombre: 'Alba',
-    rol: 'invitado',
-    // Invitado: solo Modo Cliente y Cuadre Day to Day
-    permisos: {
-      crearPrestamo: false, editarPrestamo: false, eliminarCliente: false,
-      registrarPago: false, eliminarPago: false, verCaja: false,
-      exportar: false, importar: false, negociarCartera: false,
-      verReportes: false, configurarNube: false, gestionarNotas: false,
-      presupuesto: true, bolsillos: true, whatsapp: false,
-      modoCliente: true, dayToDay: true
-    }
+  usuario: {
+    crearPrestamo:true,editarPrestamo:true,eliminarCliente:true,
+    registrarPago:true,eliminarPago:true,verCaja:true,
+    exportar:true,importar:true,negociarCartera:true,
+    verReportes:true,configurarNube:true,gestionarNotas:true,
+    presupuesto:true,bolsillos:true,whatsapp:true,
+    modoCliente:true,dayToDay:true,panelAdmin:false
+  },
+  invitado: {
+    crearPrestamo:false,editarPrestamo:false,eliminarCliente:false,
+    registrarPago:false,eliminarPago:false,verCaja:false,
+    exportar:false,importar:false,negociarCartera:false,
+    verReportes:false,configurarNube:false,gestionarNotas:false,
+    presupuesto:true,bolsillos:true,whatsapp:false,
+    modoCliente:true,dayToDay:true,panelAdmin:false
   }
-];
+};
 
+// UID del admin principal — hardcodeado para que nunca cambie
+const SUPER_ADMIN_EMAIL = 'admin@cuadre.app';
 let currentUser = null;
 
 function checkLogin(){
-  localStorage.removeItem('ef_session');
   currentUser = null;
   document.getElementById('login-screen').style.display='flex';
 }
 
-// Map app usernames → Firebase email and role
-const EF_EMAIL_MAP = {
-  'admin':    { email: 'admin@cuadre.app',    rol: 'admin' },
-  'cobrador': { email: 'cobrador@cuadre.app', rol: 'cobrador' },
-  'socio':    { email: 'socio@cuadre.app',    rol: 'lectura' },
-  'invitado': { email: 'invitado@cuadre.app', rol: 'invitado' }
-};
+// ── Tabs login / registro ────────────────────────────────────────────────────
+function switchLoginTab(tab){
+  document.getElementById('login-panel').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-panel').style.display = tab==='register'?'block':'none';
+  document.getElementById('ltab-login').classList.toggle('active', tab==='login');
+  document.getElementById('ltab-register').classList.toggle('active', tab==='register');
+  document.getElementById('login-error').style.display='none';
+  document.getElementById('register-error').style.display='none';
+}
 
-async function doLogin(){
-  const user = document.getElementById('login-user').value.trim().toLowerCase();
-  const pass = document.getElementById('login-pass').value;
-  const errEl = document.getElementById('login-error');
-  const btn = document.querySelector('.login-btn');
+// ── Registro nuevo usuario ────────────────────────────────────────────────────
+async function doRegister(){
+  const nombre = document.getElementById('reg-nombre').value.trim();
+  const email  = document.getElementById('reg-email').value.trim().toLowerCase();
+  const pass   = document.getElementById('reg-pass').value;
+  const pass2  = document.getElementById('reg-pass2').value;
+  const errEl  = document.getElementById('register-error');
   errEl.style.display='none';
 
-  // Validar credenciales localmente
-  const found = EF_USERS.find(u=>u.user===user&&u.pass===pass);
-  if(!found){
+  if(!nombre||!email||!pass){errEl.textContent='Complete todos los campos';errEl.style.display='block';return;}
+  if(pass.length<6){errEl.textContent='La contraseña debe tener al menos 6 caracteres';errEl.style.display='block';return;}
+  if(pass!==pass2){errEl.textContent='Las contraseñas no coinciden';errEl.style.display='block';return;}
+  if(!window._firebaseReady){errEl.textContent='Sin conexión — intente más tarde';errEl.style.display='block';return;}
+
+  try{
+    // Crear usuario en Firebase Auth
+    const cred = await window._fbCreateUser(window._auth, email, pass);
+    const uid = cred.user.uid;
+    // Guardar perfil en Firestore con estado 'pendiente'
+    await window._fbSetDoc(window._fbDoc(window._db,'usuarios',uid),{
+      uid, nombre, email,
+      rol: 'usuario',
+      estado: 'pendiente',
+      plan: 'free',
+      creadoEn: new Date().toISOString(),
+      aprobadoEn: null
+    });
+    // Cerrar sesión inmediatamente — no puede entrar hasta ser aprobado
+    await window._fbSignOut(window._auth);
+    // Mostrar mensaje de espera
+    document.getElementById('register-form').style.display='none';
+    document.getElementById('register-pending').style.display='block';
+    toast('Solicitud enviada — el administrador revisará tu cuenta','info',4000);
+  }catch(e){
+    const msgs={
+      'auth/email-already-in-use':'Este correo ya tiene una cuenta registrada',
+      'auth/invalid-email':'Correo electrónico no válido',
+      'auth/weak-password':'Contraseña muy débil — usa al menos 6 caracteres'
+    };
+    errEl.textContent=msgs[e.code]||('Error: '+e.message);
     errEl.style.display='block';
-    document.getElementById('login-pass').value='';
-    return;
-  }
-
-  // ── LOGIN LOCAL INMEDIATO ──────────────────────────────────────────────────────────────────
-  // Ingresar sin esperar Firebase para que el acceso sea instantaneo
-  currentUser = found;
-  localStorage.setItem('ef_session', JSON.stringify({user:found.user}));
-  document.getElementById('login-screen').style.display='none';
-  applyRoleRestrictions();
-  if(found.rol==='invitado'){
-    setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
-  } else {
-    setTimeout(checkTC, 300);
-  }
-
-  // ── SINCRONIZACION CON FIREBASE EN SEGUNDO PLANO ──────────────────────────────────────────
-  // No bloquea el acceso — si falla, el usuario sigue usando la app offline
-  const emailMap = EF_EMAIL_MAP[user];
-  if(window._firebaseReady && emailMap){
-    try{
-      const cred = await window._fbSignIn(window._auth, emailMap.email, pass);
-      const uid = cred.user.uid;
-      if(found.rol==='admin') _adminUid = uid;
-      else {
-        const savedAdminUid = localStorage.getItem('ef_admin_uid');
-        _adminUid = savedAdminUid || uid;
-      }
-      if(found.rol==='admin') localStorage.setItem('ef_admin_uid', uid);
-      toast('Sincronizando datos ☁...','info',2000);
-      await _loadFromFirestore(_adminUid);
-      // Refrescar TODOS los módulos visibles con los datos recién cargados de Firebase
-      renderSidebar();
-      // Refrescar pantalla activa para mostrar notas, presupuesto y otros datos en nube
-      const activeScreen = document.querySelector('.screen.active');
-      if(activeScreen){
-        const sid = activeScreen.id;
-        if(sid==='dayday') renderDDTab(ddTab);
-        if(sid==='loans') renderDashboard();
-        if(sid==='cliente'){ loadDeudas(); renderClienteDashboard(); }
-      }
-      toast('Datos sincronizados ☁ ✓','info',2500);
-    }catch(fbErr){
-      console.warn('Firebase auth (offline mode):', fbErr.message);
-    }
   }
 }
 
-async function doLogout(){
-  if(window._firebaseReady && window._auth){
-    try{ await window._fbSignOut(window._auth); }catch(e){}
+// ── Login con Firebase Auth real ──────────────────────────────────────────────
+async function doLogin(){
+  const email = document.getElementById('login-user').value.trim().toLowerCase();
+  const pass  = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display='none';
+
+  if(!email||!pass){errEl.textContent='Ingrese correo y contraseña';errEl.style.display='block';return;}
+  if(!window._firebaseReady){errEl.textContent='Sin conexión con el servidor';errEl.style.display='block';return;}
+
+  const btn=document.querySelector('#login-panel .login-btn');
+  if(btn){btn.textContent='Verificando...';btn.disabled=true;}
+
+  try{
+    const cred = await window._fbSignIn(window._auth, email, pass);
+    const uid  = cred.user.uid;
+
+    // Cargar perfil desde Firestore
+    const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',uid));
+    if(!snap.exists()){
+      await window._fbSignOut(window._auth);
+      errEl.textContent='Cuenta no encontrada. Regístrese primero.';
+      errEl.style.display='block';
+      if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
+      return;
+    }
+
+    const perfil = snap.data();
+
+    // Verificar estado
+    if(perfil.estado==='pendiente'){
+      await window._fbSignOut(window._auth);
+      errEl.textContent='Tu cuenta está pendiente de aprobación. Te notificaremos cuando esté lista.';
+      errEl.style.display='block';
+      if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
+      return;
+    }
+    if(perfil.estado==='suspendido'){
+      await window._fbSignOut(window._auth);
+      errEl.textContent='Tu cuenta ha sido suspendida. Contacta al administrador.';
+      errEl.style.display='block';
+      if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
+      return;
+    }
+
+    // Usuario aprobado — construir objeto currentUser
+    const rol = perfil.rol || 'usuario';
+    const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
+    currentUser = {
+      uid,
+      user: uid,
+      nombre: perfil.nombre || email.split('@')[0],
+      email: perfil.email || email,
+      rol: esAdmin ? 'admin' : rol,
+      plan: perfil.plan || 'free',
+      permisos: ROL_PERMISOS[esAdmin ? 'admin' : rol] || ROL_PERMISOS.usuario
+    };
+
+    // Cada usuario tiene sus propios datos en Firestore bajo su UID
+    _adminUid = uid;
+    localStorage.setItem('ef_admin_uid', uid);
+
+    // Ocultar login y entrar
+    document.getElementById('login-screen').style.display='none';
+    applyRoleRestrictions();
+
+    // Cargar datos propios desde Firestore
+    toast('Cargando tus datos ☁...','info',2000);
+    await _loadFromFirestore(uid);
+    load(); // también desde localStorage como respaldo
+    renderSidebar();
+
+    if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
+
+    if(currentUser.rol==='invitado'){
+      setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
+    } else {
+      setTimeout(checkTC,300);
+    }
+    toast('Bienvenido, '+currentUser.nombre+' ✓','success',2500);
+
+  }catch(e){
+    const msgs={
+      'auth/user-not-found':'No existe una cuenta con ese correo',
+      'auth/wrong-password':'Contraseña incorrecta',
+      'auth/invalid-credential':'Correo o contraseña incorrectos',
+      'auth/too-many-requests':'Demasiados intentos. Intente más tarde.',
+      'auth/network-request-failed':'Sin conexión a internet'
+    };
+    errEl.textContent=msgs[e.code]||('Error: '+e.message);
+    errEl.style.display='block';
+    document.getElementById('login-pass').value='';
+    if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
   }
-  localStorage.removeItem('ef_session');
-  currentUser = null;
-  activeId = null;
+}
+
+// ── Recuperar contraseña ──────────────────────────────────────────────────────
+async function doResetPassword(){
+  const email=document.getElementById('login-user').value.trim();
+  if(!email){toast('Ingrese su correo primero','error');return;}
+  if(!window._firebaseReady){toast('Sin conexión','error');return;}
+  try{
+    await window._fbResetPassword(window._auth,email);
+    toast('Correo de recuperación enviado a '+email,'success',4000);
+  }catch(e){
+    toast('No se pudo enviar: '+e.message,'error',4000);
+  }
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+async function doLogout(){
+  if(window._firebaseReady&&window._auth){
+    try{await window._fbSignOut(window._auth);}catch(e){}
+  }
+  currentUser=null;
+  _adminUid=null;
+  activeId=null;
+  // Limpiar datos en memoria para que no queden datos del usuario anterior
+  clients=[];caja=[];notes=[];pockets=[];deudas=[];
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById('home').classList.add('active');
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
   document.getElementById('login-screen').style.display='flex';
+  // Reset register form
+  const rf=document.getElementById('register-form');
+  const rp=document.getElementById('register-pending');
+  if(rf) rf.style.display='block';
+  if(rp) rp.style.display='none';
+  switchLoginTab('login');
   toast('Sesión cerrada','info');
 }
 
@@ -7501,12 +7626,111 @@ function canDo(permiso){
   return currentUser.permisos[permiso]===true;
 }
 
+// ── Panel admin: gestionar usuarios ──────────────────────────────────────────
+async function renderAdminUsuarios(container){
+  if(!container) return;
+  if(!currentUser||currentUser.rol!=='admin'){
+    container.innerHTML='<div style="padding:20px;color:var(--text3);font-size:12px">Sin acceso.</div>';
+    return;
+  }
+  container.innerHTML='<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Cargando usuarios...</div>';
+  try{
+    const snap = await window._fbGetDocs(window._fbCollection(window._db,'usuarios'));
+    const usuarios=[];
+    snap.forEach(d=>usuarios.push(d.data()));
+    usuarios.sort((a,b)=>{
+      const ord={pendiente:0,activo:1,suspendido:2};
+      return (ord[a.estado]||1)-(ord[b.estado]||1);
+    });
+
+    const pendientes=usuarios.filter(u=>u.estado==='pendiente').length;
+    let html='<div style="padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
+      +'<div style="font-size:13px;font-weight:800;color:var(--text)">Usuarios de Cuadre</div>'
+      +(pendientes>0?'<span style="background:rgba(255,167,38,.2);color:#FFB300;border:1px solid rgba(255,167,38,.4);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800">'+pendientes+' pendiente'+(pendientes>1?'s':'')+'</span>':'')
+      +'</div>';
+
+    if(usuarios.length===0){
+      html+='<div style="padding:24px;text-align:center;color:var(--text3);font-size:12px">No hay usuarios registrados aún.</div>';
+    } else {
+      html+=usuarios.map(u=>{
+        const badgeClass=u.estado==='pendiente'?'badge-pendiente':u.estado==='suspendido'?'badge-suspendido':'badge-activo';
+        const badgeLabel=u.estado==='pendiente'?'Pendiente':u.estado==='suspendido'?'Suspendido':'Activo';
+        const rolLabel={admin:'Admin',usuario:'Usuario',cobrador:'Cobrador',lectura:'Lectura',invitado:'Invitado'}[u.rol]||u.rol;
+        let btns='';
+        if(u.estado==='pendiente'){
+          btns='<button class="admin-btn-sm" style="background:rgba(102,187,106,.2);color:#66bb6a;border:1px solid rgba(102,187,106,.4)" onclick="adminAprobar(\''+u.uid+'\')">✓ Aprobar</button>'
+            +' <button class="admin-btn-sm" style="background:rgba(239,83,80,.1);color:var(--red);border:1px solid rgba(239,83,80,.3)" onclick="adminRechazar(\''+u.uid+'\')">✕ Rechazar</button>';
+        } else if(u.estado==='activo'&&u.email!==SUPER_ADMIN_EMAIL){
+          btns='<select onchange="adminCambiarRol(\''+u.uid+'\',this.value)" style="background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:10px;padding:3px 5px;font-family:Nunito,sans-serif">'
+            +'<option value="usuario"'+(u.rol==='usuario'?' selected':'')+'>Usuario</option>'
+            +'<option value="cobrador"'+(u.rol==='cobrador'?' selected':'')+'>Cobrador</option>'
+            +'<option value="lectura"'+(u.rol==='lectura'?' selected':'')+'>Lectura</option>'
+            +'<option value="invitado"'+(u.rol==='invitado'?' selected':'')+'>Invitado</option>'
+            +'</select>'
+            +' <button class="admin-btn-sm" style="background:rgba(239,83,80,.1);color:var(--red);border:1px solid rgba(239,83,80,.3)" onclick="adminSuspender(\''+u.uid+'\')">Suspender</button>';
+        } else if(u.estado==='suspendido'){
+          btns='<button class="admin-btn-sm" style="background:rgba(102,187,106,.2);color:#66bb6a;border:1px solid rgba(102,187,106,.4)" onclick="adminAprobar(\''+u.uid+'\')">Reactivar</button>';
+        }
+        return '<div class="admin-user-row">'
+          +'<div class="admin-user-info">'
+          +'<div class="admin-user-name">'+u.nombre+'</div>'
+          +'<div class="admin-user-email">'+u.email+' · <span style="color:var(--amber)">'+rolLabel+'</span></div>'
+          +'</div>'
+          +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">'
+          +'<span class="admin-user-badge '+badgeClass+'">'+badgeLabel+'</span>'
+          +btns
+          +'</div></div>';
+      }).join('');
+    }
+    container.innerHTML='<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)">'+html+'</div>';
+  }catch(e){
+    container.innerHTML='<div style="padding:20px;color:var(--red);font-size:12px">Error: '+e.message+'</div>';
+  }
+}
+
+async function adminAprobar(uid){
+  try{
+    await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{
+      estado:'activo',aprobadoEn:new Date().toISOString()
+    });
+    toast('Usuario aprobado ✓','success');
+    const c=document.getElementById('cuadre-admin-usuarios');
+    if(c) renderAdminUsuarios(c);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function adminRechazar(uid){
+  if(!confirm('¿Rechazar esta solicitud? El usuario será eliminado.')) return;
+  try{
+    await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{estado:'rechazado'});
+    toast('Solicitud rechazada','info');
+    const c=document.getElementById('cuadre-admin-usuarios');
+    if(c) renderAdminUsuarios(c);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function adminSuspender(uid){
+  if(!confirm('¿Suspender este usuario?')) return;
+  try{
+    await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{estado:'suspendido'});
+    toast('Usuario suspendido','info');
+    const c=document.getElementById('cuadre-admin-usuarios');
+    if(c) renderAdminUsuarios(c);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function adminCambiarRol(uid,nuevoRol){
+  try{
+    await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{rol:nuevoRol});
+    toast('Rol actualizado: '+nuevoRol,'success');
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
 function applyRoleRestrictions(){
   if(!currentUser) return;
-  const roleColors={admin:'#E91E8C',cobrador:'#FFB300',lectura:'#00BCD4',invitado:'#4CAF50'};
-  const roleLabels={admin:'Admin',cobrador:'Cobrador',lectura:'Lectura',invitado:'Invitado'};
+  const roleColors={admin:'#E91E8C',cobrador:'#FFB300',lectura:'#00BCD4',invitado:'#4CAF50',usuario:'#7070ff'};
+  const roleLabels={admin:'Admin',cobrador:'Cobrador',lectura:'Lectura',invitado:'Invitado',usuario:'Usuario'};
 
-  // ── User badge in topbar ──────────────────────────────────────────────────
   const topbar=document.querySelector('.topbar');
   let badge=document.getElementById('user-badge');
   if(!badge&&topbar){
@@ -7523,18 +7747,13 @@ function applyRoleRestrictions(){
       +'<button onclick="doLogout()" style="background:none;border:1px solid #2a2a45;border-radius:6px;color:#8888aa;font-size:10px;padding:2px 7px;cursor:pointer;font-family:Nunito,sans-serif" title="Cerrar sesión">⏻ Salir</button>';
   }
 
-  // ── Hide Prestamista card for invitado ──────────────────────────────────────
-  const cardPrestamista = document.getElementById('card-prestamista');
-  if(cardPrestamista){
-    cardPrestamista.style.display = currentUser.rol==='invitado' ? 'none' : '';
-  }
+  const cardPrestamista=document.getElementById('card-prestamista');
+  if(cardPrestamista) cardPrestamista.style.display=currentUser.rol==='invitado'?'none':'';
 
-  // ── Hide/show export bar buttons by role ─────────────────────────────────
   setTimeout(()=>{
     const exportBtns=document.getElementById('export-btns');
     if(exportBtns){
       const btns=exportBtns.querySelectorAll('button');
-      // Resp(0) Car(1) Excel(2) Import(3) Reportes(4)
       if(btns[2]) btns[2].style.display=canDo('exportar')?'':'none';
       if(btns[3]) btns[3].style.display=canDo('importar')?'':'none';
       if(btns[4]) btns[4].style.display=canDo('verReportes')?'':'none';
@@ -12032,21 +12251,61 @@ window.addEventListener('DOMContentLoaded',()=>{
     <div class="login-logo-sub">Sus cuentas, bajo control</div>
   </div>
   <div class="login-card">
-    <div class="login-card-title">Iniciar sesión</div>
-    <div class="login-card-sub">Ingrese sus credenciales para continuar</div>
-    <div class="login-error" id="login-error">Usuario o contraseña incorrectos</div>
-    <div class="login-fr">
-      <label>USUARIO</label>
-      <input type="text" id="login-user" placeholder="su usuario" autocomplete="username" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+    <!-- Tabs login / registro -->
+    <div class="login-tab-bar">
+      <button class="login-tab active" id="ltab-login" onclick="switchLoginTab('login')">Iniciar sesión</button>
+      <button class="login-tab" id="ltab-register" onclick="switchLoginTab('register')">Crear cuenta</button>
     </div>
-    <div class="login-fr">
-      <label>CONTRASEÑA</label>
-      <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+
+    <!-- Panel login -->
+    <div id="login-panel">
+      <div class="login-error" id="login-error">Correo o contraseña incorrectos</div>
+      <div class="login-fr">
+        <label>CORREO ELECTRÓNICO</label>
+        <input type="email" id="login-user" placeholder="correo@ejemplo.com" autocomplete="email" onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()">
+      </div>
+      <div class="login-fr">
+        <label>CONTRASEÑA</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+      <div style="text-align:center;margin-top:10px">
+        <button onclick="doResetPassword()" style="background:none;border:none;color:#8888aa;font-size:11px;cursor:pointer;font-family:'Nunito',sans-serif;text-decoration:underline">¿Olvidó su contraseña?</button>
+      </div>
     </div>
-    <button class="login-btn" onclick="doLogin()">Ingresar →</button>
+
+    <!-- Panel registro -->
+    <div id="register-panel" style="display:none">
+      <div class="login-error" id="register-error">Error al registrar</div>
+      <div id="register-pending" class="login-pending" style="display:none">
+        <div class="login-pending-icon">⏳</div>
+        <div class="login-pending-title">Solicitud enviada</div>
+        <div class="login-pending-sub">Tu cuenta está en revisión.<br>El administrador te notificará cuando esté aprobada.</div>
+      </div>
+      <div id="register-form">
+        <div class="login-fr">
+          <label>NOMBRE COMPLETO</label>
+          <input type="text" id="reg-nombre" placeholder="Ej: Juan Pérez" autocomplete="name">
+        </div>
+        <div class="login-fr">
+          <label>CORREO ELECTRÓNICO</label>
+          <input type="email" id="reg-email" placeholder="correo@ejemplo.com" autocomplete="email">
+        </div>
+        <div class="login-fr">
+          <label>CONTRASEÑA</label>
+          <input type="password" id="reg-pass" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+        </div>
+        <div class="login-fr">
+          <label>CONFIRMAR CONTRASEÑA</label>
+          <input type="password" id="reg-pass2" placeholder="Repita su contraseña" onkeydown="if(event.key==='Enter')doRegister()">
+        </div>
+        <button class="login-btn" onclick="doRegister()">Solicitar acceso →</button>
+      </div>
+    </div>
+
     <div style="text-align:center;margin-top:12px" id="login-role-wrap" style="display:none"></div>
   </div>
-  <div class="login-footer">Cuadre v2.0 · Colombia 2026</div>
+  <div class="login-footer">Cuadre v2.1 · Colombia 2026</div>
 </div>
 
 <!-- Terms & Conditions Modal -->
