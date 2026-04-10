@@ -2333,15 +2333,15 @@ function save(){
   });
 }
 
-async function _loadFromFirestore(uid){
-  const data = await _fsLoad(uid);
-  if(!data) return false;
+// UID del admin anterior (datos históricos antes de la migración)
+const LEGACY_ADMIN_UID = 'tSQJzYqCbmeeCNj686qR3lOUWwa2';
+
+function _applyFirestoreData(data){
   if(data.clients){clients=data.clients;localStorage.setItem(SK,JSON.stringify(clients));}
   if(data.caja){caja=data.caja;localStorage.setItem(CK,JSON.stringify(caja));}
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.deudas_admin){deudas=data.deudas_admin;localStorage.setItem('ef_deudas_admin',JSON.stringify(deudas));}
-  // Restaurar presupuesto desde nube (merge: conserva meses locales + agrega/actualiza nube)
   try{
     if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
       const local=JSON.parse(localStorage.getItem(BK)||'[]')||[];
@@ -2350,7 +2350,57 @@ async function _loadFromFirestore(uid){
       localStorage.setItem(BK,JSON.stringify(merged));
     }
   }catch(e){console.warn('Budget restore error',e);}
-  return true;
+}
+
+function _hasRealData(data){
+  if(!data) return false;
+  // Considera que hay datos reales si tiene clientes, caja, deudas o bolsillos con contenido
+  return (data.clients&&data.clients.length>0) ||
+         (data.caja&&data.caja.length>0) ||
+         (data.deudas_admin&&data.deudas_admin.length>0) ||
+         (data.pockets&&data.pockets.length>0);
+}
+
+async function _loadFromFirestore(uid){
+  // 1. Intentar cargar datos del UID actual
+  const data = await _fsLoad(uid);
+
+  if(_hasRealData(data)){
+    _applyFirestoreData(data);
+    return true;
+  }
+
+  // 2. Fallback: buscar en UID anterior (migración de datos)
+  if(uid !== LEGACY_ADMIN_UID){
+    console.log('Sin datos en UID actual, buscando en UID legado...');
+    const legacyData = await _fsLoad(LEGACY_ADMIN_UID);
+    if(_hasRealData(legacyData)){
+      console.log('Datos encontrados en UID legado — migrando al nuevo UID...');
+      _applyFirestoreData(legacyData);
+      // Migrar datos al nuevo UID para que la próxima vez carguen directo
+      try{
+        await window._fbSetDoc(window._fbDoc(window._db,'cuadre',uid), {
+          clients: legacyData.clients||[],
+          caja: legacyData.caja||[],
+          notes: legacyData.notes||[],
+          pockets: legacyData.pockets||[],
+          budgets: legacyData.budgets||[],
+          deudas_admin: legacyData.deudas_admin||[],
+          updatedAt: new Date().toISOString(),
+          migratedFrom: LEGACY_ADMIN_UID
+        }, {merge:true});
+        toast('✅ Datos migrados correctamente a tu nueva cuenta','success',4000);
+      }catch(e){
+        console.warn('Error migrando datos:', e);
+      }
+      return true;
+    }
+  }
+
+  // 3. Si hay datos en el UID actual aunque estén vacíos, aplicarlos igual
+  if(data){ _applyFirestoreData(data); return true; }
+
+  return false;
 }
 
 load();
@@ -6489,7 +6539,27 @@ function calcSimulador(){
 
   // Unidades para ser rentable (20%)
   if(unidsRentable!==null && unidsRentable>0 && isFinite(unidsRentable)){
-    rows+=simRow('Para margen 20% necesitas', `${unidsRentable} unidades/mes`, 'var(--purple)', fmtN(unidsRentable*precio)+' en ventas');
+    rows+=simRow('Para ser rentable (20%) vende', `${unidsRentable} unidades/mes`, 'var(--purple)', '= '+fmtN(unidsRentable*precio)+' en ventas al mes');
+  }
+
+  // Resumen de rentabilidad en lenguaje claro
+  if(peUnids!==null && precio>0){
+    const faltanPE = Math.max(0, peUnids - unids);
+    const costoMeta = costoUnitario>0 ? Math.round(precio*0.7) : null; // costo máximo para margen 30%
+    let resumen = '';
+    if(unids===0){
+      resumen = `Para cubrir tus costos fijos debes vender mínimo <strong>${peUnids} unidades/mes</strong> a ${fmtN(precio)} c/u.`;
+    } else if(faltanPE>0){
+      resumen = `Te faltan <strong>${faltanPE} ventas</strong> para no perder dinero. Actualmente cubres el ${Math.round((unids/peUnids)*100)}% del punto de equilibrio.`;
+    } else {
+      resumen = `✅ Ya superaste el punto de equilibrio. Cada unidad adicional te genera <strong>${fmtN(margenUni)} de ganancia pura</strong>.`;
+    }
+    if(costoMeta && costoUnitario > precio*0.8){
+      resumen += ` ⚠️ Tus costos de materias primas son muy altos (${((costoUnitario/precio)*100).toFixed(0)}% del precio). Para tener margen del 30%, el costo por unidad no debería superar ${fmtN(costoMeta)}.`;
+    }
+    rows += `<div style="padding:12px 14px;border-bottom:1px solid var(--border);background:rgba(80,80,255,0.04)">
+      <div style="font-size:11px;color:var(--text2);line-height:1.6">${resumen}</div>
+    </div>`;
   }
 
   // ROI y Payback
