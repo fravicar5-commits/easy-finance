@@ -6439,8 +6439,8 @@ function simCambiarProducto(){
   const prod = cat.productos[idx];
   if(!prod) return;
 
-  // Cargar materias primas
-  _simMaterias = prod.materias.map(m=>({nombre:m.nombre, costo:m.costo, cantidad:1}));
+  // Cargar materias primas (rendimiento = cuántas unidades salen de 1 unidad del insumo)
+  _simMaterias = prod.materias.map(m=>({nombre:m.nombre, costo:m.costo, rendimiento:10}));
 
   // Precio sugerido
   const precioEl = document.getElementById('sim-precio');
@@ -6456,21 +6456,37 @@ function simRenderMaterias(){
   const list = document.getElementById('sim-materias-list');
   if(!list) return;
   const IS='background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:6px 8px;color:var(--text);font-size:11px;outline:none;font-family:Nunito,sans-serif;width:100%';
-  list.innerHTML = _simMaterias.map((m,i)=>`
-    <div style="display:grid;grid-template-columns:1fr 90px 70px 28px;gap:6px;margin-bottom:6px;align-items:center">
-      <input type="text" value="${m.nombre}" style="${IS}" placeholder="Materia prima" oninput="_simMaterias[${i}].nombre=this.value;calcSimulador()">
-      <input type="number" value="${m.costo}" min="0" style="${IS};text-align:right" placeholder="Costo $" oninput="_simMaterias[${i}].costo=parseFloat(this.value)||0;calcSimulador()">
-      <input type="number" value="${m.cantidad}" min="0.01" step="0.01" style="${IS};text-align:right" placeholder="Cant." oninput="_simMaterias[${i}].cantidad=parseFloat(this.value)||1;calcSimulador()">
-      <button onclick="simEliminarMateria(${i})" style="background:rgba(255,80,80,.1);border:none;border-radius:6px;color:var(--red);cursor:pointer;padding:4px;font-size:14px;line-height:1">✕</button>
-    </div>`).join('');
-  // Header labels
+  list.innerHTML = _simMaterias.map((m,i)=>{
+    const rend = m.rendimiento||10;
+    const costoPorUnidad = rend>0 ? (m.costo/rend) : 0;
+    return `
+    <div style="margin-bottom:8px;background:var(--surface2);border-radius:var(--radius-xs);padding:8px">
+      <div style="display:grid;grid-template-columns:1fr 28px;gap:6px;margin-bottom:6px;align-items:center">
+        <input type="text" value="${m.nombre}" style="${IS}" placeholder="Insumo" oninput="_simMaterias[${i}].nombre=this.value;calcSimulador()">
+        <button onclick="simEliminarMateria(${i})" style="background:rgba(255,80,80,.1);border:none;border-radius:6px;color:var(--red);cursor:pointer;padding:4px;font-size:14px;line-height:1">✕</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center">
+        <div>
+          <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:3px">Costo del insumo ($)</div>
+          <input type="number" value="${m.costo}" min="0" style="${IS}" placeholder="Ej: 4000" oninput="_simMaterias[${i}].costo=parseFloat(this.value)||0;simRenderMaterias();calcSimulador()">
+        </div>
+        <div>
+          <div style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:3px">¿Cuántas unidades produces con eso?</div>
+          <input type="number" value="${rend}" min="1" step="1" style="${IS}" placeholder="Ej: 20" oninput="_simMaterias[${i}].rendimiento=parseFloat(this.value)||1;simRenderMaterias();calcSimulador()">
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:5px;padding-top:5px;border-top:1px solid var(--border)">
+        💡 Costo por unidad: <strong style="color:var(--green)">$${Math.round(costoPorUnidad).toLocaleString('es-CO')}</strong>
+      </div>
+    </div>`;
+  }).join('');
   if(_simMaterias.length>0){
-    list.insertAdjacentHTML('afterbegin','<div style="display:grid;grid-template-columns:1fr 90px 70px 28px;gap:6px;margin-bottom:4px"><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase">Insumo</span><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;text-align:right">Costo unit.</span><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;text-align:right">Cantidad</span><span></span></div>');
+    list.insertAdjacentHTML('afterbegin','<div style="font-size:10px;color:var(--text3);margin-bottom:8px">Ingresa el costo del insumo y cuántas unidades produces con él. Ej: con 1 kg de masa ($4.000) haces 20 empanadas → costo por empanada = $200</div>');
   }
 }
 
 function simAgregarMateria(){
-  _simMaterias.push({nombre:'Nueva materia',costo:0,cantidad:1});
+  _simMaterias.push({nombre:'Nuevo insumo',costo:0,rendimiento:10});
   simRenderMaterias();
   calcSimulador();
 }
@@ -6491,8 +6507,8 @@ function calcSimulador(){
   const iaWrap  = document.getElementById('sim-ia-wrap');
   if(!resEl) return;
 
-  // Costo variable por unidad desde materias primas
-  const costoUnitario = _simMaterias.reduce((s,m)=>s+(m.costo*(m.cantidad||1)),0);
+  // Costo variable por unidad desde materias primas (costo / rendimiento)
+  const costoUnitario = _simMaterias.reduce((s,m)=>s+(m.costo/Math.max(m.rendimiento||10,1)),0);
   const ing     = precio * unids;
   const cosV    = costoUnitario * unids;
   const costoTotal = cosV + cosF;
@@ -6612,7 +6628,7 @@ async function analizarSimulador(){
   const payback = utilidad>0&&inv>0?inv/utilidad:null;
   const fmtN = v=>'$'+Math.round(v).toLocaleString('es-CO');
 
-  const materiasDetalle = _simMaterias.map(m=>`  • ${m.nombre}: ${fmtN(m.costo)} x ${m.cantidad} = ${fmtN(m.costo*m.cantidad)}`).join('\n');
+  const materiasDetalle = _simMaterias.map(m=>{const rend=m.rendimiento||10;return `  • ${m.nombre}: ${fmtN(m.costo)} rinde ${rend} unidades → ${fmtN(Math.round(m.costo/rend))} por unidad`;}).join('\n');
 
   const prompt = `Eres un asesor financiero experto en negocios colombianos. El usuario quiere montar un negocio de "${nombreProd}" en el sector "${sector}" en "${ciudad}".
 
