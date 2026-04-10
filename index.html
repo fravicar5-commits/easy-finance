@@ -5744,6 +5744,124 @@ const SIM_SECTORES=[
   'Tecnología / Software','Educación / Capacitación','Manufactura','Otro'
 ];
 
+const SIM_CATALOGO = {
+  'Restaurante / Comidas': { emoji:'🍽️', productos:[
+    { nombre:'Pizza', precio:25000, materias:[
+      {nombre:'Harina de trigo (kg)',costo:3500},{nombre:'Queso mozzarella (kg)',costo:18000},
+      {nombre:'Salsa de tomate (lt)',costo:4000},{nombre:'Pepperoni / topping (kg)',costo:22000},{nombre:'Empaques / cajas',costo:800}]},
+    { nombre:'Hamburguesa', precio:18000, materias:[
+      {nombre:'Pan de hamburguesa (und)',costo:1200},{nombre:'Carne molida (kg)',costo:16000},
+      {nombre:'Queso tajado (kg)',costo:14000},{nombre:'Verduras (lechuga, tomate)',costo:3000},
+      {nombre:'Salsas (mayonesa, ketchup)',costo:2500},{nombre:'Papas fritas (kg)',costo:4000}]},
+    { nombre:'Hot Dog', precio:8000, materias:[
+      {nombre:'Salchicha (kg)',costo:9000},{nombre:'Pan de hot dog (und)',costo:800},
+      {nombre:'Salsas y toppings',costo:2000},{nombre:'Empaques',costo:300}]},
+    { nombre:'Empanadas', precio:3000, materias:[
+      {nombre:'Masa de maíz (kg)',costo:4000},{nombre:'Relleno carne/pollo (kg)',costo:14000},
+      {nombre:'Papa cocida (kg)',costo:2500},{nombre:'Aceite para freír (lt)',costo:5500},{nombre:'Especias y condimentos',costo:1500}]},
+    { nombre:'Bandeja Paisa', precio:22000, materias:[
+      {nombre:'Frijoles (kg)',costo:6000},{nombre:'Arroz (kg)',costo:3500},{nombre:'Carne molida (kg)',costo:16000},
+      {nombre:'Chorizo (kg)',costo:12000},{nombre:'Chicharrón (kg)',costo:14000},{nombre:'Huevo (cubeta x30)',costo:14000},{nombre:'Plátano maduro (racimo)',costo:5000}]},
+    { nombre:'Perro Caliente', precio:7000, materias:[
+      {nombre:'Salchicha (kg)',costo:9000},{nombre:'Pan (und)',costo:800},
+      {nombre:'Papa rallada (kg)',costo:2000},{nombre:'Salsas variadas',costo:2500}]},
+    { nombre:'Arepas', precio:3500, materias:[
+      {nombre:'Harina de maíz (kg)',costo:4500},{nombre:'Queso blanco (kg)',costo:12000},
+      {nombre:'Mantequilla (kg)',costo:9000},{nombre:'Gas / carbón (mes)',costo:2000}]},
+    { nombre:'Sanduches / Subs', precio:12000, materias:[
+      {nombre:'Pan (und)',costo:1500},{nombre:'Jamón / pollo (kg)',costo:14000},
+      {nombre:'Queso (kg)',costo:14000},{nombre:'Verduras frescas',costo:3000},{nombre:'Salsas',costo:2000}]},
+  ]},
+  'Tienda / Minorista': { emoji:'🛒', productos:[
+    { nombre:'Tienda de barrio', precio:0, materias:[
+      {nombre:'Gaseosas (caja x24)',costo:48000},{nombre:'Leche (lt)',costo:3000},{nombre:'Pan (docena)',costo:8000},
+      {nombre:'Huevos (cubeta)',costo:14000},{nombre:'Arroz (bulto 50kg)',costo:120000},{nombre:'Aceite (lt)',costo:8000}]},
+    { nombre:'Papelería', precio:0, materias:[
+      {nombre:'Cuadernos (docena)',costo:36000},{nombre:'Esferos (caja x24)',costo:18000},
+      {nombre:'Resmas de papel',costo:15000},{nombre:'Fotocopias (millar)',costo:25000}]},
+    { nombre:'Miscelánea / Todo a $', precio:0, materias:[
+      {nombre:'Artículos hogar x lote',costo:200000},{nombre:'Juguetería x lote',costo:150000},{nombre:'Cosméticos x lote',costo:180000}]},
+  ]},
+  'Servicios profesionales': { emoji:'💼', productos:[
+    { nombre:'Contador / Asesoría', precio:150000, materias:[
+      {nombre:'Software contable (mes)',costo:80000},{nombre:'Internet y comunicación',costo:50000},{nombre:'Papelería y útiles',costo:20000}]},
+    { nombre:'Abogado', precio:200000, materias:[
+      {nombre:'Suscripciones legales',costo:100000},{nombre:'Papelería y radicados',costo:30000},{nombre:'Transporte',costo:50000}]},
+    { nombre:'Diseño gráfico / Web', precio:300000, materias:[
+      {nombre:'Software Adobe/Figma (mes)',costo:120000},{nombre:'Hosting y dominio',costo:30000},{nombre:'Internet',costo:80000}]},
+    { nombre:'Consultoría / Coaching', precio:250000, materias:[
+      {nombre:'Plataforma videollamadas',costo:40000},{nombre:'Materiales digitales',costo:20000},{nombre:'Marketing digital',costo:100000}]},
+  ]},
+  'Construcción / Remodelaciones': { emoji:'🏗️', productos:[
+    { nombre:'Pintura de interiores', precio:80000, materias:[
+      {nombre:'Pintura (galón)',costo:55000},{nombre:'Rodillos y brochas',costo:15000},
+      {nombre:'Masilla / estuco (kg)',costo:8000},{nombre:'Lija y accesorios',costo:5000}]},
+    { nombre:'Enchape / Pisos', precio:120000, materias:[
+      {nombre:'Baldosas (m²)',costo:35000},{nombre:'Pegante (bulto)',costo:22000},
+      {nombre:'Boquilla (kg)',costo:8000},{nombre:'Herramientas',costo:10000}]},
+    { nombre:'Instalaciones eléctricas', precio:150000, materias:[
+      {nombre:'Cable eléctrico (rollo)',costo:85000},{nombre:'Tomacorrientes / interruptores',costo:25000},
+      {nombre:'Tubería conduit',costo:20000},{nombre:'Breakers / tacos',costo:35000}]},
+  ]},
+  'Transporte / Logística': { emoji:'🚗', productos:[
+    { nombre:'Domicilios en moto', precio:5000, materias:[
+      {nombre:'Gasolina (galón)',costo:12000},{nombre:'Mantenimiento moto (mes)',costo:80000},
+      {nombre:'SOAT y seguros (mes)',costo:25000},{nombre:'Bolsa / empaque domicilio',costo:300}]},
+    { nombre:'Taxi / Plataforma', precio:8000, materias:[
+      {nombre:'Gasolina (galón)',costo:12000},{nombre:'Mantenimiento vehículo (mes)',costo:150000},
+      {nombre:'Seguro + SOAT (mes)',costo:80000},{nombre:'Comisión plataforma (mes)',costo:200000}]},
+    { nombre:'Fletes pequeños', precio:80000, materias:[
+      {nombre:'Gasolina por viaje',costo:30000},{nombre:'Embalaje / costales',costo:5000},{nombre:'Mantenimiento camión (mes)',costo:300000}]},
+  ]},
+  'Salud / Estética': { emoji:'💇', productos:[
+    { nombre:'Corte de cabello', precio:20000, materias:[
+      {nombre:'Cuchillas / hojas (und)',costo:3000},{nombre:'Productos capilares (mes)',costo:50000},
+      {nombre:'Toallas y consumibles',costo:20000},{nombre:'Energía eléctrica (mes)',costo:60000}]},
+    { nombre:'Manicure / Pedicure', precio:25000, materias:[
+      {nombre:'Esmaltes y gelish',costo:8000},{nombre:'Limas y accesorios',costo:5000},
+      {nombre:'Acetona y removedor',costo:3000},{nombre:'Cremas hidratantes',costo:4000}]},
+    { nombre:'Masajes / Spa', precio:60000, materias:[
+      {nombre:'Aceites esenciales',costo:15000},{nombre:'Cremas y lociones',costo:20000},
+      {nombre:'Sábanas y toallas',costo:8000},{nombre:'Aromaterapia',costo:5000}]},
+    { nombre:'Depilación', precio:30000, materias:[
+      {nombre:'Cera depilatoria (kg)',costo:18000},{nombre:'Bandas y espátulas',costo:8000},{nombre:'Lociones post-depilación',costo:12000}]},
+  ]},
+  'Tecnología / Software': { emoji:'💻', productos:[
+    { nombre:'Soporte técnico PC', precio:60000, materias:[
+      {nombre:'Herramientas técnicas',costo:5000},{nombre:'Repuestos básicos (mes)',costo:50000},
+      {nombre:'Software y licencias',costo:30000},{nombre:'Transporte',costo:15000}]},
+    { nombre:'Desarrollo de apps', precio:2000000, materias:[
+      {nombre:'Herramientas desarrollo (mes)',costo:150000},{nombre:'Hosting y servidores',costo:80000},
+      {nombre:'Internet',costo:80000},{nombre:'Subcontratistas (mes)',costo:500000}]},
+    { nombre:'Venta de equipos', precio:1800000, materias:[
+      {nombre:'Costo equipo (und)',costo:1200000},{nombre:'Accesorios y periféricos',costo:80000},{nombre:'Garantía y soporte',costo:30000}]},
+  ]},
+  'Educación / Capacitación': { emoji:'📚', productos:[
+    { nombre:'Clases particulares', precio:35000, materias:[
+      {nombre:'Material didáctico (mes)',costo:30000},{nombre:'Plataforma online',costo:20000},{nombre:'Internet',costo:80000}]},
+    { nombre:'Curso virtual', precio:150000, materias:[
+      {nombre:'Plataforma e-learning (mes)',costo:80000},{nombre:'Producción de videos',costo:200000},{nombre:'Marketing digital',costo:150000}]},
+    { nombre:'Guardería / Jardín', precio:400000, materias:[
+      {nombre:'Alimentación niños (mes)',costo:80000},{nombre:'Materiales pedagógicos',costo:50000},
+      {nombre:'Servicios públicos (mes)',costo:150000},{nombre:'Personal auxiliar (mes)',costo:1300000}]},
+  ]},
+  'Manufactura': { emoji:'🏭', productos:[
+    { nombre:'Ropa / Confección', precio:45000, materias:[
+      {nombre:'Tela (metro)',costo:12000},{nombre:'Hilo y cremalleras',costo:3000},
+      {nombre:'Botones y accesorios',costo:2000},{nombre:'Etiquetas y empaques',costo:1500},{nombre:'Energía eléctrica (mes)',costo:80000}]},
+    { nombre:'Velas / Aromaterapia', precio:15000, materias:[
+      {nombre:'Cera de soya (kg)',costo:20000},{nombre:'Fragancias (lt)',costo:35000},
+      {nombre:'Pabilo / mechas',costo:5000},{nombre:'Envases de vidrio',costo:4500},{nombre:'Etiquetas',costo:800}]},
+    { nombre:'Muebles / Carpintería', precio:350000, materias:[
+      {nombre:'Madera (tablón)',costo:45000},{nombre:'Tornillería y pegante',costo:8000},
+      {nombre:'Laca y pintura',costo:20000},{nombre:'Herramientas (depreciación)',costo:15000}]},
+  ]},
+  'Otro': { emoji:'💡', productos:[
+    { nombre:'Producto personalizado', precio:0, materias:[
+      {nombre:'Materia prima 1',costo:0},{nombre:'Materia prima 2',costo:0},{nombre:'Materia prima 3',costo:0}]},
+  ]},
+};
+
 // ══ SIMULADOR DE CRÉDITO DE VIVIENDA ════════════════════════════════════════
 // Ley 546/1999 · Superfinanciera · Mi Casa Ya · Sistema francés · UVR · Leasing
 // ═════════════════════════════════════════════════════════════════════════════
@@ -6172,42 +6290,63 @@ function calcViv() {
 
 
 function renderSimulator(el){
+  const IS='width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif;box-sizing:border-box';
+  const LS='font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px';
   el.innerHTML=`
 <div style="max-width:520px;margin:0 auto">
   <div style="text-align:center;margin-bottom:18px">
     <div style="font-size:22px;font-weight:900;color:var(--text)">📊 Simulador de Negocio</div>
-    <div style="font-size:12px;color:var(--text3);margin-top:4px">Punto de equilibrio · Margen · ROI · Payback + análisis IA</div>
+    <div style="font-size:12px;color:var(--text3);margin-top:4px">Materias primas · Punto de equilibrio · Margen · ROI · Análisis IA</div>
   </div>
 
-  <!-- INPUTS -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px">
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">📋 Datos del negocio</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">📋 1. Elige tu sector y producto</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Sector</label>
-        <select id="sim-sector" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
-          ${SIM_SECTORES.map(s=>`<option value="${s}">${s}</option>`).join('')}
+        <label style="${LS}">Sector</label>
+        <select id="sim-sector" style="${IS}" onchange="simCambiarSector()">
+          ${SIM_SECTORES.map(s=>`<option value="${s}">${(SIM_CATALOGO[s]||{emoji:''}).emoji} ${s}</option>`).join('')}
         </select>
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Ciudad / Región</label>
-        <input type="text" id="sim-ciudad" value="Colombia" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
+        <label style="${LS}">Producto / Servicio</label>
+        <select id="sim-producto" style="${IS}" onchange="simCambiarProducto()">
+        </select>
+      </div>
+    </div>
+    <div>
+      <label style="${LS}">Ciudad / Región</label>
+      <input type="text" id="sim-ciudad" value="Colombia" style="${IS}" oninput="calcSimulador()">
+    </div>
+  </div>
+
+  <!-- MATERIAS PRIMAS -->
+  <div id="sim-materias-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:none">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:4px">🧾 2. Materias primas por unidad producida</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Ajusta las cantidades y costos según tu operación real</div>
+    <div id="sim-materias-list"></div>
+    <button onclick="simAgregarMateria()" style="width:100%;margin-top:10px;padding:8px;border:1.5px dashed var(--border2);border-radius:var(--radius-xs);background:transparent;color:var(--text3);font-size:12px;cursor:pointer;font-family:Nunito,sans-serif">+ Agregar materia prima</button>
+  </div>
+
+  <!-- DATOS GENERALES -->
+  <div id="sim-datos-wrap" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;display:none">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">📦 3. Volumen y costos del negocio</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label style="${LS}">Precio de venta por unidad ($)</label>
+        <input type="number" id="sim-precio" min="0" style="${IS}" placeholder="25000" oninput="calcSimulador()">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Inversión inicial ($)</label>
-        <input type="number" id="sim-inversion" min="0" placeholder="5000000" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
+        <label style="${LS}">Unidades vendidas / mes</label>
+        <input type="number" id="sim-unidades" min="0" style="${IS}" placeholder="300" oninput="calcSimulador()">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Ingresos mensuales estimados ($)</label>
-        <input type="number" id="sim-ingresos" min="0" placeholder="8000000" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
+        <label style="${LS}">Costos fijos / mes ($) <span style="font-weight:400;text-transform:none">(arriendo, luz, salarios)</span></label>
+        <input type="number" id="sim-costos-fijos" min="0" style="${IS}" placeholder="1500000" oninput="calcSimulador()">
       </div>
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Costos variables / mes ($)</label>
-        <input type="number" id="sim-costos-var" min="0" placeholder="3000000" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
-      </div>
-      <div>
-        <label style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:4px">Costos fijos / mes ($)</label>
-        <input type="number" id="sim-costos-fijos" min="0" placeholder="2000000" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-size:12px;outline:none;font-family:Nunito,sans-serif" oninput="calcSimulador()">
+        <label style="${LS}">Inversión inicial ($)</label>
+        <input type="number" id="sim-inversion" min="0" style="${IS}" placeholder="5000000" oninput="calcSimulador()">
       </div>
     </div>
   </div>
@@ -6226,59 +6365,145 @@ function renderSimulator(el){
 
   <div style="font-size:10px;color:var(--text3);text-align:center;margin-top:8px">Los valores son estimaciones — consulte un contador para decisiones definitivas</div>
 </div>`;
+  simCambiarSector();
+}
+
+// Estado materias primas del simulador
+let _simMaterias = [];
+
+function simCambiarSector(){
+  const sector = document.getElementById('sim-sector')?.value;
+  const cat = SIM_CATALOGO[sector];
+  if(!cat) return;
+  const sel = document.getElementById('sim-producto');
+  if(!sel) return;
+  sel.innerHTML = cat.productos.map((p,i)=>`<option value="${i}">${p.nombre}</option>`).join('');
+  simCambiarProducto();
+}
+
+function simCambiarProducto(){
+  const sector = document.getElementById('sim-sector')?.value;
+  const idx = parseInt(document.getElementById('sim-producto')?.value||'0');
+  const cat = SIM_CATALOGO[sector];
+  if(!cat) return;
+  const prod = cat.productos[idx];
+  if(!prod) return;
+
+  // Cargar materias primas
+  _simMaterias = prod.materias.map(m=>({nombre:m.nombre, costo:m.costo, cantidad:1}));
+
+  // Precio sugerido
+  const precioEl = document.getElementById('sim-precio');
+  if(precioEl && prod.precio > 0) precioEl.value = prod.precio;
+
+  document.getElementById('sim-materias-wrap').style.display='block';
+  document.getElementById('sim-datos-wrap').style.display='block';
+  simRenderMaterias();
+  calcSimulador();
+}
+
+function simRenderMaterias(){
+  const list = document.getElementById('sim-materias-list');
+  if(!list) return;
+  const IS='background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:6px 8px;color:var(--text);font-size:11px;outline:none;font-family:Nunito,sans-serif;width:100%';
+  list.innerHTML = _simMaterias.map((m,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 90px 70px 28px;gap:6px;margin-bottom:6px;align-items:center">
+      <input type="text" value="${m.nombre}" style="${IS}" placeholder="Materia prima" oninput="_simMaterias[${i}].nombre=this.value;calcSimulador()">
+      <input type="number" value="${m.costo}" min="0" style="${IS};text-align:right" placeholder="Costo $" oninput="_simMaterias[${i}].costo=parseFloat(this.value)||0;calcSimulador()">
+      <input type="number" value="${m.cantidad}" min="0.01" step="0.01" style="${IS};text-align:right" placeholder="Cant." oninput="_simMaterias[${i}].cantidad=parseFloat(this.value)||1;calcSimulador()">
+      <button onclick="simEliminarMateria(${i})" style="background:rgba(255,80,80,.1);border:none;border-radius:6px;color:var(--red);cursor:pointer;padding:4px;font-size:14px;line-height:1">✕</button>
+    </div>`).join('');
+  // Header labels
+  if(_simMaterias.length>0){
+    list.insertAdjacentHTML('afterbegin','<div style="display:grid;grid-template-columns:1fr 90px 70px 28px;gap:6px;margin-bottom:4px"><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase">Insumo</span><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;text-align:right">Costo unit.</span><span style="font-size:9px;color:var(--text3);font-weight:700;text-transform:uppercase;text-align:right">Cantidad</span><span></span></div>');
+  }
+}
+
+function simAgregarMateria(){
+  _simMaterias.push({nombre:'Nueva materia',costo:0,cantidad:1});
+  simRenderMaterias();
+  calcSimulador();
+}
+
+function simEliminarMateria(i){
+  _simMaterias.splice(i,1);
+  simRenderMaterias();
   calcSimulador();
 }
 
 function calcSimulador(){
-  const inv   = parseFloat(document.getElementById('sim-inversion')?.value)||0;
-  const ing   = parseFloat(document.getElementById('sim-ingresos')?.value)||0;
-  const cosV  = parseFloat(document.getElementById('sim-costos-var')?.value)||0;
-  const cosF  = parseFloat(document.getElementById('sim-costos-fijos')?.value)||0;
-  const resEl = document.getElementById('sim-resultados');
-  const iaWrap= document.getElementById('sim-ia-wrap');
+  const precio  = parseFloat(document.getElementById('sim-precio')?.value)||0;
+  const unids   = parseFloat(document.getElementById('sim-unidades')?.value)||0;
+  const cosF    = parseFloat(document.getElementById('sim-costos-fijos')?.value)||0;
+  const inv     = parseFloat(document.getElementById('sim-inversion')?.value)||0;
+  const sector  = document.getElementById('sim-sector')?.value||'';
+  const resEl   = document.getElementById('sim-resultados');
+  const iaWrap  = document.getElementById('sim-ia-wrap');
   if(!resEl) return;
 
-  // Necesita al menos ingresos y un costo para calcular
-  if(!ing && !cosV && !cosF){ resEl.style.display='none'; if(iaWrap) iaWrap.style.display='none'; return; }
+  // Costo variable por unidad desde materias primas
+  const costoUnitario = _simMaterias.reduce((s,m)=>s+(m.costo*(m.cantidad||1)),0);
+  const ing     = precio * unids;
+  const cosV    = costoUnitario * unids;
+  const costoTotal = cosV + cosF;
+  const utilidad   = ing - costoTotal;
+  const margen     = ing>0 ? (utilidad/ing*100) : 0;
+  const margenUni  = precio>0 ? precio - costoUnitario : 0;
 
-  const costoTotal  = cosV + cosF;
-  const utilidad    = ing - costoTotal;
-  const margen      = ing>0 ? (utilidad/ing*100) : 0;
-  // Punto de equilibrio: ingresos donde utilidad = 0
-  // PE = costos_fijos / (1 - costos_var/ingresos)  [sólo válido si ing > cosV]
-  const ratioCV     = ing>0 ? cosV/ing : 0;
-  const pe          = (1-ratioCV)>0 ? cosF/(1-ratioCV) : null;
-  // ROI = (ganancia neta anual / inversión) * 100
-  const gananciaMes = Math.max(utilidad, 0);
-  const roi         = inv>0 ? (gananciaMes*12/inv*100) : null;
-  // Payback = inversión / ganancia mensual
-  const payback     = gananciaMes>0 && inv>0 ? inv/gananciaMes : null;
+  // Punto de equilibrio en unidades y en pesos
+  const peUnids = margenUni>0 ? Math.ceil(cosF/margenUni) : null;
+  const pePesos = peUnids!==null ? peUnids*precio : null;
+
+  // Unidades para rentabilidad (meta: margen 20%)
+  const metaMargen = 0.20;
+  const unidsRentable = margenUni>0 ? Math.ceil(cosF/(precio*(1-metaMargen)-costoUnitario+(precio*metaMargen))) : null;
+
+  const roi     = inv>0 && utilidad>0 ? (utilidad*12/inv*100) : null;
+  const payback = utilidad>0 && inv>0 ? inv/utilidad : null;
 
   const fmtN = v => '$'+Math.round(v).toLocaleString('es-CO');
-  const colorU = utilidad>=0 ? 'var(--green)' : 'var(--red)';
-  const colorM = margen>=20 ? 'var(--green)' : margen>=10 ? 'var(--amber)' : 'var(--red)';
+
+  if(!precio && !unids && !cosF){ resEl.style.display='none'; if(iaWrap) iaWrap.style.display='none'; return; }
 
   let rows='';
-  // Utilidad mensual
-  rows+=simRow('Utilidad mensual', fmtN(utilidad), colorU, utilidad>=0?'✓ Positiva':'⚠ Negativa');
-  // Margen bruto
-  rows+=simRow('Margen de utilidad', margen.toFixed(1)+'%', colorM, margen>=20?'Saludable':margen>=10?'Ajustado':'Crítico');
+  // Costo por unidad
+  if(costoUnitario>0) rows+=simRow('Costo por unidad (materias primas)', fmtN(costoUnitario), 'var(--text2)', '');
+  // Margen por unidad
+  if(precio>0) rows+=simRow('Margen por unidad', fmtN(margenUni), margenUni>=0?'var(--green)':'var(--red)', margenUni>=0?`${((margenUni/precio)*100).toFixed(1)}% del precio de venta`:'⚠ Precio menor al costo');
+  // Ingresos mensuales
+  if(ing>0) rows+=simRow('Ingresos mensuales', fmtN(ing), 'var(--text)', `${unids} unid. × ${fmtN(precio)}`);
+  // Utilidad
+  rows+=simRow('Utilidad mensual', fmtN(utilidad), utilidad>=0?'var(--green)':'var(--red)', utilidad>=0?'✓ Positiva':'⚠ Pérdida');
+  // Margen %
+  if(ing>0) rows+=simRow('Margen de utilidad', margen.toFixed(1)+'%', margen>=20?'var(--green)':margen>=10?'var(--amber)':'var(--red)', margen>=20?'✅ Saludable':margen>=10?'⚠ Ajustado':'🔴 Crítico');
+
   // Punto de equilibrio
-  if(pe!==null) rows+=simRow('Punto de equilibrio/mes', fmtN(pe), 'var(--blue)', pe<=ing?'Ya lo supera':'Aún no alcanzado');
-  // ROI anual
-  if(roi!==null) rows+=simRow('ROI anual (sobre inversión)', roi.toFixed(1)+'%', roi>=20?'var(--green)':roi>=10?'var(--amber)':'var(--red)', roi>=20?'Atractivo':roi>=10?'Aceptable':'Bajo');
-  // Payback
+  if(peUnids!==null){
+    const superado = unids>=peUnids;
+    rows+=simRow('Punto de equilibrio', `${peUnids} unidades/mes`, 'var(--blue)',
+      `${fmtN(pePesos||0)} en ventas · ${superado?'✅ Ya lo superas':'⚠ Aún no alcanzado'}`);
+    if(!superado && unids>0){
+      rows+=simRow('Te faltan para equilibrio', `${peUnids-unids} unidades`, 'var(--amber)', 'Vende más o reduce costos fijos');
+    }
+  }
+
+  // Unidades para ser rentable (20%)
+  if(unidsRentable!==null && unidsRentable>0 && isFinite(unidsRentable)){
+    rows+=simRow('Para margen 20% necesitas', `${unidsRentable} unidades/mes`, 'var(--purple)', fmtN(unidsRentable*precio)+' en ventas');
+  }
+
+  // ROI y Payback
+  if(roi!==null) rows+=simRow('ROI anual', roi.toFixed(1)+'%', roi>=20?'var(--green)':roi>=10?'var(--amber)':'var(--red)', roi>=20?'Atractivo':roi>=10?'Aceptable':'Bajo');
   if(payback!==null){
-    const py = payback<1 ? Math.round(payback*30)+' días' : payback.toFixed(1)+' meses';
-    rows+=simRow('Período de recuperación', py, payback<=12?'var(--green)':payback<=24?'var(--amber)':'var(--red)', payback<=12?'Rápido':payback<=24?'Moderado':'Lento');
+    const py = payback<1?Math.round(payback*30)+' días':payback.toFixed(1)+' meses';
+    rows+=simRow('Recuperación inversión', py, payback<=12?'var(--green)':payback<=24?'var(--amber)':'var(--red)', payback<=12?'Rápida':payback<=24?'Moderada':'Lenta');
   }
 
   resEl.style.display='block';
   resEl.innerHTML=
     '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:4px">'
     +'<div style="padding:12px 14px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em">📈 Resultados</div>'
-    +rows
-    +'</div>';
+    +rows+'</div>';
 
   if(iaWrap) iaWrap.style.display='block';
 }
@@ -6289,38 +6514,54 @@ function simRow(label, val, color, badge){
       <div style="font-size:12px;color:var(--text2)">${label}</div>
       ${badge?`<div style="font-size:10px;color:${color};margin-top:2px">${badge}</div>`:''}
     </div>
-    <div style="font-size:16px;font-weight:800;font-family:'DM Mono',monospace;color:${color}">${val}</div>
+    <div style="font-size:15px;font-weight:800;font-family:'DM Mono',monospace;color:${color};text-align:right;min-width:90px">${val}</div>
   </div>`;
 }
 
 async function analizarSimulador(){
   if(simClaudeLoading) return;
-  const inv    = parseFloat(document.getElementById('sim-inversion')?.value)||0;
-  const ing    = parseFloat(document.getElementById('sim-ingresos')?.value)||0;
-  const cosV   = parseFloat(document.getElementById('sim-costos-var')?.value)||0;
-  const cosF   = parseFloat(document.getElementById('sim-costos-fijos')?.value)||0;
-  const sector = document.getElementById('sim-sector')?.value||'';
-  const ciudad = document.getElementById('sim-ciudad')?.value||'Colombia';
+  const precio  = parseFloat(document.getElementById('sim-precio')?.value)||0;
+  const unids   = parseFloat(document.getElementById('sim-unidades')?.value)||0;
+  const cosF    = parseFloat(document.getElementById('sim-costos-fijos')?.value)||0;
+  const inv     = parseFloat(document.getElementById('sim-inversion')?.value)||0;
+  const sector  = document.getElementById('sim-sector')?.value||'';
+  const idxProd = parseInt(document.getElementById('sim-producto')?.value||'0');
+  const ciudad  = document.getElementById('sim-ciudad')?.value||'Colombia';
+  const cat     = SIM_CATALOGO[sector];
+  const prod    = cat?.productos[idxProd];
+  const nombreProd = prod?.nombre||sector;
 
-  const costoTotal = cosV+cosF;
-  const utilidad   = ing-costoTotal;
-  const margen     = ing>0?(utilidad/ing*100):0;
-  const ratioCV    = ing>0?cosV/ing:0;
-  const pe         = (1-ratioCV)>0?cosF/(1-ratioCV):null;
-  const roi        = inv>0&&utilidad>0?(utilidad*12/inv*100):null;
-  const payback    = utilidad>0&&inv>0?inv/utilidad:null;
+  const costoUnitario = _simMaterias.reduce((s,m)=>s+(m.costo*(m.cantidad||1)),0);
+  const ing    = precio*unids;
+  const cosV   = costoUnitario*unids;
+  const utilidad = ing - cosV - cosF;
+  const margen = ing>0?(utilidad/ing*100):0;
+  const margenUni = precio - costoUnitario;
+  const peUnids = margenUni>0?Math.ceil(cosF/margenUni):null;
+  const roi = inv>0&&utilidad>0?(utilidad*12/inv*100):null;
+  const payback = utilidad>0&&inv>0?inv/utilidad:null;
+  const fmtN = v=>'$'+Math.round(v).toLocaleString('es-CO');
 
-  const fmtN = v => '$'+Math.round(v).toLocaleString('es-CO');
-  const prompt=`Eres un asesor financiero experto en negocios colombianos. El usuario tiene un negocio en el sector "${sector}" ubicado en "${ciudad}" con estos datos mensuales:
+  const materiasDetalle = _simMaterias.map(m=>`  • ${m.nombre}: ${fmtN(m.costo)} x ${m.cantidad} = ${fmtN(m.costo*m.cantidad)}`).join('\n');
+
+  const prompt = `Eres un asesor financiero experto en negocios colombianos. El usuario quiere montar un negocio de "${nombreProd}" en el sector "${sector}" en "${ciudad}".
+
+Datos del negocio:
+- Precio de venta: ${fmtN(precio)} por unidad
+- Unidades vendidas/mes: ${unids}
+- Costo por unidad (materias primas): ${fmtN(costoUnitario)}
+  Detalle materias primas:
+${materiasDetalle}
+- Costos fijos/mes: ${fmtN(cosF)}
 - Inversión inicial: ${fmtN(inv)}
-- Ingresos mensuales estimados: ${fmtN(ing)}
-- Costos variables: ${fmtN(cosV)} / Costos fijos: ${fmtN(cosF)}
+- Ingresos mensuales: ${fmtN(ing)}
 - Utilidad mensual: ${fmtN(utilidad)} (margen ${margen.toFixed(1)}%)
-${pe!==null?`- Punto de equilibrio: ${fmtN(pe)}`:''}
+- Margen por unidad: ${fmtN(margenUni)}
+${peUnids!==null?`- Punto de equilibrio: ${peUnids} unidades/mes (${fmtN(peUnids*precio)})`:''} 
 ${roi!==null?`- ROI anual: ${roi.toFixed(1)}%`:''}
-${payback!==null?`- Payback: ${payback.toFixed(1)} meses`:''}
+${payback!==null?`- Recuperación inversión: ${payback.toFixed(1)} meses`:''}
 
-Escribe UN solo párrafo de análisis contextualizado (máximo 5 oraciones). Sé específico para el sector y la realidad económica colombiana de 2025-2026. Incluye al menos una advertencia o recomendación práctica concreta. No repitas los números, interprétalos. Habla directamente al usuario (tutéalo).`;
+Escribe un análisis práctico de máximo 6 oraciones para este emprendedor colombiano. Incluye: 1) si el negocio es viable, 2) qué tan realistas son los costos de materias primas, 3) estrategias concretas para alcanzar o superar el punto de equilibrio, 4) una advertencia importante del sector. Habla directamente (tutéalo). Sé específico para Colombia 2025-2026.`;
 
   simClaudeLoading=true;
   const btn=document.getElementById('sim-ia-btn');
@@ -6339,21 +6580,15 @@ Escribe UN solo párrafo de análisis contextualizado (máximo 5 oraciones). Sé
       })
     });
     const d=await r.json();
-    const texto=d.content?.find(b=>b.type==='text')?.text||'No se pudo obtener análisis.';
-    if(resIA){
-      resIA.innerHTML=`<div style="display:flex;gap:10px;align-items:flex-start">
-        <div style="font-size:20px;flex-shrink:0">🤖</div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.7">${texto}</div>
-      </div>`;
-    }
+    const txt=(d.content||[]).map(b=>b.text||'').join('').trim();
+    if(resIA) resIA.innerHTML=txt.replace(/\n/g,'<br>');
   }catch(e){
-    if(resIA) resIA.innerHTML='<span style="color:var(--red);font-size:12px">⚠ Error al conectar con la IA. Verifique su conexión.</span>';
+    if(resIA) resIA.innerHTML='<span style="color:var(--red);font-size:12px">⚠ Error al conectar con la IA.</span>';
   }finally{
     simClaudeLoading=false;
     if(btn) btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10"/><path d="M12 8v4l3 3"/><circle cx="18" cy="5" r="3"/></svg> Analizar con IA';
   }
 }
-
 // ── CONVERTER ─────────────────────────────────────────────────────────────────
 let rates={},ratesTs=0;
 const CURRENCIES=[
