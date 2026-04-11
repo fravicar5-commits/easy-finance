@@ -1836,12 +1836,8 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <div class="modal-title" id="pocket-title">Nuevo bolsillo <button class="modal-close" onclick="closeModal('modal-pocket')">✕</button></div>
     <div class="fr"><label>Nombre del bolsillo</label><input type="text" id="pk-name" placeholder="Ej: Vacaciones, Moto..."></div>
     <div class="fg2">
-      <div class="fr"><label>Meta ($)</label><input type="number" id="pk-meta" min="0" step="1" inputmode="numeric" oninput="calcAporteSugerido()"></div>
-      <div class="fr"><label>Fecha límite</label><input type="month" id="pk-fecha" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-family:Nunito,sans-serif;font-size:13px;outline:none" onchange="calcAporteSugerido()"></div>
-    </div>
-    <div class="fr"><label>Ahorro mensual sugerido ($)</label>
-      <input type="number" id="pk-mensual" min="0" step="1" inputmode="numeric" placeholder="Se calcula automáticamente">
-      <div id="pk-sugerido" style="font-size:11px;color:var(--green);margin-top:4px;min-height:16px"></div>
+      <div class="fr"><label>Meta ($)</label><input type="number" id="pk-meta" min="0" step="1" inputmode="numeric"></div>
+      <div class="fr"><label>Ahorro mensual ($)</label><input type="number" id="pk-mensual" min="0" step="1" inputmode="numeric"></div>
     </div>
     <div class="fr"><label>Emoji / ícono</label><input type="text" id="pk-emoji" placeholder="🐷" maxlength="4" style="font-size:22px;text-align:center"></div>
     <div class="form-actions">
@@ -7045,62 +7041,51 @@ function renderSavings(el){
     const falta=Math.max(p.meta-p.ahorrado,0);
     const clr=pct>=100?'var(--green)':pct>=50?'var(--amber)':'var(--ef-pink2)';
 
-    // ── Inteligencia dinámica con fecha límite ─────────────────────────────
+    // ── Inteligencia dinámica ───────────────────────────────────────────────
     let smartLines='';
     if(pct<100&&falta>0){
-      const hoyD=new Date();
-      const ms=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      let mesesMeta=null,diasRestantes=null,fechaMetaLabel='',enRiesgo=false;
-      if(p.fechaMeta){
-        const [fy,fm]=p.fechaMeta.split('-').map(Number);
-        const fechaObj=new Date(fy,fm-1,1);
-        mesesMeta=Math.max(1,Math.round((fechaObj-hoyD)/(30.44*24*3600*1000)));
-        diasRestantes=Math.round((fechaObj-hoyD)/(24*3600*1000));
-        fechaMetaLabel=ms[fm-1]+' '+fy;
-        enRiesgo=p.mensual>0&&p.mensual<Math.ceil(falta/mesesMeta);
-      }
-      const cuotaNecesaria=mesesMeta?Math.ceil(falta/mesesMeta):null;
+      // 1. Tiempo con aporte actual
       const mesesActual=p.mensual>0?Math.ceil(falta/p.mensual):null;
-      let fechaEst='';
-      if(mesesActual){const fe=new Date();fe.setMonth(fe.getMonth()+mesesActual);fechaEst=ms[fe.getMonth()]+' '+fe.getFullYear();}
+      // 2. Sugerir aporte óptimo si hay saldo libre
       const aporteSugerido=sfDisponibleAhorro>0?Math.min(sfDisponibleAhorro,falta):0;
       const mesesOptimo=aporteSugerido>0?Math.ceil(falta/aporteSugerido):null;
+      // 3. Fecha estimada con aporte actual
+      let fechaEst='';
+      if(mesesActual){
+        const fe=new Date();fe.setMonth(fe.getMonth()+mesesActual);
+        const ms=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+        fechaEst=ms[fe.getMonth()]+' '+fe.getFullYear();
+      }
+      // 4. Velocidad mínima para llegar antes del año
+      const mesesRestantesAnio=12-new Date().getMonth();
+      const aporteMinimoAnio=mesesRestantesAnio>0?Math.ceil(falta/mesesRestantesAnio):null;
 
-      smartLines+='<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:10px 12px;margin:8px 0;font-size:11px">';
-      if(p.fechaMeta){
-        const colorF=diasRestantes<0?'var(--red)':enRiesgo?'var(--amber)':'var(--text3)';
-        const labelF=diasRestantes<0?'⚠️ Meta vencida':'📅 Meta: '+fechaMetaLabel+' ('+mesesMeta+' mes'+(mesesMeta!==1?'es':'')+' restantes)';
-        smartLines+='<div style="color:'+colorF+';font-weight:700;margin-bottom:6px">'+labelF+'</div>';
+      smartLines+='<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:8px 10px;margin:8px 0;font-size:11px">';
+      if(p.mensual>0){
+        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+          +'<span style="color:var(--text3)">Con tu aporte actual</span>'
+          +'<span style="font-weight:700;color:var(--text)">'+fmt(p.mensual)+'/mes → ~'+mesesActual+' mes'+(mesesActual!==1?'es':'')+''+(fechaEst?' ('+fechaEst+')':'')+'</span></div>';
       }
-      if(cuotaNecesaria){
-        const ok=p.mensual>=cuotaNecesaria;
-        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:'+(ok?'var(--green)':'var(--red)')+'">'+(ok?'✅ Vas a tiempo':'⚠️ Para llegar a tiempo')+'</span><span style="font-weight:800;color:'+(ok?'var(--green)':'var(--red)')+'">'+fmt(cuotaNecesaria)+'/mes</span></div>';
-        if(!ok&&p.mensual>0) smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Tu aporte actual</span><span style="font-weight:700;color:var(--amber)">'+fmt(p.mensual)+'/mes → '+fechaEst+'</span></div>';
-      } else if(p.mensual>0){
-        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Con tu aporte actual</span><span style="font-weight:700;color:var(--text)">'+fmt(p.mensual)+'/mes → ~'+mesesActual+' mes'+(mesesActual!==1?'es':'')+(fechaEst?' ('+fechaEst+')':'')+'</span></div>';
+      if(aporteSugerido>0&&aporteSugerido!==p.mensual){
+        smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px">'
+          +'<span style="color:var(--green)">💡 Aportando saldo libre</span>'
+          +'<span style="font-weight:700;color:var(--green)">'+fmt(aporteSugerido)+'/mes → ~'+mesesOptimo+' mes'+(mesesOptimo!==1?'es':'')+'</span></div>';
       }
-      if(aporteSugerido>0&&aporteSugerido!==p.mensual) smartLines+='<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--green)">💡 Usando saldo libre</span><span style="font-weight:700;color:var(--green)">'+fmt(aporteSugerido)+'/mes → ~'+mesesOptimo+' mes'+(mesesOptimo!==1?'es':'')+'</span></div>';
-      if(!p.mensual&&!cuotaNecesaria&&sfDisponibleAhorro===0) smartLines+='<div style="color:var(--text3)">Define una fecha límite y aporte para ver proyecciones.</div>';
+      if(aporteMinimoAnio&&(!p.mensual||p.mensual<aporteMinimoAnio)){
+        smartLines+='<div style="display:flex;justify-content:space-between">'
+          +'<span style="color:var(--amber)">🎯 Para llegar este año</span>'
+          +'<span style="font-weight:700;color:var(--amber)">'+fmt(aporteMinimoAnio)+'/mes</span></div>';
+      }
+      if(!p.mensual&&sfDisponibleAhorro===0&&!aporteSugerido){
+        smartLines+='<div style="color:var(--text3)">Define un aporte mensual o libera saldo en tu presupuesto para ver proyecciones.</div>';
+      }
       smartLines+='</div>';
-    } else if(pct>=100){
-      smartLines='<div style="background:rgba(61,220,132,.08);border:1px solid rgba(61,220,132,.2);border-radius:var(--radius-xs);padding:8px 12px;margin:8px 0;font-size:11px;color:var(--green);font-weight:700;text-align:center">🎉 ¡Meta cumplida! Puedes usar este dinero o aumentar la meta.</div>';
     }
 
-
-    // Fecha meta badge
-    let fechaBadge='';
-    if(p.fechaMeta){
-      const [fy2,fm2]=p.fechaMeta.split('-').map(Number);
-      const msN=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-      const mesesR=Math.round((new Date(fy2,fm2-1,1)-new Date())/(30.44*24*3600*1000));
-      const vencida=mesesR<0;
-      fechaBadge='<div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 7px;border-radius:10px;background:'+(vencida?'rgba(255,107,107,.15)':'rgba(0,188,212,.12)')+';color:'+(vencida?'var(--red)':'#00BCD4')+';margin-top:3px">'+(vencida?'\u26a0 Vencida':'\ud83d\udcc5 '+msN[fm2-1]+' '+fy2)+'</div>';
-    }
     return '<div class="pocket-card">'
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
-      +'<div><div style="font-size:22px">'+(p.emoji||'\ud83d\udc37')+'</div>'
-      +'<div style="font-size:14px;font-weight:700;margin-top:4px">'+p.nombre+'</div>'
-      +fechaBadge+'</div>'
+      +'<div><div style="font-size:22px">'+(p.emoji||'🐷')+'</div>'
+      +'<div style="font-size:14px;font-weight:700;margin-top:4px">'+p.nombre+'</div></div>'
       +'<div style="text-align:right">'
       +'<div style="font-size:18px;font-weight:700;color:var(--green)">'+fmt(p.ahorrado)+'</div>'
       +'<div style="font-size:11px;color:var(--text3)">de '+fmt(p.meta)+'</div></div>'
@@ -7122,59 +7107,32 @@ function renderSavings(el){
 }
 function abrirNuevoPocket(){
   activePocketId=null;
-  document.getElementById('pocket-title').innerHTML='Nuevo bolsillo <button class="modal-close" onclick="closeModal('modal-pocket')">✕</button>';
+  document.getElementById('pocket-title').innerHTML='Nuevo bolsillo <button class="modal-close" onclick="closeModal(\'modal-pocket\')">✕</button>';
   ['pk-name','pk-meta','pk-mensual'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('pk-emoji').value='🐷';
-  // Fecha por defecto: 6 meses desde hoy
-  const def=new Date();def.setMonth(def.getMonth()+6);
-  document.getElementById('pk-fecha').value=def.getFullYear()+'-'+String(def.getMonth()+1).padStart(2,'0');
-  document.getElementById('pk-sugerido').textContent='';
   openModal('modal-pocket');
 }
 function editarPocket(id){
   const p=pockets.find(x=>x.id===id);
   activePocketId=id;
-  document.getElementById('pocket-title').innerHTML='Editar bolsillo <button class="modal-close" onclick="closeModal('modal-pocket')">✕</button>';
+  document.getElementById('pocket-title').innerHTML='Editar bolsillo <button class="modal-close" onclick="closeModal(\'modal-pocket\')">✕</button>';
   document.getElementById('pk-name').value=p.nombre;
   document.getElementById('pk-meta').value=p.meta;
   document.getElementById('pk-mensual').value=p.mensual||0;
   document.getElementById('pk-emoji').value=p.emoji||'🐷';
-  document.getElementById('pk-fecha').value=p.fechaMeta||'';
-  calcAporteSugerido();
   openModal('modal-pocket');
 }
-function calcAporteSugerido(){
-  const meta=parseFloat(document.getElementById('pk-meta')?.value)||0;
-  const fechaStr=document.getElementById('pk-fecha')?.value;
-  const sug=document.getElementById('pk-sugerido');
-  const inp=document.getElementById('pk-mensual');
-  if(!meta||!fechaStr){if(sug)sug.textContent='';return;}
-  const hoy=new Date();
-  const [y,m]=fechaStr.split('-').map(Number);
-  const meta_date=new Date(y,m-1,1);
-  const meses=Math.max(1,Math.round((meta_date-hoy)/(30.44*24*3600*1000)));
-  // Considerar lo ya ahorrado si estamos editando
-  let yaAhorrado=0;
-  if(activePocketId){const p=pockets.find(x=>x.id===activePocketId);yaAhorrado=p?p.ahorrado:0;}
-  const falta=Math.max(meta-yaAhorrado,0);
-  const cuota=Math.ceil(falta/meses);
-  if(sug) sug.textContent=`💡 Para llegar a tiempo: $${cuota.toLocaleString('es-CO')}/mes (${meses} mes${meses!==1?'es':''})`;
-  // Auto-fill solo si el campo está vacío
-  if(inp&&!inp.value) inp.value=cuota;
-}
-
 function guardarPocket(){
   const nombre=document.getElementById('pk-name').value.trim();
   const meta=parseFloat(document.getElementById('pk-meta').value)||0;
   const mensual=parseFloat(document.getElementById('pk-mensual').value)||0;
   const emoji=document.getElementById('pk-emoji').value||'🐷';
-  const fechaMeta=document.getElementById('pk-fecha').value||'';
   if(!nombre||!meta){toast('Complete nombre y meta','error');return;}
   if(activePocketId){
     const p=pockets.find(x=>x.id===activePocketId);
-    Object.assign(p,{nombre,meta,mensual,emoji,fechaMeta});
+    Object.assign(p,{nombre,meta,mensual,emoji});
   } else {
-    pockets.push({id:Date.now(),nombre,meta,mensual,emoji,fechaMeta,ahorrado:0,creado:today()});
+    pockets.push({id:Date.now(),nombre,meta,mensual,emoji,ahorrado:0,creado:today()});
   }
   save();closeModal('modal-pocket');renderSavings(document.getElementById('dd-content'));toast('Bolsillo guardado');
 }
