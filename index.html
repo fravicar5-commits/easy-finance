@@ -744,7 +744,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .recovery-result{background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.25);border-radius:var(--radius);padding:12px;margin-bottom:12px}
 .recovery-result-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px}
 .recovery-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
-.login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
+.login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
 /* ── SPLASH SCREEN ── */
 .splash-screen{position:fixed;inset:0;background:linear-gradient(160deg,#090918 0%,#1a0035 60%,#0a0a18 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;transition:opacity .5s ease}
 .splash-logo-box{width:90px;height:90px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 48px rgba(80,80,255,.5);animation:splash-pop .6s cubic-bezier(.34,1.56,.64,1) both}
@@ -13020,30 +13020,41 @@ function volEnviarAPresupuesto(){
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
 
-  // Esperar Firebase listo, luego verificar sesión persistida
+  // Mostrar login de inmediato — se ocultará solo si hay sesión válida
+  checkLogin();
+
+  let _authResolved = false;
+
+  // Timeout de seguridad: si Firebase no responde en 4s, el login ya está visible
+  setTimeout(()=>{
+    if(!_authResolved){ _authResolved = true; /* login ya visible por checkLogin() arriba */ }
+  }, 4000);
+
   function _initAuth(){
     if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._auth){
       setTimeout(_initAuth, 100);
       return;
     }
     window._fbOnAuthStateChanged(window._auth, async (user) => {
+      if(_authResolved) return; // ya resolvió el timeout, no hacer nada
+      _authResolved = true;
+
       if(!user){
-        checkLogin();
+        // Sin sesión — login ya está visible
         return;
       }
       try{
         const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',user.uid));
         if(!snap.exists()){
           await window._fbSignOut(window._auth);
-          checkLogin();
-          return;
+          return; // login ya visible
         }
         const perfil = snap.data();
         if(perfil.estado==='pendiente'||perfil.estado==='suspendido'||perfil.estado==='rechazado'){
           await window._fbSignOut(window._auth);
-          checkLogin();
-          return;
+          return; // login ya visible
         }
+        // Sesión válida — construir currentUser y entrar
         const rol = perfil.rol || 'usuario';
         const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
         currentUser = {
@@ -13063,13 +13074,15 @@ window.addEventListener('DOMContentLoaded',()=>{
         load();
         loadDeudas();
         renderSidebar();
+        toast('Bienvenido de nuevo, '+currentUser.nombre+' ✓','success',2500);
         if(currentUser.rol==='invitado'){
           setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
         } else {
           setTimeout(checkTC,300);
         }
       }catch(e){
-        checkLogin();
+        // Error inesperado — login ya está visible
+        if(window._auth) try{ await window._fbSignOut(window._auth); }catch(_){}
       }
     });
   }
