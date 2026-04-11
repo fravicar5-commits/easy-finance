@@ -2369,7 +2369,7 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  // Restaurar deudas: primero buscar la clave dinámica del usuario, luego fallback a deudas_admin
+  // Restaurar deudas: primero clave dinámica del usuario, luego fallback a deudas_admin
   const _deudasKey = currentUser ? ('deudas_' + currentUser.user) : 'deudas_admin';
   if(data[_deudasKey] && data[_deudasKey].length > 0){
     deudas = data[_deudasKey];
@@ -13020,7 +13020,7 @@ function volEnviarAPresupuesto(){
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
 
-  // Esperar a que Firebase esté listo para verificar sesión persistida
+  // Esperar Firebase listo, luego verificar sesión persistida
   function _initAuth(){
     if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._auth){
       setTimeout(_initAuth, 100);
@@ -13028,11 +13028,9 @@ window.addEventListener('DOMContentLoaded',()=>{
     }
     window._fbOnAuthStateChanged(window._auth, async (user) => {
       if(!user){
-        // Sin sesión activa → mostrar login
         checkLogin();
         return;
       }
-      // Hay sesión Firebase activa → restaurar perfil
       try{
         const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',user.uid));
         if(!snap.exists()){
@@ -13046,7 +13044,6 @@ window.addEventListener('DOMContentLoaded',()=>{
           checkLogin();
           return;
         }
-        // Restaurar currentUser
         const rol = perfil.rol || 'usuario';
         const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
         currentUser = {
@@ -13072,7 +13069,6 @@ window.addEventListener('DOMContentLoaded',()=>{
           setTimeout(checkTC,300);
         }
       }catch(e){
-        // Si falla la restauración, mostrar login
         checkLogin();
       }
     });
