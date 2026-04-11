@@ -1357,6 +1357,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <button class="dd-tab" onclick="setDDTab('simulator',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg> Simulador</button>
     <button class="dd-tab" onclick="setDDTab('vivienda',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Vivienda</button>
     <button class="dd-tab" onclick="setDDTab('segsocial',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Seg. Social</button>
+    <button class="dd-tab" onclick="setDDTab('volante',this)"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><path d="M6 7h4m-4 4h8m-8 3h3"/></svg> Volante</button>
   </div>
   <div class="dd-content" id="dd-content"></div>
 </div>
@@ -2337,6 +2338,7 @@ function load(){
   try{caja=JSON.parse(localStorage.getItem(CK))||[];}catch{caja=[];}
   try{notes=JSON.parse(localStorage.getItem(NK))||[];}catch{notes=[];}
   try{pockets=JSON.parse(localStorage.getItem(PK))||[];}catch{pockets=[];}
+  try{volanteHistorial=JSON.parse(localStorage.getItem(VK))||[];}catch{volanteHistorial=[];}
 }
 
 function save(){
@@ -2344,6 +2346,7 @@ function save(){
   localStorage.setItem(CK,JSON.stringify(caja));
   localStorage.setItem(NK,JSON.stringify(notes));
   localStorage.setItem(PK,JSON.stringify(pockets));
+  localStorage.setItem(VK,JSON.stringify(volanteHistorial));
   renderSidebar();
   // Push to Firestore asynchronously
   _fsSave({
@@ -2351,6 +2354,7 @@ function save(){
     caja: caja,
     notes: notes,
     pockets: pockets,
+    volantes: volanteHistorial,
     budgets: loadBudgets(),
     updatedAt: new Date().toISOString()
   });
@@ -2364,6 +2368,7 @@ function _applyFirestoreData(data){
   if(data.caja){caja=data.caja;localStorage.setItem(CK,JSON.stringify(caja));}
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
+  if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
   if(data.deudas_admin){deudas=data.deudas_admin;localStorage.setItem('ef_deudas_admin',JSON.stringify(deudas));}
   try{
     if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
@@ -2377,11 +2382,13 @@ function _applyFirestoreData(data){
 
 function _hasRealData(data){
   if(!data) return false;
-  // Considera que hay datos reales si tiene clientes, caja, deudas o bolsillos con contenido
   return (data.clients&&data.clients.length>0) ||
          (data.caja&&data.caja.length>0) ||
+         (data.notes&&data.notes.length>0) ||
+         (data.pockets&&data.pockets.length>0) ||
+         (data.volantes&&data.volantes.length>0) ||
          (data.deudas_admin&&data.deudas_admin.length>0) ||
-         (data.pockets&&data.pockets.length>0);
+         (data.budgets&&data.budgets.length>0);
 }
 
 async function _loadFromFirestore(uid){
@@ -2440,8 +2447,23 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull deudas from cloud if connected
-    if(jsonbinEnabled && autoSync){
+    // Pull deudas desde Firebase (fuente principal)
+    if(window._db && window._fsUid && _fsUid()){
+      _fsLoad(_fsUid()).then(data=>{
+        if(!data) return;
+        const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
+        const cloudDeudas = (data[userKey]&&data[userKey].length>0)
+          ? data[userKey]
+          : (data.deudas_admin&&data.deudas_admin.length>0 ? data.deudas_admin : null);
+        if(cloudDeudas && JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
+          deudas=cloudDeudas;
+          localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+          renderClienteTab();
+          toast('Deudas sincronizadas ☁','info',2000);
+        }
+      }).catch(()=>{});
+    } else if(jsonbinEnabled && autoSync){
+      // Fallback JSONBin si Firebase no disponible
       jbinRead().then(data=>{
         const userKeyC = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
         const cloudDeudas = data[userKeyC] && data[userKeyC].length > 0
@@ -4871,7 +4893,7 @@ function updateDDIndicator(tabName) {
   if (!ind) return;
   const labels = {
     converter: 'Divisas', calc: 'Calculadora', budget: 'Presupuesto',
-    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador', vivienda: 'Vivienda', segsocial: 'Seg. Social'
+    savings: 'Bolsillos', tips: 'Consejos', notes: 'Notas', nomina: 'Nómina', simulator: 'Simulador', vivienda: 'Vivienda', segsocial: 'Seg. Social', volante: 'Volante de Pago'
   };
   ind.textContent = labels[tabName] || tabName;
 }
@@ -4895,6 +4917,7 @@ function renderDDTab(tab){
   else if(tab==='segsocial') renderSegSocial(el);
   else if(tab==='simulator') renderSimulator(el);
   else if(tab==='vivienda') renderSimVivienda(el);
+  else if(tab==='volante') renderVolante(el);
 }
 
 
@@ -12861,6 +12884,129 @@ if('serviceWorker' in navigator){
 }
 
 // Inicializar login y drive después del DOM completo
+// ══ VOLANTE DE PAGO ══════════════════════════════════════════════════════════
+const VK = 'ef_volantes_v1';
+let volanteHistorial = [];
+
+function _vLoad(){ try{ return JSON.parse(localStorage.getItem(VK)||'[]'); }catch{ return []; } }
+function _vSave(arr){ volanteHistorial=arr; localStorage.setItem(VK,JSON.stringify(arr)); _fsSave({volantes:arr,updatedAt:new Date().toISOString()}); }
+
+function renderVolante(el){
+  volanteHistorial=_vLoad();
+  const fmt=n=>'$'+Math.round(n).toLocaleString('es-CO');
+  const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+  let histHtml='';
+  if(volanteHistorial.length>=2){
+    const porMes={};
+    volanteHistorial.forEach(v=>{ const k=v.periodoKey||v.periodo||'?'; if(!porMes[k]) porMes[k]={q1:null,q2:null}; if(v.quincena===1) porMes[k].q1=v; else porMes[k].q2=v; });
+    const meses=Object.keys(porMes).reverse().slice(0,6);
+    histHtml='<div class="sec-label" style="margin-bottom:10px">Historial</div>'
+      +'<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">'
+      +'<thead><tr style="background:var(--surface3)"><th style="padding:7px 8px;text-align:left;color:var(--text2)">Período</th><th style="padding:7px 8px;text-align:right;color:var(--accent)">Q1</th><th style="padding:7px 8px;text-align:right;color:var(--text2)">Q2</th><th style="padding:7px 8px;text-align:right;color:var(--green)">Mes</th><th style="padding:7px 8px;text-align:right;color:var(--amber)">% Var</th></tr></thead><tbody>';
+    meses.forEach(k=>{ const {q1,q2}=porMes[k]; const tn=(q1?q1.neto:0)+(q2?q2.neto:0); const tb=(q1?q1.bruto:0)+(q2?q2.bruto:0); const tc=(q1?q1.comisiones:0)+(q2?q2.comisiones:0);
+      histHtml+='<tr style="border-bottom:1px solid var(--border)"><td style="padding:7px 8px;color:var(--text2)">'+(q1?q1.periodo:q2.periodo)+'</td><td style="padding:7px 8px;text-align:right;color:var(--accent)">'+(q1?fmt(q1.neto):'—')+'</td><td style="padding:7px 8px;text-align:right;color:var(--text)">'+(q2?fmt(q2.neto):'—')+'</td><td style="padding:7px 8px;text-align:right;color:var(--green);font-weight:700">'+fmt(tn)+'</td><td style="padding:7px 8px;text-align:right;color:var(--amber)">'+pct(tc,tb)+'</td></tr>';
+    });
+    histHtml+='</tbody></table></div>';
+  }
+  el.innerHTML='<div class="sec-label" style="margin-bottom:12px">Volante de Pago</div>'
+    +'<div style="background:var(--surface2);border:2px dashed var(--border2);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:16px">'
+    +'<div style="font-size:28px;margin-bottom:8px">📄</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">Importar volante Excel</div>'
+    +'<div style="font-size:11px;color:var(--text2);margin-bottom:14px">.xls o .xlsx · cualquier empresa colombiana</div>'
+    +'<input type="file" id="vol-file-input" accept=".xls,.xlsx" style="display:none" onchange="volProcesar(this)">'
+    +'<button class="btn btn-pink" onclick="document.getElementById(\'vol-file-input\').click()">📂 Seleccionar archivo</button>'
+    +'</div>'
+    +'<div id="vol-resultado"></div>'
+    +(histHtml?'<div style="background:var(--surface2);border-radius:var(--radius);padding:14px;margin-top:16px">'+histHtml+'<button onclick="volLimpiarHistorial()" style="margin-top:10px;background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:\'Nunito\',sans-serif">🗑 Limpiar historial</button></div>':'')
+    +'<div style="font-size:10px;color:var(--text3);margin-top:12px;text-align:center">Procesado localmente · historial sincronizado en la nube</div>';
+}
+
+function volLimpiarHistorial(){ if(!confirm('¿Eliminar todo el historial?')) return; _vSave([]); renderVolante(document.getElementById('dd-content')); toast('Historial eliminado','info'); }
+
+function volProcesar(input){
+  const file=input.files[0]; if(!file) return;
+  const res=document.getElementById('vol-resultado');
+  res.innerHTML='<div style="text-align:center;padding:20px;color:var(--text2)">⏳ Procesando...</div>';
+  if(!window.XLSX){ const s=document.createElement('script'); s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; s.onload=()=>_volLeer(file,res); s.onerror=()=>{ res.innerHTML='<div style="color:var(--red);padding:12px">Error cargando librería.</div>'; }; document.head.appendChild(s); }
+  else _volLeer(file,res);
+}
+function _volLeer(file,res){
+  const reader=new FileReader();
+  reader.onload=e=>{ try{ const wb=XLSX.read(e.target.result,{type:'array',cellDates:true}); const ws=wb.Sheets[wb.SheetNames[0]]; const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}); _volAnalizar(rows,res); }catch(err){ res.innerHTML='<div style="color:var(--red);padding:12px">No se pudo leer: '+err.message+'</div>'; } };
+  reader.readAsArrayBuffer(file);
+}
+function _volAnalizar(rows,res){
+  const fmt=n=>'$'+Math.round(n).toLocaleString('es-CO');
+  const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
+  const toNum=v=>{ if(!v&&v!==0) return 0; const n=parseFloat(String(v).replace(/[$,\s]/g,'')); return isNaN(n)?0:Math.abs(n); };
+  let fechaIni=null,nombre='',nivelEnd=0,prom12=0;
+  for(let i=0;i<Math.min(10,rows.length);i++){
+    const dr=rows[i].filter(c=>c instanceof Date||(typeof c==='string'&&/\d{4}-\d{2}-\d{2}/.test(c)));
+    if(dr.length>=2&&!fechaIni){ const d1=dr[0] instanceof Date?dr[0]:new Date(dr[0]); if(!isNaN(d1)) fechaIni=d1; }
+    rows[i].forEach((c,j)=>{ const cs=String(c); if(/nombre/i.test(cs)&&rows[i][j+2]&&!nombre) nombre=String(rows[i][j+2]).trim(); if(/endeudamiento/i.test(cs)){ const n=toNum(rows[i][j+1]); if(n>0&&n<100) nivelEnd=n; } if(/promedio.*12|12.*mes/i.test(cs)){ const n=toNum(rows[i][j+2]||rows[i][j+1]); if(n>100000) prom12=n; } });
+  }
+  const ms=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  let periodoLabel='Sin fecha',quincena=0,periodoKey='';
+  if(fechaIni){ quincena=fechaIni.getDate()<=15?1:2; periodoLabel=ms[fechaIni.getMonth()]+' '+fechaIni.getFullYear(); periodoKey=fechaIni.getFullYear()+'-'+String(fechaIni.getMonth()+1).padStart(2,'0'); }
+  const K_F=/garantizado|salario|sueldo|basico|básico|transici[oó]n/i,K_C=/comisi[oó]n|bonus|incentivo/i,K_A=/auxilio(?!.*poliz)|transporte/i,K_P=/pensi[oó]n|ivm|proteccion/i,K_S=/salud|eps|egm/i,K_R=/retenci[oó]n.*fuente/i,K_PR=/pr[eé]stamo|credito/i,K_PO=/p[oó]liza|seguro.*vida|vida.*grupo/i;
+  const devs=[],deds=[];
+  let secDev=false,secDed=false,resumen=false,tpD=0,tdD=0,nD=0;
+  rows.forEach(row=>{ const c0=String(row[0]||'').trim();
+    if(/resumen.*consolidado/i.test(c0)) resumen=true;
+    if(/otros.*conceptos.*pago/i.test(c0)&&!resumen){secDev=true;secDed=false;return;}
+    if(/otros.*conceptos.*deducci/i.test(c0)&&!resumen){secDed=true;secDev=false;return;}
+    if(/concepto/i.test(c0)&&/valor/i.test(String(row[3]||row[2]||''))) return;
+    if(resumen){ if(/total.*pagos/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)tpD=n;} if(/total.*deducci/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)tdD=n;} if(/total.*pagar|neto/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)nD=n;} return; }
+    if((secDev||secDed)&&c0&&!/^\d+$/.test(c0)){ const v=toNum(row[3]||row[2]||row[1]); if(!v) return; if(secDev) devs.push({c:c0,v}); else deds.push({c:c0,v}); }
+  });
+  let fijo=0,com=0,aux=0;
+  devs.forEach(d=>{ if(K_C.test(d.c)) com+=d.v; else if(K_F.test(d.c)) fijo+=d.v; else if(K_A.test(d.c)) aux+=d.v; else com+=d.v; });
+  const bruto=tpD||devs.reduce((s,d)=>s+d.v,0);
+  const neto=nD||(bruto-(tdD||deds.reduce((s,d)=>s+d.v,0)));
+  let dPen=0,dSal=0,dPr=0,dPo=0,dRet=0,dOt=0;
+  deds.forEach(d=>{ if(K_P.test(d.c)) dPen+=d.v; else if(K_S.test(d.c)) dSal+=d.v; else if(K_R.test(d.c)) dRet+=d.v; else if(K_PR.test(d.c)) dPr+=d.v; else if(K_PO.test(d.c)) dPo+=d.v; else dOt+=d.v; });
+  const tDed=tdD||deds.reduce((s,d)=>s+d.v,0);
+  volanteHistorial=_vLoad();
+  volanteHistorial=volanteHistorial.filter(v=>!(v.periodoKey===periodoKey&&v.quincena===quincena));
+  volanteHistorial.push({periodoKey,periodo:periodoLabel,quincena,bruto,comisiones:com,fijo,auxilios:aux,deducciones:tDed,neto,deducPension:dPen,deducSalud:dSal,deducPrestamos:dPr,deducPolizas:dPo,deducRet:dRet,deducOtros:dOt,fecha:new Date().toISOString()});
+  _vSave(volanteHistorial);
+  const alertas=[];
+  const pv=bruto>0?com/bruto*100:0,pp=neto>0?dPr/neto*100:0;
+  if(pv>50) alertas.push({t:'amber',tx:'⚡ El '+pv.toFixed(0)+'% del bruto es variable. Un mes flojo afecta fuertemente el neto.'});
+  if(pp>60) alertas.push({t:'red',tx:'🔴 Cuotas de préstamos: '+fmt(dPr)+' ('+pp.toFixed(0)+'% del neto). Margen ajustado.'});
+  if(nivelEnd>70) alertas.push({t:'red',tx:'🔴 Nivel de endeudamiento: '+nivelEnd+'%. Supera el 70% recomendado.'});
+  if(prom12>0&&neto<prom12*0.85) alertas.push({t:'amber',tx:'⚠️ Neto ('+fmt(neto)+') está '+Math.round((1-neto/prom12)*100)+'% bajo el promedio 12m ('+fmt(prom12)+').'});
+  if(fijo>0&&dPr>fijo) alertas.push({t:'red',tx:'🔴 Cuotas ('+fmt(dPr)+') superan el salario fijo ('+fmt(fijo)+'). Solo sostenible con comisiones constantes.'});
+  let compHtml='';
+  const qa=volanteHistorial.find(v=>v.periodoKey===periodoKey&&v.quincena!==quincena);
+  if(qa){ const df=neto-qa.neto,dp=qa.neto>0?df/qa.neto*100:0,co=df>=0?'var(--green)':'var(--red)',si=df>=0?'+':'';
+    compHtml='<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase">vs Q'+(quincena===1?2:1)+' mismo mes</div><div style="font-size:13px;color:var(--text);margin-top:2px">Anterior: '+fmt(qa.neto)+'</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:800;color:'+co+'">'+si+fmt(df)+'</div><div style="font-size:11px;color:'+co+'">'+si+dp.toFixed(1)+'%</div></div></div>'; }
+  const ql='Quincena '+quincena+(quincena===1?' (fuerte)':' (liviana)');
+  const ah=alertas.map(a=>'<div style="background:'+(a.t==='red'?'var(--red-bg)':'var(--amber-bg)')+';border:1px solid '+(a.t==='red'?'var(--red-bdr)':'var(--amber-bdr)')+';border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text)">'+a.tx+'</div>').join('');
+  const fd=(lb,v)=>v>0?'<tr><td style="padding:5px 0;color:var(--text2)">'+lb+'</td><td style="text-align:right;color:var(--red);font-weight:600">−'+fmt(v)+'</td></tr>':'';
+  res.innerHTML='<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.04em">'+periodoLabel+' · '+ql+'</div>'+(nombre?'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+nombre+'</div>':'')+'</div><button onclick="document.getElementById(\'vol-resultado\').innerHTML=\'\'" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:\'Nunito\',sans-serif">✕</button></div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Bruto</div><div style="font-size:18px;font-weight:800;color:var(--text)">'+fmt(bruto)+'</div></div>'
+    +'<div style="background:var(--green-bg);border:1px solid var(--green-bdr);border-radius:var(--radius-sm);padding:12px;text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Neto</div><div style="font-size:18px;font-weight:800;color:var(--green)">'+fmt(neto)+'</div></div></div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Devengados</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'+(fijo?'<tr><td style="padding:5px 0;color:var(--text2)">Salario / Garantizado</td><td style="text-align:right;color:var(--text);font-weight:600">'+fmt(fijo)+'</td></tr>':'')+(com?'<tr><td style="padding:5px 0;color:var(--text2)">Comisiones <span style="color:var(--amber);font-size:10px">('+pct(com,bruto)+')</span></td><td style="text-align:right;color:var(--accent);font-weight:600">'+fmt(com)+'</td></tr>':'')+(aux?'<tr><td style="padding:5px 0;color:var(--text2)">Auxilios</td><td style="text-align:right;color:var(--text)">'+fmt(aux)+'</td></tr>':'')
+    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total bruto</td><td style="text-align:right;font-weight:800;color:var(--text)">'+fmt(bruto)+'</td></tr></table>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Deducciones</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">'+fd('Pensión',dPen)+fd('Salud (EPS)',dSal)+fd('Préstamos',dPr)+fd('Pólizas / Seguros',dPo)+fd('Retención en fuente',dRet)+(dOt?fd('Otros descuentos',dOt):'')
+    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total deducciones</td><td style="text-align:right;font-weight:800;color:var(--red)">−'+fmt(tDed)+'</td></tr></table></div>'
+    +compHtml+(ah?'<div style="margin-bottom:4px">'+ah+'</div>':'')
+    +'<button class="btn btn-pink" style="width:100%;margin-top:10px" onclick="volEnviarAPresupuesto()">📊 Usar neto en Presupuesto</button>';
+}
+function volEnviarAPresupuesto(){
+  const h=_vLoad(); if(!h.length){toast('Primero importa un volante','error');return;}
+  const ps=[...new Set(h.map(v=>v.periodoKey))].sort().reverse();
+  const nm=h.filter(v=>v.periodoKey===ps[0]).reduce((s,v)=>s+v.neto,0);
+  const bb=document.querySelector('.dd-tab[onclick*="budget"]');
+  if(bb) setDDTab('budget',bb);
+  setTimeout(()=>{ const inp=document.querySelector('#budget-ing-principal,#inp-ingreso,[data-budget-ing]'); if(inp){inp.value=nm;inp.dispatchEvent(new Event('input',{bubbles:true}));toast('Neto $'+Math.round(nm).toLocaleString('es-CO')+' cargado ✓','success',3000);}else toast('Neto mes: $'+Math.round(nm).toLocaleString('es-CO')+' — ingrésalo en Presupuesto','info',5000); },400);
+}
+// ════════════════════════════════════════════════════════════════════════════
+
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
   setTimeout(checkLogin, 300);
