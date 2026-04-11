@@ -423,6 +423,25 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .cn-line{stroke-dasharray:150;stroke-dashoffset:150;animation:none}
 .cn-line.play{animation:ln-draw .55s ease forwards}
 .cn-intro-label{font-size:11px;color:var(--text3);margin-top:10px;text-align:center;font-style:italic}
+/* Score de salud financiera */
+.salud-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.salud-score-wrap{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+.salud-circle{position:relative;width:80px;height:80px;flex-shrink:0}
+.salud-circle svg{width:80px;height:80px;transform:rotate(-90deg)}
+.salud-circle-bg{fill:none;stroke:var(--border2);stroke-width:7}
+.salud-circle-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)}
+.salud-score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.salud-score-val{font-size:20px;font-weight:900;font-family:'DM Mono',monospace;line-height:1}
+.salud-score-max{font-size:9px;color:var(--text3);font-weight:600}
+.salud-info{flex:1}
+.salud-nivel{font-size:16px;font-weight:900;margin-bottom:2px}
+.salud-desc{font-size:11px;color:var(--text3);line-height:1.5}
+.salud-bars{display:flex;flex-direction:column;gap:7px}
+.salud-bar-row{display:flex;align-items:center;gap:8px}
+.salud-bar-label{font-size:10px;color:var(--text3);width:80px;flex-shrink:0}
+.salud-bar-track{flex:1;height:5px;background:var(--border2);border-radius:3px;overflow:hidden}
+.salud-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+.salud-bar-val{font-size:10px;font-weight:700;width:28px;text-align:right;font-family:'DM Mono',monospace}
 /* Cards observaciones */
 .obs-section-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);display:flex;align-items:center;gap:5px;margin:14px 0 7px}
 .obs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 12px 10px;margin-bottom:8px;position:relative;overflow:hidden}
@@ -2901,6 +2920,141 @@ function _obsCardHTML(o){
 }
 
 let _cuadreAnimDone=false;
+function calcSaludFinanciera(){
+  const r = cajaResumen();
+  const bArr = loadBudgets();
+  const bAct = bArr && bArr.length ? bArr[bArr.length-1] : null;
+  const ingPres = bAct ? budMonthIngresos(bAct) : 0;
+  const gastosFijos = bAct ? allTotal(bAct,'gastosFijos') : 0;
+  const gastosVar = bAct ? allTotal(bAct,'gastosVar') : 0;
+  const sfPres = ingPres - gastosFijos - gastosVar;
+  const totalDeudaP = deudas.reduce((s,d)=>s+saldoDeuda(d),0);
+  const enMora = clients.filter(c=>!isLiquidado(c)&&diasMora(c)>0);
+  const clientesActivos = clients.filter(c=>!isLiquidado(c));
+
+  // ── DIMENSIÓN 1: Negocio (30 pts) ────────────────────────────────────────
+  let pNegocio = 0;
+  // Mora (15 pts)
+  if(clientesActivos.length>0){
+    const pctMora = enMora.length/clientesActivos.length;
+    if(pctMora===0) pNegocio+=15;
+    else if(pctMora<=0.1) pNegocio+=10;
+    else if(pctMora<=0.25) pNegocio+=5;
+  } else { pNegocio+=8; } // sin clientes aún
+  // ROI (15 pts)
+  const roi = r.capitalEnCalle>0 ? (r.ganancias*12/r.capitalEnCalle*100) : 0;
+  if(roi>=30) pNegocio+=15;
+  else if(roi>=20) pNegocio+=12;
+  else if(roi>=10) pNegocio+=7;
+  else if(roi>0) pNegocio+=3;
+  const maxNegocio = 30;
+
+  // ── DIMENSIÓN 2: Deudas personales (25 pts) ──────────────────────────────
+  let pDeudas = 25; // empieza perfecto, se resta
+  if(totalDeudaP>0){
+    // Relación deuda/ingresos
+    const rdi = ingPres>0 ? totalDeudaP/ingPres : 99;
+    if(rdi>12) pDeudas-=15;
+    else if(rdi>6) pDeudas-=8;
+    else if(rdi>3) pDeudas-=3;
+    // Tasa más cara
+    const dActivas = deudas.filter(d=>saldoDeuda(d)>0);
+    if(dActivas.length>0){
+      const tasaMax = Math.max(...dActivas.map(d=>d.tasa||0));
+      if(tasaMax>5) pDeudas-=6;
+      else if(tasaMax>2) pDeudas-=3;
+    }
+  }
+  pDeudas = Math.max(0, pDeudas);
+  const maxDeudas = 25;
+
+  // ── DIMENSIÓN 3: Presupuesto / flujo (25 pts) ────────────────────────────
+  let pPresupuesto = 0;
+  if(ingPres>0){
+    // Saldo libre positivo (15 pts)
+    if(sfPres>0) pPresupuesto+=15;
+    else if(sfPres===0) pPresupuesto+=5;
+    // Gastos variables bajo control (10 pts)
+    const pctVar = ingPres>0 ? gastosVar/ingPres : 1;
+    if(pctVar<=0.2) pPresupuesto+=10;
+    else if(pctVar<=0.3) pPresupuesto+=7;
+    else if(pctVar<=0.45) pPresupuesto+=3;
+  } else { pPresupuesto+=8; } // sin presupuesto aún
+  const maxPresupuesto = 25;
+
+  // ── DIMENSIÓN 4: Ahorro / bolsillos (20 pts) ─────────────────────────────
+  let pAhorro = 0;
+  const bolsillosActivos = (pockets||[]).filter(p=>p.meta>0);
+  if(bolsillosActivos.length>0){
+    pAhorro+=10; // tiene metas de ahorro
+    const pctCumplido = bolsillosActivos.reduce((s,p)=>s+(p.actual||0)/p.meta,0)/bolsillosActivos.length;
+    if(pctCumplido>=0.8) pAhorro+=10;
+    else if(pctCumplido>=0.5) pAhorro+=6;
+    else if(pctCumplido>=0.2) pAhorro+=3;
+  }
+  const maxAhorro = 20;
+
+  const total = Math.min(100, pNegocio+pDeudas+pPresupuesto+pAhorro);
+
+  return {
+    total,
+    dims:[
+      {label:'Negocio', val:pNegocio, max:maxNegocio},
+      {label:'Deudas',  val:pDeudas,  max:maxDeudas},
+      {label:'Flujo',   val:pPresupuesto, max:maxPresupuesto},
+      {label:'Ahorro',  val:pAhorro,  max:maxAhorro},
+    ]
+  };
+}
+
+function renderSaludCard(salud){
+  const s = salud.total;
+  const color = s>=80?'#3DDC84':s>=60?'#00BCD4':s>=40?'#FFB300':'#FF6B6B';
+  const nivel = s>=80?'💚 Excelente':s>=60?'💙 Buena':s>=40?'🟡 Regular':'🔴 Crítica';
+  const desc = s>=80?'Tu finanzas están en gran forma. Sigue así.'
+    :s>=60?'Buen manejo general. Hay áreas por mejorar.'
+    :s>=40?'Atención requerida en algunas áreas clave.'
+    :'Tus finanzas necesitan atención urgente.';
+
+  // Circle: circumference = 2π×34 ≈ 213.6
+  const circ = 213.6;
+  const offset = circ - (s/100)*circ;
+
+  const bars = salud.dims.map(d=>{
+    const pct = d.max>0?Math.round(d.val/d.max*100):0;
+    const bc = pct>=80?'#3DDC84':pct>=50?'#00BCD4':pct>=25?'#FFB300':'#FF6B6B';
+    return `<div class="salud-bar-row">
+      <div class="salud-bar-label">${d.label}</div>
+      <div class="salud-bar-track"><div class="salud-bar-fill" style="width:${pct}%;background:${bc}"></div></div>
+      <div class="salud-bar-val" style="color:${bc}">${d.val}/${d.max}</div>
+    </div>`;
+  }).join('');
+
+  return `<div class="salud-card">
+    <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">🏦 Salud Financiera</div>
+    <div class="salud-score-wrap">
+      <div class="salud-circle">
+        <svg viewBox="0 0 80 80">
+          <circle class="salud-circle-bg" cx="40" cy="40" r="34"/>
+          <circle class="salud-circle-fill" cx="40" cy="40" r="34"
+            stroke="${color}"
+            style="stroke-dasharray:${circ};stroke-dashoffset:${circ}"
+            id="salud-arc"/>
+        </svg>
+        <div class="salud-score-num">
+          <div class="salud-score-val" style="color:${color}" id="salud-num">0</div>
+          <div class="salud-score-max">/ 100</div>
+        </div>
+      </div>
+      <div class="salud-info">
+        <div class="salud-nivel" style="color:${color}">${nivel}</div>
+        <div class="salud-desc">${desc}</div>
+      </div>
+    </div>
+    <div class="salud-bars">${bars}</div>
+  </div>`;
+}
+
 function renderCuadre(){
   try{
     loadDeudas();
@@ -2943,6 +3097,9 @@ function renderCuadre(){
     html+='<div class="cr-row"><span class="cr-lbl">Ingresos mes</span><span class="cr-val c-green">'+fmtS(ingPres)+'</span></div>';
     html+='<div class="cr-row"><span class="cr-lbl">Saldo libre</span><span class="cr-val '+(sfPres>=0?'c-green':'c-red')+'">'+fmtS(sfPres)+'</span></div></div>';
     html+='</div>';
+    // Score salud financiera
+    const saludData = calcSaludFinanciera();
+    html += renderSaludCard(saludData);
     // Observaciones
     if(obs.negocio.length){html+='<div class="obs-world"><span>💼 Negocio</span></div>';obs.negocio.forEach(function(o){html+=_obsCardHTML(o);});}
     if(obs.personal.length){html+='<div class="obs-world"><span>👤 Personal</span></div>';obs.personal.forEach(function(o){html+=_obsCardHTML(o);});}
@@ -2962,6 +3119,24 @@ function renderCuadre(){
       var lns=document.querySelectorAll('#cuadre-body .cn-line');
       var dl=[0,.15,.3,.45,.6,.75];
       lns.forEach(function(l,i){l.style.animationDelay=(dl[i]||0)+'s';l.classList.add('play');});
+      // Animar score
+      var arc=document.getElementById('salud-arc');
+      var num=document.getElementById('salud-num');
+      if(arc&&num){
+        var circ=213.6;
+        var s=saludData.total;
+        var offset=circ-(s/100)*circ;
+        setTimeout(function(){arc.style.strokeDashoffset=offset;},100);
+        var start=0;var dur=1200;var t0=performance.now();
+        function countUp(ts){
+          var p=Math.min((ts-t0)/dur,1);
+          var ease=1-Math.pow(1-p,3);
+          num.textContent=Math.round(ease*s);
+          if(p<1) requestAnimationFrame(countUp);
+          else num.textContent=s;
+        }
+        requestAnimationFrame(countUp);
+      }
     });});
   }catch(e){
     var eb=document.getElementById('cuadre-body');
