@@ -745,6 +745,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .recovery-result-title{font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px}
 .recovery-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
 .login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 100%);z-index:99998;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:'Nunito',sans-serif}
+.login-screen.visible{display:flex}
 /* ── SPLASH SCREEN ── */
 .splash-screen{position:fixed;inset:0;background:linear-gradient(160deg,#090918 0%,#1a0035 60%,#0a0a18 100%);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Nunito',sans-serif;transition:opacity .5s ease}
 .splash-logo-box{width:90px;height:90px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 48px rgba(80,80,255,.5);animation:splash-pop .6s cubic-bezier(.34,1.56,.64,1) both}
@@ -8001,7 +8002,14 @@ let currentUser = null;
 
 function checkLogin(){
   currentUser = null;
-  document.getElementById('login-screen').style.display='flex';
+  const ls = document.getElementById('login-screen');
+  ls.style.display = '';
+  ls.classList.add('visible');
+}
+function hideLogin(){
+  const ls = document.getElementById('login-screen');
+  ls.classList.remove('visible');
+  ls.style.display = 'none';
 }
 
 // ── Tabs login / registro ────────────────────────────────────────────────────
@@ -8121,7 +8129,7 @@ async function doLogin(){
     localStorage.setItem('ef_admin_uid', uid);
 
     // Ocultar login y entrar
-    document.getElementById('login-screen').style.display='none';
+    hideLogin();
     applyRoleRestrictions();
 
     // Cargar datos propios desde Firestore
@@ -8269,7 +8277,7 @@ async function doLogout(){
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
+  checkLogin();
   // Reset register form
   const rf=document.getElementById('register-form');
   const rp=document.getElementById('register-pending');
@@ -13020,73 +13028,72 @@ function volEnviarAPresupuesto(){
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
 
-  // Mostrar login de inmediato — se ocultará solo si hay sesión válida
+  // 1. Mostrar login de inmediato siempre
   checkLogin();
 
-  let _authResolved = false;
-
-  // Timeout de seguridad: si Firebase no responde en 4s, el login ya está visible
-  setTimeout(()=>{
-    if(!_authResolved){ _authResolved = true; /* login ya visible por checkLogin() arriba */ }
-  }, 4000);
-
-  function _initAuth(){
+  // 2. Esperar a que Firebase esté listo
+  function _waitFirebase(){
     if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._auth){
-      setTimeout(_initAuth, 100);
+      setTimeout(_waitFirebase, 80);
       return;
     }
-    window._fbOnAuthStateChanged(window._auth, async (user) => {
-      if(_authResolved) return; // ya resolvió el timeout, no hacer nada
-      _authResolved = true;
+
+    // 3. Escuchar estado de auth UNA sola vez
+    const unsub = window._fbOnAuthStateChanged(window._auth, async (user) => {
+      unsub(); // desuscribir inmediatamente — solo necesitamos el estado inicial
 
       if(!user){
-        // Sin sesión — login ya está visible
+        // Sin sesión — el login ya está visible, nada más que hacer
         return;
       }
+
+      // Hay sesión Firebase — verificar en Firestore si el usuario está activo
       try{
-        const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',user.uid));
+        const snap = await window._fbGetDoc(window._fbDoc(window._db, 'usuarios', user.uid));
         if(!snap.exists()){
           await window._fbSignOut(window._auth);
           return; // login ya visible
         }
         const perfil = snap.data();
-        if(perfil.estado==='pendiente'||perfil.estado==='suspendido'||perfil.estado==='rechazado'){
+        if(perfil.estado !== 'activo'){
           await window._fbSignOut(window._auth);
           return; // login ya visible
         }
-        // Sesión válida — construir currentUser y entrar
+
+        // Usuario válido — construir sesión y entrar sin pasar por el formulario
         const rol = perfil.rol || 'usuario';
         const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
         currentUser = {
-          uid: user.uid,
-          user: user.uid,
-          nombre: perfil.nombre || user.email.split('@')[0],
-          email: perfil.email || user.email,
-          rol: esAdmin ? 'admin' : rol,
-          plan: perfil.plan || 'free',
+          uid:      user.uid,
+          user:     user.uid,
+          nombre:   perfil.nombre || user.email.split('@')[0],
+          email:    perfil.email  || user.email,
+          rol:      esAdmin ? 'admin' : rol,
+          plan:     perfil.plan   || 'free',
           permisos: ROL_PERMISOS[esAdmin ? 'admin' : rol] || ROL_PERMISOS.usuario
         };
         _adminUid = user.uid;
         localStorage.setItem('ef_admin_uid', user.uid);
-        document.getElementById('login-screen').style.display='none';
+
+        hideLogin();
         applyRoleRestrictions();
         await _loadFromFirestore(user.uid);
         load();
         loadDeudas();
         renderSidebar();
-        toast('Bienvenido de nuevo, '+currentUser.nombre+' ✓','success',2500);
-        if(currentUser.rol==='invitado'){
-          setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
+        toast('Bienvenido, ' + currentUser.nombre + ' ✓', 'success', 2500);
+        if(currentUser.rol === 'invitado'){
+          setTimeout(()=>{ checkTC(); setTimeout(()=>goTo('cliente'), 400); }, 300);
         } else {
-          setTimeout(checkTC,300);
+          setTimeout(checkTC, 300);
         }
-      }catch(e){
-        // Error inesperado — login ya está visible
-        if(window._auth) try{ await window._fbSignOut(window._auth); }catch(_){}
+      } catch(e){
+        // Cualquier error: cerrar sesión y mostrar login (ya está visible)
+        try{ await window._fbSignOut(window._auth); }catch(_){}
       }
     });
   }
-  _initAuth();
+  _waitFirebase();
 });
 </script>
 <!-- Login Screen -->
