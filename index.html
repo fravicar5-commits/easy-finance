@@ -7994,7 +7994,20 @@ let currentUser = null;
 
 function checkLogin(){
   currentUser = null;
+  // Mostrar landing primero, no el login directo
+  document.getElementById('landing-page').style.display='block';
+  document.getElementById('login-screen').style.display='none';
+}
+function landingGoLogin(){
+  document.getElementById('landing-page').style.display='none';
   document.getElementById('login-screen').style.display='flex';
+  // Asegurar que el tab de login esté activo
+  switchLoginTab('login');
+}
+function landingGoRegister(){
+  document.getElementById('landing-page').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  switchLoginTab('register');
 }
 
 // ── Tabs login / registro ────────────────────────────────────────────────────
@@ -8094,6 +8107,18 @@ async function doLogin(){
       errEl.style.display='block';
       if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
       return;
+    }
+
+    // Verificar si el período de prueba expiró
+    if(perfil.trialEnd && perfil.plan==='trial'){
+      const trialEnd = new Date(perfil.trialEnd);
+      if(Date.now() > trialEnd.getTime()){
+        await window._fbSignOut(window._auth);
+        errEl.innerHTML='Tu período de prueba gratuita de <strong>7 días</strong> ha finalizado.<br><span style="font-size:11px;color:#8888aa">Para continuar usando Cuadre contacta al administrador.</span>';
+        errEl.style.display='block';
+        if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
+        return;
+      }
     }
 
     // Usuario aprobado — construir objeto currentUser
@@ -8307,6 +8332,13 @@ async function renderAdminUsuarios(container){
         const badgeClass=u.estado==='pendiente'?'badge-pendiente':u.estado==='suspendido'?'badge-suspendido':'badge-activo';
         const badgeLabel=u.estado==='pendiente'?'Pendiente':u.estado==='suspendido'?'Suspendido':'Activo';
         const rolLabel={admin:'Admin',usuario:'Usuario',cobrador:'Cobrador',lectura:'Lectura',invitado:'Invitado'}[u.rol]||u.rol;
+        // Calcular días de prueba restantes
+        let trialBadge='';
+        if(u.trialEnd && u.plan==='trial' && u.estado==='activo'){
+          const diasR=Math.ceil((new Date(u.trialEnd)-Date.now())/(24*60*60*1000));
+          if(diasR>0) trialBadge='<span style="background:rgba(0,230,120,.12);color:#00e678;border:1px solid rgba(0,230,120,.3);border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700">⏱ '+diasR+'d prueba</span>';
+          else trialBadge='<span style="background:rgba(255,107,107,.12);color:var(--red);border:1px solid rgba(255,107,107,.3);border-radius:8px;padding:2px 7px;font-size:10px;font-weight:700">Prueba vencida</span>';
+        }
         let btns='';
         if(u.estado==='pendiente'){
           btns='<button class="admin-btn-sm" style="background:rgba(102,187,106,.2);color:#66bb6a;border:1px solid rgba(102,187,106,.4)" onclick="adminAprobar(\''+u.uid+'\')">✓ Aprobar</button>'
@@ -8318,6 +8350,7 @@ async function renderAdminUsuarios(container){
             +'<option value="lectura"'+(u.rol==='lectura'?' selected':'')+'>Lectura</option>'
             +'<option value="invitado"'+(u.rol==='invitado'?' selected':'')+'>Invitado</option>'
             +'</select>'
+            +' <button class="admin-btn-sm" style="background:rgba(80,80,255,.15);color:#a0a0ff;border:1px solid rgba(80,80,255,.3)" onclick="adminExtenderPrueba(\''+u.uid+'\')">+7d</button>'
             +' <button class="admin-btn-sm" style="background:rgba(239,83,80,.1);color:var(--red);border:1px solid rgba(239,83,80,.3)" onclick="adminSuspender(\''+u.uid+'\')">Suspender</button>';
         } else if(u.estado==='suspendido'){
           btns='<button class="admin-btn-sm" style="background:rgba(102,187,106,.2);color:#66bb6a;border:1px solid rgba(102,187,106,.4)" onclick="adminAprobar(\''+u.uid+'\')">Reactivar</button>';
@@ -8328,6 +8361,7 @@ async function renderAdminUsuarios(container){
           +'<div class="admin-user-email">'+u.email+' · <span style="color:var(--amber)">'+rolLabel+'</span></div>'
           +'</div>'
           +'<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end">'
+          +trialBadge
           +'<span class="admin-user-badge '+badgeClass+'">'+badgeLabel+'</span>'
           +btns
           +'</div></div>';
@@ -8341,10 +8375,11 @@ async function renderAdminUsuarios(container){
 
 async function adminAprobar(uid){
   try{
+    const trialEnd = new Date(Date.now() + 7*24*60*60*1000).toISOString();
     await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{
-      estado:'activo',aprobadoEn:new Date().toISOString()
+      estado:'activo', aprobadoEn:new Date().toISOString(), trialEnd, plan:'trial'
     });
-    toast('Usuario aprobado ✓','success');
+    toast('Usuario aprobado — prueba de 7 días activada ✓','success');
     const c=document.getElementById('cuadre-admin-usuarios');
     if(c) renderAdminUsuarios(c);
   }catch(e){toast('Error: '+e.message,'error');}
@@ -8365,6 +8400,20 @@ async function adminSuspender(uid){
   try{
     await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{estado:'suspendido'});
     toast('Usuario suspendido','info');
+    const c=document.getElementById('cuadre-admin-usuarios');
+    if(c) renderAdminUsuarios(c);
+  }catch(e){toast('Error: '+e.message,'error');}
+}
+
+async function adminExtenderPrueba(uid){
+  try{
+    const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',uid));
+    const perfil = snap.data();
+    // Si ya tiene trialEnd futuro, extender desde ahí; si no, desde hoy
+    const base = perfil.trialEnd && new Date(perfil.trialEnd)>new Date() ? new Date(perfil.trialEnd) : new Date();
+    const nuevoTrialEnd = new Date(base.getTime() + 7*24*60*60*1000).toISOString();
+    await window._fbUpdateDoc(window._fbDoc(window._db,'usuarios',uid),{trialEnd:nuevoTrialEnd, plan:'trial', estado:'activo'});
+    toast('+7 días de prueba activados ✓','success');
     const c=document.getElementById('cuadre-admin-usuarios');
     if(c) renderAdminUsuarios(c);
   }catch(e){toast('Error: '+e.message,'error');}
@@ -13013,6 +13062,99 @@ window.addEventListener('DOMContentLoaded',()=>{
   setTimeout(checkLogin, 300);
 });
 </script>
+<!-- Landing Page -->
+<div id="landing-page" style="display:none;position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 60%,#0a0a18 100%);z-index:99997;overflow-y:auto;font-family:'Nunito',sans-serif;color:#f0edf8">
+
+  <!-- Nav -->
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid rgba(80,80,255,.12)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:10px;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:20px;font-weight:900;color:white;line-height:1">C</span>
+      </div>
+      <span style="font-size:20px;font-weight:900;letter-spacing:-.02em">Cuadre</span>
+    </div>
+    <button onclick="landingGoLogin()" style="background:rgba(80,80,255,.15);border:1px solid rgba(80,80,255,.4);color:#a0a0ff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Iniciar sesión</button>
+  </div>
+
+  <!-- Hero -->
+  <div style="text-align:center;padding:56px 24px 40px">
+    <div style="display:inline-block;background:rgba(0,230,120,.1);border:1px solid rgba(0,230,120,.3);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:800;color:#00e678;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px">7 días gratis · sin tarjeta</div>
+    <h1 style="font-size:clamp(28px,7vw,48px);font-weight:900;line-height:1.1;margin:0 0 16px;letter-spacing:-.02em">Tus finanzas,<br><span style="background:linear-gradient(90deg,#7070ff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">bajo control</span></h1>
+    <p style="font-size:16px;color:#9896b0;max-width:340px;margin:0 auto 32px;line-height:1.6">Presupuesto, deudas, ahorros y comisiones — todo en una sola app que funciona desde tu celular sin instalar nada.</p>
+    <button onclick="landingGoRegister()" style="background:linear-gradient(135deg,#5050ff,#8800cc);color:white;border:none;padding:16px 36px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 32px rgba(80,80,255,.4);width:100%;max-width:320px">Probar gratis 7 días →</button>
+    <div style="margin-top:12px;font-size:12px;color:#555570">Sin compromiso · cancela cuando quieras</div>
+  </div>
+
+  <!-- Para quién -->
+  <div style="padding:0 20px 40px">
+    <div style="font-size:11px;font-weight:800;color:#555570;text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:20px">¿Para quién es Cuadre?</div>
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:420px;margin:0 auto">
+
+      <div style="background:rgba(80,80,255,.08);border:1px solid rgba(80,80,255,.18);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">💼</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Asalariados con ingresos mixtos</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Tienes salario fijo más comisiones que cambian cada mes. Cuadre separa lo seguro de lo variable y te dice cuánto puedes gastar realmente en cada quincena.</div>
+      </div>
+
+      <div style="background:rgba(0,230,120,.06);border:1px solid rgba(0,230,120,.15);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">🏦</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Personas con deudas o créditos</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Registra todas tus deudas en un solo lugar, ve cuánto debes en total, cuándo vence cada cuota y cuánto te queda libre después de pagar.</div>
+      </div>
+
+      <div style="background:rgba(204,68,255,.06);border:1px solid rgba(204,68,255,.15);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">📋</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Prestamistas informales</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Lleva el control de tus clientes, cuotas, pagos y mora. Genera estados de cuenta y recibos de pago desde el celular en segundos.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Funciones -->
+  <div style="padding:0 20px 40px">
+    <div style="font-size:11px;font-weight:800;color:#555570;text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:20px">¿Qué incluye?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:0 auto">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">📊</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Presupuesto mensual</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Ingresos, gastos y saldo libre real</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🐷</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Bolsillos de ahorro</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Metas con fecha y proyecciones</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">📄</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Volante de pago</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Sube tu Excel y analiza tu neto</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🏠</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Simulador de vivienda</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Crédito, UVR y Mi Casa Ya</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">💳</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Control de deudas</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Cuotas, mora y estados de cuenta</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🔒</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Datos seguros</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Sincronizados en la nube</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA final -->
+  <div style="text-align:center;padding:0 24px 56px">
+    <button onclick="landingGoRegister()" style="background:linear-gradient(135deg,#5050ff,#8800cc);color:white;border:none;padding:16px 36px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 32px rgba(80,80,255,.4);width:100%;max-width:320px">Comenzar prueba gratis →</button>
+    <div style="margin-top:14px;font-size:12px;color:#555570">¿Ya tienes cuenta? <button onclick="landingGoLogin()" style="background:none;border:none;color:#7070ff;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;text-decoration:underline">Inicia sesión aquí</button></div>
+  </div>
+
+</div>
 <!-- Login Screen -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-logo">
@@ -13055,12 +13197,11 @@ window.addEventListener('DOMContentLoaded',()=>{
     <div id="register-panel" style="display:none">
       <div class="login-error" id="register-error">Error al registrar</div>
       <div id="register-pending" class="login-pending" style="display:none">
-        <div class="login-pending-icon">⏳</div>
-        <div class="login-pending-title">Solicitud enviada</div>
-        <div class="login-pending-sub">Tu cuenta está en revisión y será activada pronto.<br><br>
-          <strong style="color:#FFB300">Para activar tu acceso:</strong><br>
-          Realiza tu pago por <strong style="color:#FFB300">Nequi o Bancolombia</strong> a nombre de <strong style="color:#FFB300">Fran Viloria</strong> y envía el comprobante por WhatsApp al <strong style="color:#FFB300">+57 300 851 4699</strong>.<br><br>
-          Una vez confirmado el pago, tu cuenta será aprobada en minutos. 🚀
+        <div class="login-pending-icon">🎉</div>
+        <div class="login-pending-title">¡Solicitud recibida!</div>
+        <div class="login-pending-sub">Tu cuenta está en revisión.<br><br>
+          Una vez aprobada, tendrás <strong style="color:#00e678">7 días de prueba gratuita</strong> para explorar todas las funciones de Cuadre sin ningún costo.<br><br>
+          Te notificaremos cuando tu acceso esté listo. ¡Pronto podrás empezar! 🚀
         </div>
       </div>
       <div id="register-form">
