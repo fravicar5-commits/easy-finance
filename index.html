@@ -911,7 +911,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 <!-- ════════════════════════════════
      HOME SCREEN
 ════════════════════════════════ -->
-<div class="screen active" id="home">
+<div class="screen" id="home">
   <div class="home-logo">
     <div class="cuadre-logo-icon" style="width:72px;height:72px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 32px rgba(80,80,255,.4);margin:0 auto">
       <span style="font-family:'Nunito',sans-serif;font-size:38px;font-weight:900;color:white;line-height:1">C</span>
@@ -8122,6 +8122,7 @@ async function doLogin(){
 
     // Ocultar login y entrar
     document.getElementById('login-screen').style.display='none';
+    document.getElementById('home').classList.add('active');
     applyRoleRestrictions();
 
     // Cargar datos propios desde Firestore
@@ -8265,7 +8266,7 @@ async function doLogout(){
   // Limpiar datos en memoria para que no queden datos del usuario anterior
   clients=[];caja=[];notes=[];pockets=[];deudas=[];
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById('home').classList.add('active');
+  // NO activar home hasta próximo login exitoso
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
@@ -13020,17 +13021,59 @@ function volEnviarAPresupuesto(){
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
 
-  // Mostrar login siempre al cargar la página
-  checkLogin();
-
-  // Cerrar cualquier sesión Firebase previa — siempre se deben ingresar credenciales
+  // Esperar Firebase listo, luego verificar sesión persistida
   function _initAuth(){
-    if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._fbSignOut || !window._auth){
+    if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._auth){
       setTimeout(_initAuth, 100);
       return;
     }
-    // Cerrar sesión activa si existe, luego el usuario ingresa manualmente
-    window._fbSignOut(window._auth).catch(()=>{});
+    window._fbOnAuthStateChanged(window._auth, async (user) => {
+      if(!user){
+        checkLogin();
+        return;
+      }
+      try{
+        const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',user.uid));
+        if(!snap.exists()){
+          await window._fbSignOut(window._auth);
+          checkLogin();
+          return;
+        }
+        const perfil = snap.data();
+        if(perfil.estado==='pendiente'||perfil.estado==='suspendido'||perfil.estado==='rechazado'){
+          await window._fbSignOut(window._auth);
+          checkLogin();
+          return;
+        }
+        const rol = perfil.rol || 'usuario';
+        const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
+        currentUser = {
+          uid: user.uid,
+          user: user.uid,
+          nombre: perfil.nombre || user.email.split('@')[0],
+          email: perfil.email || user.email,
+          rol: esAdmin ? 'admin' : rol,
+          plan: perfil.plan || 'free',
+          permisos: ROL_PERMISOS[esAdmin ? 'admin' : rol] || ROL_PERMISOS.usuario
+        };
+        _adminUid = user.uid;
+        localStorage.setItem('ef_admin_uid', user.uid);
+        document.getElementById('login-screen').style.display='none';
+        document.getElementById('home').classList.add('active');
+        applyRoleRestrictions();
+        await _loadFromFirestore(user.uid);
+        load();
+        loadDeudas();
+        renderSidebar();
+        if(currentUser.rol==='invitado'){
+          setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
+        } else {
+          setTimeout(checkTC,300);
+        }
+      }catch(e){
+        checkLogin();
+      }
+    });
   }
   _initAuth();
 });
@@ -13173,9 +13216,23 @@ window.addEventListener('DOMContentLoaded',()=>{
 </div>
 <script>
 (function(){
-  const sp=document.getElementById('splash-screen');
+  // Ocultar home inmediatamente — solo se muestra tras login exitoso
+  const home = document.getElementById('home');
+  if(home) home.classList.remove('active');
+
+  const sp = document.getElementById('splash-screen');
   if(!sp) return;
-  setTimeout(()=>{sp.style.opacity='0';setTimeout(()=>sp.remove(),500);},1600);
+
+  // Cuando el splash termina, mostrar login siempre
+  setTimeout(()=>{
+    sp.style.opacity='0';
+    setTimeout(()=>{
+      sp.remove();
+      // Mostrar login al terminar el splash
+      const ls = document.getElementById('login-screen');
+      if(ls) ls.style.display = 'flex';
+    }, 500);
+  }, 1600);
 })();
 </script>
 </body>
