@@ -8120,7 +8120,7 @@ async function doLogin(){
     _adminUid = uid;
     localStorage.setItem('ef_admin_uid', uid);
 
-    // Ocultar login y entrar
+    // Ocultar login y mostrar home
     document.getElementById('login-screen').style.display='none';
     document.getElementById('home').classList.add('active');
     applyRoleRestrictions();
@@ -8266,7 +8266,6 @@ async function doLogout(){
   // Limpiar datos en memoria para que no queden datos del usuario anterior
   clients=[];caja=[];notes=[];pockets=[];deudas=[];
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  // NO activar home hasta próximo login exitoso
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
@@ -13020,62 +13019,15 @@ function volEnviarAPresupuesto(){
 
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
-
-  // Esperar Firebase listo, luego verificar sesión persistida
-  function _initAuth(){
-    if(!window._firebaseReady || !window._fbOnAuthStateChanged || !window._auth){
-      setTimeout(_initAuth, 100);
+  // Cerrar sesión Firebase previa para que siempre se requieran credenciales
+  function _cerrarSesionPrevia(){
+    if(!window._firebaseReady || !window._fbSignOut || !window._auth){
+      setTimeout(_cerrarSesionPrevia, 100);
       return;
     }
-    window._fbOnAuthStateChanged(window._auth, async (user) => {
-      if(!user){
-        checkLogin();
-        return;
-      }
-      try{
-        const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',user.uid));
-        if(!snap.exists()){
-          await window._fbSignOut(window._auth);
-          checkLogin();
-          return;
-        }
-        const perfil = snap.data();
-        if(perfil.estado==='pendiente'||perfil.estado==='suspendido'||perfil.estado==='rechazado'){
-          await window._fbSignOut(window._auth);
-          checkLogin();
-          return;
-        }
-        const rol = perfil.rol || 'usuario';
-        const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
-        currentUser = {
-          uid: user.uid,
-          user: user.uid,
-          nombre: perfil.nombre || user.email.split('@')[0],
-          email: perfil.email || user.email,
-          rol: esAdmin ? 'admin' : rol,
-          plan: perfil.plan || 'free',
-          permisos: ROL_PERMISOS[esAdmin ? 'admin' : rol] || ROL_PERMISOS.usuario
-        };
-        _adminUid = user.uid;
-        localStorage.setItem('ef_admin_uid', user.uid);
-        document.getElementById('login-screen').style.display='none';
-        document.getElementById('home').classList.add('active');
-        applyRoleRestrictions();
-        await _loadFromFirestore(user.uid);
-        load();
-        loadDeudas();
-        renderSidebar();
-        if(currentUser.rol==='invitado'){
-          setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},300);
-        } else {
-          setTimeout(checkTC,300);
-        }
-      }catch(e){
-        checkLogin();
-      }
-    });
+    window._fbSignOut(window._auth).catch(()=>{});
   }
-  _initAuth();
+  _cerrarSesionPrevia();
 });
 </script>
 <!-- Login Screen -->
@@ -13216,20 +13168,18 @@ window.addEventListener('DOMContentLoaded',()=>{
 </div>
 <script>
 (function(){
-  // Ocultar home inmediatamente — solo se muestra tras login exitoso
-  const home = document.getElementById('home');
-  if(home) home.classList.remove('active');
+  // Ocultar home desde el primer frame
+  var h = document.getElementById('home');
+  if(h) h.classList.remove('active');
 
-  const sp = document.getElementById('splash-screen');
+  var sp = document.getElementById('splash-screen');
   if(!sp) return;
-
-  // Cuando el splash termina, mostrar login siempre
-  setTimeout(()=>{
-    sp.style.opacity='0';
-    setTimeout(()=>{
+  setTimeout(function(){
+    sp.style.opacity = '0';
+    setTimeout(function(){
       sp.remove();
       // Mostrar login al terminar el splash
-      const ls = document.getElementById('login-screen');
+      var ls = document.getElementById('login-screen');
       if(ls) ls.style.display = 'flex';
     }, 500);
   }, 1600);
