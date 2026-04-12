@@ -2372,14 +2372,20 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  // Deudas: buscar primero con la clave del usuario actual, luego deudas_admin como fallback
-  const deudasUID = currentUser ? currentUser.user : null;
-  const deudasData = (deudasUID && data['deudas_'+deudasUID] && data['deudas_'+deudasUID].length>0)
-    ? data['deudas_'+deudasUID]
-    : (data.deudas_admin || null);
-  if(deudasData){
-    deudas=deudasData;
-    localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+  // Deudas: buscar en todas las claves posibles, quedarse con la que tenga más datos
+  const uid = currentUser ? currentUser.user : null;
+  const candidatos = [];
+  if(uid && data['deudas_'+uid] && data['deudas_'+uid].length>0)
+    candidatos.push(data['deudas_'+uid]);
+  if(data.deudas_admin && data.deudas_admin.length>0)
+    candidatos.push(data.deudas_admin);
+  if(data.deudas && data.deudas.length>0)
+    candidatos.push(data.deudas);
+  // Usar el array con más elementos
+  if(candidatos.length>0){
+    const mejorCandidato = candidatos.reduce((a,b)=>b.length>a.length?b:a);
+    deudas = mejorCandidato;
+    localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
   }
   try{
     if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
@@ -2395,7 +2401,8 @@ function _hasRealData(data){
   if(!data) return false;
   const uid = currentUser ? currentUser.user : null;
   const tieneDeudas = (uid && data['deudas_'+uid] && data['deudas_'+uid].length>0)
-    || (data.deudas_admin && data.deudas_admin.length>0);
+    || (data.deudas_admin && data.deudas_admin.length>0)
+    || (data.deudas && data.deudas.length>0);
   return (data.clients&&data.clients.length>0) ||
          (data.caja&&data.caja.length>0) ||
          (data.notes&&data.notes.length>0) ||
@@ -2461,33 +2468,24 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull deudas desde Firebase (fuente principal)
+    // Pull deudas desde Firebase — siempre preferir la nube si tiene datos
     if(window._db && window._fsUid && _fsUid()){
       _fsLoad(_fsUid()).then(data=>{
         if(!data) return;
         const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-        const cloudDeudas = (data[userKey]&&data[userKey].length>0)
+        // Buscar en clave dinámica, luego deudas_admin
+        const cloudDeudas = (data[userKey] && data[userKey].length > 0)
           ? data[userKey]
-          : (data.deudas_admin&&data.deudas_admin.length>0 ? data.deudas_admin : null);
-        if(cloudDeudas && JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
-          deudas=cloudDeudas;
-          localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+          : (data.deudas_admin && data.deudas_admin.length > 0 ? data.deudas_admin : null);
+        if(!cloudDeudas) return;
+        // Aplicar si la nube tiene más deudas o si son distintas
+        const localLen = (deudas||[]).length;
+        const cloudLen = cloudDeudas.length;
+        if(cloudLen > localLen || JSON.stringify(cloudDeudas) !== JSON.stringify(deudas)){
+          deudas = cloudDeudas;
+          localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
           renderClienteTab();
-          toast('Deudas sincronizadas ☁','info',2000);
-        }
-      }).catch(()=>{});
-    } else if(jsonbinEnabled && autoSync){
-      // Fallback JSONBin si Firebase no disponible
-      jbinRead().then(data=>{
-        const userKeyC = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-        const cloudDeudas = data[userKeyC] && data[userKeyC].length > 0
-          ? data[userKeyC]
-          : (data.deudas && data.deudas.length > 0 && currentUser && currentUser.rol==='admin' ? data.deudas : null);
-        if(cloudDeudas && JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
-          deudas=cloudDeudas;
-          localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
-          renderClienteTab();
-          toast('Deudas actualizadas desde nube ☁','info');
+          if(cloudLen > localLen) toast('Deudas sincronizadas ☁ ('+cloudLen+')','info',2000);
         }
       }).catch(()=>{});
     }
