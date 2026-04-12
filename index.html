@@ -2372,19 +2372,24 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  // Deudas: buscar en todas las claves posibles, quedarse con la que tenga más datos
-  const uid = currentUser ? currentUser.user : null;
-  const candidatos = [];
-  if(uid && data['deudas_'+uid] && data['deudas_'+uid].length>0)
-    candidatos.push(data['deudas_'+uid]);
-  if(data.deudas_admin && data.deudas_admin.length>0)
-    candidatos.push(data.deudas_admin);
-  if(data.deudas && data.deudas.length>0)
-    candidatos.push(data.deudas);
-  // Usar el array con más elementos
-  if(candidatos.length>0){
-    const mejorCandidato = candidatos.reduce((a,b)=>b.length>a.length?b:a);
-    deudas = mejorCandidato;
+  // Deudas: recoger TODOS los arrays posibles y quedarse con el más grande
+  const _dUID = currentUser ? currentUser.user : null;
+  const _dCandidatos = [];
+  if(_dUID && Array.isArray(data['deudas_'+_dUID]) && data['deudas_'+_dUID].length>0)
+    _dCandidatos.push(data['deudas_'+_dUID]);
+  if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
+    _dCandidatos.push(data.deudas_admin);
+  if(Array.isArray(data.deudas) && data.deudas.length>0)
+    _dCandidatos.push(data.deudas);
+  // Buscar también cualquier clave que empiece con "deudas_" en el documento
+  Object.keys(data).forEach(k=>{
+    if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0)
+      _dCandidatos.push(data[k]);
+  });
+  if(_dCandidatos.length>0){
+    // Preferir el array con más elementos (más completo)
+    const _dMejor = _dCandidatos.reduce((a,b)=>b.length>a.length?b:a);
+    deudas = _dMejor;
     localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
   }
   try{
@@ -2399,10 +2404,9 @@ function _applyFirestoreData(data){
 
 function _hasRealData(data){
   if(!data) return false;
-  const uid = currentUser ? currentUser.user : null;
-  const tieneDeudas = (uid && data['deudas_'+uid] && data['deudas_'+uid].length>0)
-    || (data.deudas_admin && data.deudas_admin.length>0)
-    || (data.deudas && data.deudas.length>0);
+  const tieneDeudas = Object.keys(data).some(k=>
+    (k==='deudas'||k.startsWith('deudas_')) && Array.isArray(data[k]) && data[k].length>0
+  );
   return (data.clients&&data.clients.length>0) ||
          (data.caja&&data.caja.length>0) ||
          (data.notes&&data.notes.length>0) ||
@@ -2468,24 +2472,30 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull deudas desde Firebase — siempre preferir la nube si tiene datos
+    // Pull deudas desde Firebase — buscar en todas las claves, preferir la más completa
     if(window._db && window._fsUid && _fsUid()){
       _fsLoad(_fsUid()).then(data=>{
         if(!data) return;
-        const userKey = currentUser ? 'deudas_'+currentUser.user : 'deudas_default';
-        // Buscar en clave dinámica, luego deudas_admin
-        const cloudDeudas = (data[userKey] && data[userKey].length > 0)
-          ? data[userKey]
-          : (data.deudas_admin && data.deudas_admin.length > 0 ? data.deudas_admin : null);
-        if(!cloudDeudas) return;
-        // Aplicar si la nube tiene más deudas o si son distintas
-        const localLen = (deudas||[]).length;
-        const cloudLen = cloudDeudas.length;
-        if(cloudLen > localLen || JSON.stringify(cloudDeudas) !== JSON.stringify(deudas)){
-          deudas = cloudDeudas;
-          localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
+        const candidatos=[];
+        const uid=currentUser?currentUser.user:null;
+        if(uid&&Array.isArray(data['deudas_'+uid])&&data['deudas_'+uid].length>0)
+          candidatos.push(data['deudas_'+uid]);
+        if(Array.isArray(data.deudas_admin)&&data.deudas_admin.length>0)
+          candidatos.push(data.deudas_admin);
+        if(Array.isArray(data.deudas)&&data.deudas.length>0)
+          candidatos.push(data.deudas);
+        Object.keys(data).forEach(k=>{
+          if(k.startsWith('deudas_')&&Array.isArray(data[k])&&data[k].length>0)
+            candidatos.push(data[k]);
+        });
+        if(!candidatos.length) return;
+        const cloudDeudas=candidatos.reduce((a,b)=>b.length>a.length?b:a);
+        if(cloudDeudas.length>(deudas||[]).length||JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
+          deudas=cloudDeudas;
+          localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
-          if(cloudLen > localLen) toast('Deudas sincronizadas ☁ ('+cloudLen+')','info',2000);
+          if(cloudDeudas.length>(deudas||[]).length)
+            toast('Deudas sincronizadas ☁ ('+cloudDeudas.length+')','info',2000);
         }
       }).catch(()=>{});
     }
@@ -9325,47 +9335,49 @@ function renderClienteDashboard(){
   const pp=proximos[0];
   const reminderHTML=renderReminderBanners();
 
-  // ── Banda de alerta inteligente ──────────────────────────────────────────────
+  // ── Banda de alerta inteligente con slider multi-deuda ──────────────────────
   const hoyD=new Date(); hoyD.setHours(0,0,0,0);
   const enMoraList=activas.filter(d=>enMoraDeuda(d));
   let alertaHTML='';
+
+  // Construir TODOS los items relevantes — no solo el primero
+  const alertItems=[];
   if(enMoraList.length>0){
-    // 🔴 En mora — pulsante
-    const nombres=enMoraList.map(d=>d.acreedor).join(', ');
-    alertaHTML='<div style="background:rgba(239,83,80,.15);border:1.5px solid rgba(239,83,80,.5);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;animation:pulse-red 1.5s infinite">'
-      +'<span style="font-size:22px">🚨</span>'
-      +'<div><div style="font-size:13px;font-weight:800;color:#ef5350">'+enMoraList.length+' pago'+(enMoraList.length>1?'s':'')+' vencido'+(enMoraList.length>1?'s':'')+' — En mora</div>'
-      +'<div style="font-size:11px;color:rgba(239,83,80,.8);margin-top:2px">'+nombres+'</div></div>'
-      +'</div>';
-  } else if(pp){
-    const ppDate=new Date(pp.fecha+'T00:00:00');
-    const diffMs=ppDate-hoyD;
-    const dias=Math.round(diffMs/(1000*60*60*24));
-    if(dias<=0){
-      alertaHTML='<div style="background:rgba(255,152,0,.15);border:1.5px solid rgba(255,152,0,.5);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
-        +'<span style="font-size:22px">⚡</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:#FF9800">¡Vence HOY! — '+pp.acreedor+'</div>'
-        +'<div style="font-size:11px;color:rgba(255,152,0,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
-        +'</div>';
-    } else if(dias<=3){
-      alertaHTML='<div style="background:rgba(255,152,0,.12);border:1.5px solid rgba(255,152,0,.4);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
-        +'<span style="font-size:22px">⚡</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:#FF9800">Vence en '+dias+' día'+(dias>1?'s':'')+' — '+pp.acreedor+'</div>'
-        +'<div style="font-size:11px;color:rgba(255,152,0,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
-        +'</div>';
-    } else if(dias<=7){
-      alertaHTML='<div style="background:rgba(255,235,59,.1);border:1.5px solid rgba(255,235,59,.4);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
-        +'<span style="font-size:22px">⏰</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:#FDD835">Pago en '+dias+' días — '+pp.acreedor+'</div>'
-        +'<div style="font-size:11px;color:rgba(253,216,53,.8);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
-        +'</div>';
-    } else if(dias<=14){
-      alertaHTML='<div style="background:rgba(0,229,209,.08);border:1.5px solid rgba(0,229,209,.3);border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px">'
-        +'<span style="font-size:22px">📅</span>'
-        +'<div><div style="font-size:13px;font-weight:800;color:#00E5D1">Próximo en '+dias+' días — '+pp.acreedor+'</div>'
-        +'<div style="font-size:11px;color:rgba(0,229,209,.7);margin-top:2px">'+fmt(pp.monto)+' · '+fd(pp.fecha)+'</div></div>'
-        +'</div>';
-    }
+    enMoraList.forEach(d=>{
+      alertItems.push({ico:'🚨',titulo:'En mora — '+d.acreedor,sub:fmt(saldoDeuda(d))+' · Vencido',bg:'rgba(239,83,80,.15)',bdr:'rgba(239,83,80,.5)',color:'#ef5350',subcolor:'rgba(239,83,80,.8)',anim:'animation:pulse-red 1.5s infinite'});
+    });
+  } else {
+    proximos.forEach(p=>{
+      const pDate=new Date(p.fecha+'T00:00:00');
+      const dias=Math.round((pDate-hoyD)/(1000*60*60*24));
+      if(dias<=0)
+        alertItems.push({ico:'⚡',titulo:'¡Vence HOY! — '+p.acreedor,sub:fmt(p.monto)+' · '+fd(p.fecha),bg:'rgba(255,152,0,.15)',bdr:'rgba(255,152,0,.5)',color:'#FF9800',subcolor:'rgba(255,152,0,.8)',anim:''});
+      else if(dias<=3)
+        alertItems.push({ico:'⚡',titulo:'Vence en '+dias+' día'+(dias>1?'s':'')+' — '+p.acreedor,sub:fmt(p.monto)+' · '+fd(p.fecha),bg:'rgba(255,152,0,.12)',bdr:'rgba(255,152,0,.4)',color:'#FF9800',subcolor:'rgba(255,152,0,.8)',anim:''});
+      else if(dias<=7)
+        alertItems.push({ico:'⏰',titulo:'Pago en '+dias+' días — '+p.acreedor,sub:fmt(p.monto)+' · '+fd(p.fecha),bg:'rgba(255,235,59,.1)',bdr:'rgba(255,235,59,.4)',color:'#FDD835',subcolor:'rgba(253,216,53,.8)',anim:''});
+      else if(dias<=14)
+        alertItems.push({ico:'📅',titulo:'Próximo en '+dias+' días — '+p.acreedor,sub:fmt(p.monto)+' · '+fd(p.fecha),bg:'rgba(0,229,209,.08)',bdr:'rgba(0,229,209,.3)',color:'#00E5D1',subcolor:'rgba(0,229,209,.7)',anim:''});
+    });
+  }
+
+  if(alertItems.length===1){
+    const a=alertItems[0];
+    alertaHTML='<div style="background:'+a.bg+';border:1.5px solid '+a.bdr+';border-radius:var(--radius);padding:13px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;'+a.anim+'">'
+      +'<span style="font-size:22px">'+a.ico+'</span>'
+      +'<div><div style="font-size:13px;font-weight:800;color:'+a.color+'">'+a.titulo+'</div>'
+      +'<div style="font-size:11px;color:'+a.subcolor+';margin-top:2px">'+a.sub+'</div></div></div>';
+  } else if(alertItems.length>1){
+    const a0=alertItems[0];
+    const slides=alertItems.map((a,i)=>'<div class="cd-alert-slide" style="min-width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px">'
+      +'<span style="font-size:22px">'+a.ico+'</span>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:800;color:'+a.color+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+a.titulo+'</div>'
+      +'<div style="font-size:11px;color:'+a.subcolor+';margin-top:2px">'+a.sub+'</div></div>'
+      +'<div style="font-size:10px;color:'+a.subcolor+';font-weight:700;flex-shrink:0">'+(i+1)+'/'+alertItems.length+'</div>'
+      +'</div>').join('');
+    alertaHTML='<div id="cd-alert-banner" style="background:'+a0.bg+';border:1.5px solid '+a0.bdr+';border-radius:var(--radius);margin-bottom:14px;overflow:hidden;cursor:pointer" onclick="cdAlertNext()">'
+      +'<div id="cd-alert-track" style="display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1)">'
+      +slides+'</div></div>';
   }
 
   // ── Vencimientos con días restantes coloreados ───────────────────────────────
@@ -9400,7 +9412,28 @@ function renderClienteDashboard(){
       +proximosHTML
       +'</div>'
     );
+  // Arrancar slider si hay múltiples alertas
+  setTimeout(_cdAlertAutoStart,50);
 }
+
+// ── Slider alertas deudas ─────────────────────────────────────────────────────
+let _cdAlertIdx=0,_cdAlertTimer=null;
+function cdAlertNext(){
+  const track=document.getElementById('cd-alert-track');
+  if(!track) return;
+  const total=track.children.length;
+  if(total<=1) return;
+  _cdAlertIdx=(_cdAlertIdx+1)%total;
+  track.style.transform='translateX(-'+(_cdAlertIdx*100)+'%)';
+}
+function _cdAlertAutoStart(){
+  if(_cdAlertTimer) clearInterval(_cdAlertTimer);
+  _cdAlertIdx=0;
+  const track=document.getElementById('cd-alert-track');
+  if(!track||track.children.length<=1) return;
+  _cdAlertTimer=setInterval(cdAlertNext,3500);
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 function renderClienteDeudas(){
   loadDeudas();
