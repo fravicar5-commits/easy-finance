@@ -2372,23 +2372,24 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  // Deudas: recoger TODOS los arrays posibles y quedarse con el más grande
+  // Deudas: prioridad estricta — clave del usuario > deudas_admin > deudas (legado)
   const _dUID = currentUser ? currentUser.user : null;
-  const _dCandidatos = [];
+  let _dMejor = null;
   if(_dUID && Array.isArray(data['deudas_'+_dUID]) && data['deudas_'+_dUID].length>0)
-    _dCandidatos.push(data['deudas_'+_dUID]);
-  if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
-    _dCandidatos.push(data.deudas_admin);
-  if(Array.isArray(data.deudas) && data.deudas.length>0)
-    _dCandidatos.push(data.deudas);
-  // Buscar también cualquier clave que empiece con "deudas_" en el documento
-  Object.keys(data).forEach(k=>{
-    if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0)
-      _dCandidatos.push(data[k]);
-  });
-  if(_dCandidatos.length>0){
-    // Preferir el array con más elementos (más completo)
-    const _dMejor = _dCandidatos.reduce((a,b)=>b.length>a.length?b:a);
+    _dMejor = data['deudas_'+_dUID];
+  else if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
+    _dMejor = data.deudas_admin;
+  else if(Array.isArray(data.deudas) && data.deudas.length>0)
+    _dMejor = data.deudas;
+  else {
+    // Último recurso: cualquier clave deudas_* con datos
+    for(const k of Object.keys(data)){
+      if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0){
+        _dMejor = data[k]; break;
+      }
+    }
+  }
+  if(_dMejor){
     deudas = _dMejor;
     localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
   }
@@ -2472,32 +2473,26 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull deudas desde Firebase — SOLO aplicar si la nube tiene MÁS deudas que el local
-    // Nunca pisar datos locales recién guardados con una versión anterior de la nube
+    // Pull desde Firebase — prioridad: clave usuario > deudas_admin > deudas
+    // Solo aplica si la nube tiene MÁS deudas que el local (nunca pisa datos recién guardados)
     if(window._db && window._fsUid && _fsUid()){
       const localCount=(deudas||[]).length;
       _fsLoad(_fsUid()).then(data=>{
         if(!data) return;
-        const candidatos=[];
         const uid=currentUser?currentUser.user:null;
+        let cloud=null;
         if(uid&&Array.isArray(data['deudas_'+uid])&&data['deudas_'+uid].length>0)
-          candidatos.push(data['deudas_'+uid]);
-        if(Array.isArray(data.deudas_admin)&&data.deudas_admin.length>0)
-          candidatos.push(data.deudas_admin);
-        if(Array.isArray(data.deudas)&&data.deudas.length>0)
-          candidatos.push(data.deudas);
-        Object.keys(data).forEach(k=>{
-          if(k.startsWith('deudas_')&&Array.isArray(data[k])&&data[k].length>0)
-            candidatos.push(data[k]);
-        });
-        if(!candidatos.length) return;
-        const cloudDeudas=candidatos.reduce((a,b)=>b.length>a.length?b:a);
-        // Solo aplicar si la nube tiene ESTRICTAMENTE MÁS deudas que el local al momento de la llamada
-        if(cloudDeudas.length>localCount){
-          deudas=cloudDeudas;
+          cloud=data['deudas_'+uid];
+        else if(Array.isArray(data.deudas_admin)&&data.deudas_admin.length>0)
+          cloud=data.deudas_admin;
+        else if(Array.isArray(data.deudas)&&data.deudas.length>0)
+          cloud=data.deudas;
+        if(!cloud) return;
+        if(cloud.length>localCount){
+          deudas=cloud;
           localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
-          toast('Deudas sincronizadas ☁ ('+cloudDeudas.length+')','info',2000);
+          toast('Deudas sincronizadas ☁ ('+cloud.length+')','info',2000);
         }
       }).catch(()=>{});
     }
