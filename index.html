@@ -2472,8 +2472,10 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull deudas desde Firebase — buscar en todas las claves, preferir la más completa
+    // Pull deudas desde Firebase — SOLO aplicar si la nube tiene MÁS deudas que el local
+    // Nunca pisar datos locales recién guardados con una versión anterior de la nube
     if(window._db && window._fsUid && _fsUid()){
+      const localCount=(deudas||[]).length;
       _fsLoad(_fsUid()).then(data=>{
         if(!data) return;
         const candidatos=[];
@@ -2490,12 +2492,12 @@ function goTo(id){
         });
         if(!candidatos.length) return;
         const cloudDeudas=candidatos.reduce((a,b)=>b.length>a.length?b:a);
-        if(cloudDeudas.length>(deudas||[]).length||JSON.stringify(cloudDeudas)!==JSON.stringify(deudas)){
+        // Solo aplicar si la nube tiene ESTRICTAMENTE MÁS deudas que el local al momento de la llamada
+        if(cloudDeudas.length>localCount){
           deudas=cloudDeudas;
           localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
-          if(cloudDeudas.length>(deudas||[]).length)
-            toast('Deudas sincronizadas ☁ ('+cloudDeudas.length+')','info',2000);
+          toast('Deudas sincronizadas ☁ ('+cloudDeudas.length+')','info',2000);
         }
       }).catch(()=>{});
     }
