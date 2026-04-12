@@ -2372,7 +2372,15 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  if(data.deudas_admin){deudas=data.deudas_admin;localStorage.setItem('ef_deudas_admin',JSON.stringify(deudas));}
+  // Deudas: buscar primero con la clave del usuario actual, luego deudas_admin como fallback
+  const deudasUID = currentUser ? currentUser.user : null;
+  const deudasData = (deudasUID && data['deudas_'+deudasUID] && data['deudas_'+deudasUID].length>0)
+    ? data['deudas_'+deudasUID]
+    : (data.deudas_admin || null);
+  if(deudasData){
+    deudas=deudasData;
+    localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
+  }
   try{
     if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
       const local=JSON.parse(localStorage.getItem(BK)||'[]')||[];
@@ -2385,12 +2393,15 @@ function _applyFirestoreData(data){
 
 function _hasRealData(data){
   if(!data) return false;
+  const uid = currentUser ? currentUser.user : null;
+  const tieneDeudas = (uid && data['deudas_'+uid] && data['deudas_'+uid].length>0)
+    || (data.deudas_admin && data.deudas_admin.length>0);
   return (data.clients&&data.clients.length>0) ||
          (data.caja&&data.caja.length>0) ||
          (data.notes&&data.notes.length>0) ||
          (data.pockets&&data.pockets.length>0) ||
          (data.volantes&&data.volantes.length>0) ||
-         (data.deudas_admin&&data.deudas_admin.length>0) ||
+         tieneDeudas ||
          (data.budgets&&data.budgets.length>0);
 }
 
@@ -8909,9 +8920,10 @@ function loadDeudas(){
 }
 function saveDeudas(){
   localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
-  // Push deudas to Firestore
+  // Guardar en Firestore con la clave del usuario Y como deudas_admin
+  // para garantizar que _applyFirestoreData las encuentre siempre
   const deudasKey = 'deudas_' + (currentUser ? currentUser.user : 'admin');
-  _fsSave({[deudasKey]: deudas, updatedAt: new Date().toISOString()});
+  _fsSave({[deudasKey]: deudas, deudas_admin: deudas, updatedAt: new Date().toISOString()});
   if(jsonbinEnabled && autoSync) setTimeout(syncDeudasSilent, 500);
 }
 
