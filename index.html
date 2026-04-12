@@ -2319,10 +2319,18 @@ function _fsUid(){
 
 async function _fsSave(data){
   const uid = _fsUid();
-  if(!uid||!window._db) return;
+  if(!uid||!window._db){
+    console.error('[Cuadre] _fsSave BLOQUEADO: uid='+uid+' db='+(!!window._db));
+    toast('⚠ Sin UID — dato no guardado en nube','error',4000);
+    return;
+  }
   try{
     await window._fbSetDoc(window._fbDoc(window._db,'cuadre',uid), data, {merge:true});
-  }catch(e){console.warn('Firestore save error',e);}
+    console.log('[Cuadre] _fsSave OK → cuadre/'+uid, Object.keys(data));
+  }catch(e){
+    console.error('[Cuadre] _fsSave ERROR:',e.code, e.message);
+    toast('⚠ Error guardando en nube: '+e.message,'error',5000);
+  }
 }
 
 async function _fsLoad(uid){
@@ -2374,28 +2382,38 @@ function _applyFirestoreData(data){
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
   // Deudas: buscar siempre por clave propia del usuario primero
   const _dUID = currentUser ? currentUser.user : null;
+  const _deudaKeys = Object.keys(data).filter(k=>k.startsWith('deudas_'));
+  console.log('[Cuadre] _applyFirestoreData → buscando deudas para uid:', _dUID, '| claves en doc:', _deudaKeys);
   let _dMejor = null;
   if(_dUID && Array.isArray(data['deudas_'+_dUID]) && data['deudas_'+_dUID].length > 0){
-    // Caso normal: el usuario tiene deudas guardadas con su UID
     _dMejor = data['deudas_'+_dUID];
+    console.log('[Cuadre] Deudas encontradas por uid:', _dMejor.length);
   } else if(!_dUID || !data['deudas_'+_dUID]){
-    // No hay clave propia: buscar en deudas_admin o deudas (legacy)
-    if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
+    if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0){
       _dMejor = data.deudas_admin;
-    else if(Array.isArray(data.deudas) && data.deudas.length>0)
+      console.log('[Cuadre] Deudas encontradas en deudas_admin:', _dMejor.length);
+    } else if(Array.isArray(data.deudas) && data.deudas.length>0){
       _dMejor = data.deudas;
-    else {
+      console.log('[Cuadre] Deudas encontradas en deudas (legacy):', _dMejor.length);
+    } else {
       for(const k of Object.keys(data)){
         if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0){
-          _dMejor = data[k]; break;
+          _dMejor = data[k];
+          console.log('[Cuadre] Deudas encontradas en fallback', k, ':', _dMejor.length);
+          break;
         }
       }
     }
+  } else {
+    console.log('[Cuadre] No se encontraron deudas para cargar. data[deudas_'+_dUID+']:', data['deudas_'+_dUID]);
   }
   // Solo actualizar si encontramos datos reales (no sobreescribir con vacío)
   if(_dMejor && _dMejor.length > 0){
     deudas = _dMejor;
     localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
+    console.log('[Cuadre] deudas[] actualizado con', deudas.length, 'registros');
+  } else {
+    console.log('[Cuadre] deudas[] NO actualizado — nada encontrado en Firestore');
   }
   try{
     if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
@@ -9004,7 +9022,8 @@ function saveDeudas(){
   localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
   // Guardar en Firestore con la clave del usuario actual
   const uid = currentUser ? currentUser.user : _fsUid();
-  if(!uid){ console.warn('saveDeudas: sin usuario autenticado'); return; }
+  console.log('[Cuadre] saveDeudas → currentUser:', currentUser?.user, '| _adminUid:', _adminUid, '| uid:', uid, '| deudas:', deudas.length);
+  if(!uid){ console.warn('saveDeudas: sin usuario autenticado'); toast('⚠ No hay usuario — deuda no guardada en nube','error',4000); return; }
   const deudasKey = 'deudas_' + uid;
   // Guardar siempre con clave uid Y como deudas_admin (para que _applyFirestoreData lo encuentre)
   const payload = {[deudasKey]: deudas, deudas_admin: deudas, updatedAt: new Date().toISOString()};
