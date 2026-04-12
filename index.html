@@ -8015,9 +8015,63 @@ const ROL_PERMISOS = {
 const SUPER_ADMIN_EMAIL = 'admin@cuadre.app';
 let currentUser = null;
 
+let _authListenerRegistered = false;
 function checkLogin(){
+  // Solo registrar el listener UNA vez
+  if(_authListenerRegistered) return;
+  if(window._fbOnAuthStateChanged && window._auth){
+    _authListenerRegistered = true;
+    window._fbOnAuthStateChanged(window._auth, async (firebaseUser) => {
+      if(firebaseUser && !currentUser){
+        // Firebase tiene sesion activa y la app no ha cargado usuario todavia
+        try{
+          const uid = firebaseUser.uid;
+          const snap = await window._fbGetDoc(window._fbDoc(window._db,'usuarios',uid));
+          if(!snap.exists()){ _showLanding(); return; }
+          const perfil = snap.data();
+          if(perfil.estado==='pendiente'||perfil.estado==='suspendido'){ _showLanding(); return; }
+          if(perfil.trialEnd && perfil.plan==='trial' && Date.now()>new Date(perfil.trialEnd).getTime()){ _showLanding(); return; }
+          const rol = perfil.rol || 'usuario';
+          const esAdmin = perfil.email === SUPER_ADMIN_EMAIL || rol === 'admin';
+          currentUser = {
+            uid, user: uid,
+            nombre: perfil.nombre || firebaseUser.email.split('@')[0],
+            email: perfil.email || firebaseUser.email,
+            rol: esAdmin ? 'admin' : rol,
+            plan: perfil.plan || 'free',
+            permisos: ROL_PERMISOS[esAdmin ? 'admin' : rol] || ROL_PERMISOS.usuario
+          };
+          _adminUid = uid;
+          localStorage.setItem('ef_admin_uid', uid);
+          document.getElementById('landing-page').style.display='none';
+          document.getElementById('login-screen').style.display='none';
+          applyRoleRestrictions();
+          await _loadFromFirestore(uid);
+          load();
+          loadDeudas();
+          renderSidebar();
+          if(currentUser.rol==='invitado'){
+            setTimeout(()=>{checkTC();setTimeout(()=>goTo('cliente'),400);},200);
+          } else {
+            setTimeout(checkTC, 200);
+          }
+        }catch(e){
+          console.warn('Auto-login error:',e);
+          _showLanding();
+        }
+      } else if(!firebaseUser){
+        // Firebase cerro sesion (logout intencional o expiracion)
+        if(currentUser) currentUser = null; // limpiar si quedaba algo
+        _showLanding();
+      }
+      // Si firebaseUser existe y currentUser ya esta seteado = sesion activa normal, no hacer nada
+    });
+  } else {
+    window.addEventListener('firebaseReady', ()=>checkLogin(), {once:true});
+  }
+}
+function _showLanding(){
   currentUser = null;
-  // Mostrar landing primero, no el login directo
   document.getElementById('landing-page').style.display='block';
   document.getElementById('login-screen').style.display='none';
 }
@@ -8163,6 +8217,7 @@ async function doLogin(){
 
     // Ocultar login y entrar
     document.getElementById('login-screen').style.display='none';
+    document.getElementById('landing-page').style.display='none';
     applyRoleRestrictions();
 
     // Cargar datos propios desde Firestore
@@ -8311,7 +8366,8 @@ async function doLogout(){
   document.getElementById('login-user').value='';
   document.getElementById('login-pass').value='';
   document.getElementById('login-error').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('landing-page').style.display='block';
   // Reset register form
   const rf=document.getElementById('register-form');
   const rp=document.getElementById('register-pending');
@@ -13127,7 +13183,14 @@ function volEnviarAPresupuesto(){
 
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
-  setTimeout(checkLogin, 300);
+  // Esperar a que Firebase este listo antes de verificar sesion
+  if(window._firebaseReady){
+    setTimeout(checkLogin, 300);
+  } else {
+    window.addEventListener('firebaseReady', ()=>setTimeout(checkLogin,300), {once:true});
+    // Fallback: si Firebase tarda mas de 5s, mostrar landing
+    setTimeout(()=>{ if(!currentUser){ _showLanding(); } }, 5000);
+  }
 });
 </script>
 <!-- Landing Page -->
