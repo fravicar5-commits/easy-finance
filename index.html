@@ -2372,24 +2372,31 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
-  // Deudas: prioridad estricta — clave del usuario > deudas_admin > deudas (legado)
+  // Deudas: prioridad estricta — clave del usuario (uid) SIEMPRE primero
   const _dUID = currentUser ? currentUser.user : null;
   let _dMejor = null;
-  if(_dUID && Array.isArray(data['deudas_'+_dUID]) && data['deudas_'+_dUID].length>0)
+  if(_dUID && Array.isArray(data['deudas_'+_dUID]) && data['deudas_'+_dUID].length>0){
+    // Prioridad máxima: clave propia del usuario
     _dMejor = data['deudas_'+_dUID];
-  else if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
-    _dMejor = data.deudas_admin;
-  else if(Array.isArray(data.deudas) && data.deudas.length>0)
-    _dMejor = data.deudas;
-  else {
-    // Último recurso: cualquier clave deudas_* con datos
-    for(const k of Object.keys(data)){
-      if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0){
-        _dMejor = data[k]; break;
+  } else if(_dUID && Array.isArray(data['deudas_'+_dUID])){
+    // Clave existe pero vacía — respetar (el usuario borró todo)
+    _dMejor = data['deudas_'+_dUID];
+  } else if(!_dUID || (currentUser && currentUser.rol==='admin')){
+    // Solo usar deudas_admin si es admin o no hay usuario identificado
+    if(Array.isArray(data.deudas_admin) && data.deudas_admin.length>0)
+      _dMejor = data.deudas_admin;
+    else if(Array.isArray(data.deudas) && data.deudas.length>0)
+      _dMejor = data.deudas;
+    else {
+      // Último recurso: cualquier clave deudas_* con datos
+      for(const k of Object.keys(data)){
+        if(k.startsWith('deudas_') && Array.isArray(data[k]) && data[k].length>0){
+          _dMejor = data[k]; break;
+        }
       }
     }
   }
-  if(_dMejor){
+  if(_dMejor !== null){
     deudas = _dMejor;
     localStorage.setItem(getDKDeudas(), JSON.stringify(deudas));
   }
@@ -2473,22 +2480,22 @@ function goTo(id){
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
-    // Pull desde Firebase — prioridad: clave usuario > deudas_admin > deudas
-    // Solo aplica si la nube tiene MÁS deudas que el local (nunca pisa datos recién guardados)
+    // Pull desde Firebase — siempre si local está vacío, o si la nube tiene más
     if(window._db && window._fsUid && _fsUid()){
       const localCount=(deudas||[]).length;
       _fsLoad(_fsUid()).then(data=>{
         if(!data) return;
         const uid=currentUser?currentUser.user:null;
         let cloud=null;
-        if(uid&&Array.isArray(data['deudas_'+uid])&&data['deudas_'+uid].length>0)
-          cloud=data['deudas_'+uid];
-        else if(Array.isArray(data.deudas_admin)&&data.deudas_admin.length>0)
+        if(uid&&Array.isArray(data['deudas_'+uid]))
+          cloud=data['deudas_'+uid]; // usar siempre la clave del usuario, aunque esté vacía
+        else if(!uid&&Array.isArray(data.deudas_admin)&&data.deudas_admin.length>0)
           cloud=data.deudas_admin;
-        else if(Array.isArray(data.deudas)&&data.deudas.length>0)
+        else if(!uid&&Array.isArray(data.deudas)&&data.deudas.length>0)
           cloud=data.deudas;
-        if(!cloud) return;
-        if(cloud.length>localCount){
+        if(cloud===null) return;
+        // Actualizar si: local está vacío y nube tiene datos, O si nube tiene más registros
+        if((localCount===0 && cloud.length>0) || cloud.length>localCount){
           deudas=cloud;
           localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
           renderClienteTab();
@@ -8165,6 +8172,7 @@ async function doLogin(){
     if(!storedBio){ setTimeout(()=>registerBiometric(email),2500); }
     await _loadFromFirestore(uid);
     load(); // también desde localStorage como respaldo
+    loadDeudas(); // asegurar deudas cargadas para modo cliente
     renderSidebar();
 
     if(btn){btn.textContent='Ingresar →';btn.disabled=false;}
@@ -8920,15 +8928,35 @@ function loadDeudas(){
         saved = oldData;
       }
     }
+    // Si ya hay deudas en memoria (cargadas desde Firestore) y localStorage está vacío,
+    // preservar las de memoria y escribirlas en localStorage para persistencia local
+    if((!saved || saved.length === 0) && deudas && deudas.length > 0){
+      localStorage.setItem(userKey, JSON.stringify(deudas));
+      return; // mantener deudas[] tal como están
+    }
+    // Si tanto memoria como localStorage tienen datos, usar el que tenga más (merge por ID)
+    if(saved && saved.length > 0 && deudas && deudas.length > 0 && saved.length !== deudas.length){
+      const mergedMap = new Map();
+      saved.forEach(d => mergedMap.set(d.id, d));
+      deudas.forEach(d => mergedMap.set(d.id, d)); // memoria tiene prioridad
+      const merged = Array.from(mergedMap.values()).sort((a,b)=>a.id-b.id);
+      deudas = merged;
+      localStorage.setItem(userKey, JSON.stringify(deudas));
+      return;
+    }
     deudas = saved || [];
   }catch{deudas=[];}
 }
 function saveDeudas(){
   localStorage.setItem(getDKDeudas(),JSON.stringify(deudas));
-  // Guardar en Firestore con la clave del usuario Y como deudas_admin
-  // para garantizar que _applyFirestoreData las encuentre siempre
-  const deudasKey = 'deudas_' + (currentUser ? currentUser.user : 'admin');
-  _fsSave({[deudasKey]: deudas, deudas_admin: deudas, updatedAt: new Date().toISOString()});
+  // Guardar en Firestore SOLO con la clave del usuario actual (no pisar deudas_admin de otros)
+  const uid = currentUser ? currentUser.user : null;
+  if(!uid){ console.warn('saveDeudas: sin usuario autenticado'); return; }
+  const deudasKey = 'deudas_' + uid;
+  // Solo incluir deudas_admin si el usuario ES admin para compatibilidad legacy
+  const payload = {[deudasKey]: deudas, updatedAt: new Date().toISOString()};
+  if(currentUser && (currentUser.rol === 'admin')) payload.deudas_admin = deudas;
+  _fsSave(payload);
   if(jsonbinEnabled && autoSync) setTimeout(syncDeudasSilent, 500);
 }
 
