@@ -169,10 +169,6 @@ body.light-mode .hdr-ico-btn.hdr-ico-del{background:rgba(201,42,42,.07)!importan
   .hdr-ico-btn{width:30px;height:30px}
 }
 *{box-sizing:border-box;margin:0;padding:0}
-/* Banner offline */
-#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
-#offline-banner.show{display:block}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.4)}50%{box-shadow:0 0 0 6px rgba(239,83,80,0)}}
@@ -1856,30 +1852,33 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
   </div>
 </div>
 
-<!-- Budget item modal (ingresos / gastos fijos) -->
-<div class="overlay" id="modal-bud-item">
-  <div class="modal">
-    <div class="modal-title" id="bud-item-modal-title">Ingreso <button class="modal-close" onclick="closeModal('modal-bud-item')">✕</button></div>
-    <div class="fr"><label>Nombre</label><input type="text" id="bud-item-nombre" placeholder="Ej: Salario, Arriendo..."></div>
-    <div class="fr"><label>Valor ($)</label><input type="number" id="bud-item-valor" min="0" step="1" inputmode="numeric"></div>
-    <div class="fr"><label>Fecha</label><input type="date" id="bud-item-fecha"></div>
-    <div class="form-actions">
-      <button class="btn" onclick="closeModal('modal-bud-item')">Cancelar</button>
-      <button class="btn btn-green" id="bud-item-btn" onclick="guardarBudItem()">Agregar</button>
-    </div>
-  </div>
-</div>
-
 <!-- Pocket deposit -->
 <div class="overlay" id="modal-deposit">
   <div class="modal">
     <div class="modal-title" id="dep-title">Agregar ahorro <button class="modal-close" onclick="closeModal('modal-deposit')">✕</button></div>
     <div class="fr"><label>Valor ($)</label><input type="number" id="dep-valor" min="0" step="1" inputmode="numeric"></div>
-    <div class="fr"><label>Fecha del abono</label><input type="date" id="dep-fecha"></div>
-    <div class="fr"><label>Nota (opcional)</label><input type="text" id="dep-nota" placeholder="Ej: quincena, bono..."></div>
+    <div class="fr"><label>Fecha</label><input type="date" id="dep-fecha" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-family:Nunito,sans-serif;font-size:13px;outline:none"></div>
+    <div class="fr"><label>Nota (opcional)</label><input type="text" id="dep-nota" placeholder="Ej: quincena, bono..." style="width:100%"></div>
+    <input type="hidden" id="dep-edit-idx" value="">
     <div class="form-actions">
       <button class="btn" onclick="closeModal('modal-deposit')">Cancelar</button>
-      <button class="btn btn-green" id="dep-btn-guardar" onclick="depositarPocket()">Agregar</button>
+      <button class="btn btn-green" onclick="depositarPocket()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Budget item modal -->
+<div class="overlay" id="modal-bud-item">
+  <div class="modal">
+    <div class="modal-title" id="bud-item-title">Agregar ítem <button class="modal-close" onclick="closeModal('modal-bud-item')">✕</button></div>
+    <div class="fr"><label>Nombre</label><input type="text" id="bi-nombre" placeholder="Ej: Arriendo, Salario..."></div>
+    <div class="fr"><label>Valor ($)</label><input type="number" id="bi-valor" min="0" step="1" inputmode="numeric"></div>
+    <div class="fr" id="bi-fecha-row"><label>Fecha</label><input type="date" id="bi-fecha" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);padding:8px 10px;color:var(--text);font-family:Nunito,sans-serif;font-size:13px;outline:none"></div>
+    <input type="hidden" id="bi-field" value="">
+    <input type="hidden" id="bi-edit-idx" value="">
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-bud-item')">Cancelar</button>
+      <button class="btn btn-pink" onclick="guardarBudItem()">Guardar</button>
     </div>
   </div>
 </div>
@@ -2061,37 +2060,29 @@ function renderBudget(el){
     // Month nav
     +(arr.length>0?'<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+monthNav+'</div>':'')
 
-    // Modo mensual/quincenal toggle
-    +(()=>{
-      const esMensual=b.modoMensual||false;
-      const bgQ=esMensual?'var(--surface2)':'var(--ef-pink)';
-      const clQ=esMensual?'var(--text3)':'white';
-      const bgM=esMensual?'var(--ef-pink)':'var(--surface2)';
-      const clM=esMensual?'white':'var(--text3)';
-      return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
-        +'<div style="font-size:11px;font-weight:700;color:var(--text3)">MODO DE VISTA</div>'
-        +'<div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-xs);overflow:hidden">'
-        +'<button onclick="setBudgetModo(&quot;quincenal&quot;)" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+bgQ+';color:'+clQ+'">Quincenal</button>'
-        +'<button onclick="setBudgetModo(&quot;mensual&quot;)" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+bgM+';color:'+clM+'">Mensual</button>'
-        +'</div></div>';
-    })()
+    // View mode toggle (Quincenal / Mensual)
+    +'<div style="display:flex;justify-content:flex-end;align-items:center;gap:6px;margin-bottom:10px">'
+    +'<span style="font-size:11px;color:var(--text3)">Vista:</span>'
+    +'<button onclick="toggleBudViewMode()" style="display:flex;background:var(--surface2);border:1px solid var(--border2);border-radius:20px;padding:2px;cursor:pointer;gap:2px">'
+    +'<span style="padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700;transition:background .2s;background:'+(budViewMode==='quincenal'?'var(--ef-pink)':'transparent')+';color:'+(budViewMode==='quincenal'?'#fff':'var(--text3)')+'" >Quincenal</span>'
+    +'<span style="padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700;transition:background .2s;background:'+(budViewMode==='mensual'?'var(--ef-pink)':'transparent')+';color:'+(budViewMode==='mensual'?'#fff':'var(--text3)')+'" >Mensual</span>'
+    +'</button>'
+    +'</div>'
 
     // Quincena tabs (solo en modo quincenal)
-    +(!(b.modoMensual)?
-      '<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;display:flex;margin-bottom:0">'
-      +qTab('q1','1ª Quincena (días 1-15)')
-      +qTab('q2','2ª Quincena (días 16-fin)')
-      +'</div>'
-    :'')
+    +(budViewMode==='quincenal'
+      ?'<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;display:flex;margin-bottom:0">'
+        +qTab('q1','1ª Quincena (días 1-15)')
+        +qTab('q2','2ª Quincena (días 16-fin)')
+        +'</div>'
 
-    // Quincena summary bar (solo en modo quincenal)
-    +(!b.modoMensual?
-      '<div style="background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:10px 13px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
-      +'<div style="text-align:center"><div class="mc-label">Ingresos Q'+(activeBudgetQ==='q1'?'1':'2')+'</div><div style="font-size:14px;font-weight:700;color:var(--green)">'+fmt(qTI)+'</div></div>'
-      +'<div style="text-align:center"><div class="mc-label">Gastos Q'+(activeBudgetQ==='q1'?'1':'2')+'</div><div style="font-size:14px;font-weight:700;color:var(--red)">'+fmt(qGT)+'</div></div>'
-      +'<div style="text-align:center"><div class="mc-label">Saldo</div><div style="font-size:14px;font-weight:700;color:'+(qSaldo>=0?'var(--green)':'var(--red)')+'">'+fmt(qSaldo)+'</div></div>'
-      +'</div>'
-    :'<div style="margin-bottom:14px"></div>')
+        // Quincena summary bar
+        +'<div style="background:var(--surface2);border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);padding:10px 13px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+        +'<div style="text-align:center"><div class="mc-label">Ingresos Q'+(activeBudgetQ==='q1'?'1':'2')+'</div><div style="font-size:14px;font-weight:700;color:var(--green)">'+fmt(qTI)+'</div></div>'
+        +'<div style="text-align:center"><div class="mc-label">Gastos Q'+(activeBudgetQ==='q1'?'1':'2')+'</div><div style="font-size:14px;font-weight:700;color:var(--red)">'+fmt(qGT)+'</div></div>'
+        +'<div style="text-align:center"><div class="mc-label">Saldo</div><div style="font-size:14px;font-weight:700;color:'+(qSaldo>=0?'var(--green)':'var(--red)')+'">'+fmt(qSaldo)+'</div></div>'
+        +'</div>'
+      :'')
 
     // Monthly total summary
     +alertHTML
@@ -2116,56 +2107,46 @@ function renderBudget(el){
     +'<div class="regla-bar"><div class="regla-fill" style="width:'+pct(Math.max(saldo,0),t20)+'%;background:'+(saldo>=t20?'var(--green)':'var(--red)')+'"></div></div></div>'
     +'</div>':'')
 
-    // ── INGRESOS ──
-    +'<div class="bud-section">'
-    +(b.modoMensual?
-      '<div class="bud-section-title">💵 Ingresos del mes'
-      +' <button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'ingresos\')">+ Agregar</button></div>'
-      +(()=>{const all=[...b.q1.ingresos.map((i,x)=>({...i,_q:'q1',_x:x})),...b.q2.ingresos.map((i,x)=>({...i,_q:'q2',_x:x})),...b.q1.otrosIngresos.map((i,x)=>({...i,_q:'q1',_x:x,_f:'otrosIngresos'})),...b.q2.otrosIngresos.map((i,x)=>({...i,_q:'q2',_x:x,_f:'otrosIngresos'}))];return all.length?all.map(i=>budItemRowFull(i,i._x,i._f||'ingresos','c-green',i._q)).join(''):'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin ingresos este mes</div>';})()
-      +(ti>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total ingresos mes: <strong class="c-green">'+fmt(ti)+'</strong></div>':'')
-    :
-      '<div class="bud-section-title">💵 Ingresos '+(activeBudgetQ==='q1'?'1ª':'2ª')+' quincena'
-      +' <button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'ingresos\')">+ Agregar</button></div>'
-      +(qdata.ingresos.map((i,idx)=>budItemRow(i,idx,'ingresos','c-green')).join('')
-        ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin ingresos en esta quincena</div>')
-      +'<div class="bud-section-title" style="margin-top:10px">Otros ingresos'
-      +' <button class="btn" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'otrosIngresos\')">+ Agregar</button></div>'
-      +(qdata.otrosIngresos.map((i,idx)=>budItemRow(i,idx,'otrosIngresos','c-green')).join('')
-        ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin otros ingresos</div>')
-      +(qTI>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total ingresos esta quincena: <strong class="c-green">'+fmt(qTI)+'</strong></div>':'')
-    )
-    +'</div>'
+    // ── INGRESOS / GASTOS: modo quincenal o mensual ──
+    +(budViewMode==='mensual'
+      // ── VISTA MENSUAL ──
+      ?budRenderMensual(b,tip)
+      // ── VISTA QUINCENAL ──
+      :(
+        '<div class="bud-section">'
+        +'<div class="bud-section-title">💵 Ingresos '+(activeBudgetQ==='q1'?'1ª':'2ª')+' quincena'
+        +' <button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'ingresos\')">+ Agregar</button></div>'
+        +(qdata.ingresos.map((i,idx)=>budItemRow(i,idx,'ingresos','c-green')).join('')
+          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin ingresos en esta quincena</div>')
+        +'<div class="bud-section-title" style="margin-top:10px">Otros ingresos'
+        +' <button class="btn" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'otrosIngresos\')">+ Agregar</button></div>'
+        +(qdata.otrosIngresos.map((i,idx)=>budItemRow(i,idx,'otrosIngresos','c-green')).join('')
+          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin otros ingresos</div>')
+        +(qTI>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total ingresos esta quincena: <strong class="c-green">'+fmt(qTI)+'</strong></div>':'')
+        +'</div>'
 
-    // ── GASTOS FIJOS ──
-    +'<div class="bud-section">'
-    +(b.modoMensual?
-      '<div class="bud-section-title">🏠 Gastos Fijos del mes '+tip('Gastos fijos','Compromisos fijos del mes.')
-      +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button></div>'
-      +(()=>{const all=[...b.q1.gastosFijos.map((g,x)=>({...g,_q:'q1',_x:x})),...b.q2.gastosFijos.map((g,x)=>({...g,_q:'q2',_x:x}))];return all.length?all.map(g=>budItemRowFull(g,g._x,'gastosFijos','c-amber',g._q)).join(''):'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos este mes</div>';})()
-      +(gf>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(gf)+'</strong></div>':'')
-    :
-      '<div class="bud-section-title">🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos de esta quincena: arriendo, servicios, cuotas, etc.')
-      +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button></div>'
-      +(qdata.gastosFijos.map((g,idx)=>budItemRow(g,idx,'gastosFijos','c-amber')).join('')
-        ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos en esta quincena</div>')
-      +(qGF>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(qGF)+'</strong></div>':'')
-    )
-    +'</div>'
+        // ── GASTOS FIJOS ──
+        +'<div class="bud-section">'
+        +'<div class="bud-section-title">🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos de esta quincena: arriendo, servicios, cuotas, etc.')
+        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button></div>'
+        +(qdata.gastosFijos.map((g,idx)=>budItemRow(g,idx,'gastosFijos','c-amber')).join('')
+          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos en esta quincena</div>')
+        +(qGF>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(qGF)+'</strong></div>':'')
+        +'</div>'
 
-    // ── GASTOS VARIABLES ──
-    +'<div class="bud-section">'
-    +'<div class="bud-section-title">🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día de esta quincena.')+'</div>'
-    +'<div class="expense-input" style="flex-wrap:wrap;gap:5px">'
-    +'<select class="gv-cat-select" id="gv-cat">'+GV_CATS.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.label+'</option>').join('')+'</select>'
-    +'<input type="text" id="gv-nombre" placeholder="Concepto (ej: almuerzo)" style="flex:2">'
-    +'<input type="number" id="gv-valor" placeholder="$" style="flex:1;min-width:70px" inputmode="numeric">'
-    +'<input type="date" id="gv-fecha" style="flex:1;min-width:110px" title="Fecha del gasto">'
-    +(()=>{setTimeout(()=>{const f=document.getElementById('gv-fecha');if(f&&!f.value)f.value=today();},50);return '';})()
-    +'<button class="expense-add-btn" onclick="addGastoVar()">+</button>'
-    +'</div>'
-    +renderGastosVarAgrupados(qdata.gastosVar)
-    +(qGV>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos variables: <strong class="c-red">'+fmt(qGV)+'</strong></div>':'')
-    +'</div>'
+        // ── GASTOS VARIABLES ──
+        +'<div class="bud-section">'
+        +'<div class="bud-section-title">🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día de esta quincena.')+'</div>'
+        +'<div class="expense-input" style="flex-wrap:wrap;gap:5px">'
+        +'<select class="gv-cat-select" id="gv-cat">'+GV_CATS.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.label+'</option>').join('')+'</select>'
+        +'<input type="text" id="gv-nombre" placeholder="Concepto (ej: almuerzo)" style="flex:2">'
+        +'<input type="number" id="gv-valor" placeholder="$" style="flex:1;min-width:70px" inputmode="numeric">'
+        +'<button class="expense-add-btn" onclick="addGastoVar()">+</button>'
+        +'</div>'
+        +renderGastosVarAgrupados(qdata.gastosVar)
+        +(qGV>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos variables: <strong class="c-red">'+fmt(qGV)+'</strong></div>':'')
+        +'</div>'
+      ))
 
     // ── HISTORIAL ANUAL ──
     +(arr.length>1?'<div class="bud-section">'
@@ -2193,14 +2174,99 @@ function renderBudget(el){
     +'</tbody></table></div></div>':'');
 }
 
+function budRenderMensual(b, tip){
+  const chip=(label,q)=>'<span style="display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;background:'+(q==='q1'?'rgba(0,188,212,.15)':'rgba(255,167,38,.15)')+';color:'+(q==='q1'?'#00BCD4':'var(--amber)')+';margin-right:4px">'+label+'</span>';
+  const allIngresos=[
+    ...(b.q1.ingresos||[]).map((i,idx)=>({...i,_q:'q1',_field:'ingresos',_idx:idx})),
+    ...(b.q2.ingresos||[]).map((i,idx)=>({...i,_q:'q2',_field:'ingresos',_idx:idx})),
+    ...(b.q1.otrosIngresos||[]).map((i,idx)=>({...i,_q:'q1',_field:'otrosIngresos',_idx:idx})),
+    ...(b.q2.otrosIngresos||[]).map((i,idx)=>({...i,_q:'q2',_field:'otrosIngresos',_idx:idx})),
+  ];
+  const allFijos=[
+    ...(b.q1.gastosFijos||[]).map((g,idx)=>({...g,_q:'q1',_field:'gastosFijos',_idx:idx})),
+    ...(b.q2.gastosFijos||[]).map((g,idx)=>({...g,_q:'q2',_field:'gastosFijos',_idx:idx})),
+  ];
+  const allVars=[
+    ...(b.q1.gastosVar||[]).map((g,idx)=>({...g,_q:'q1',_field:'gastosVar',_idx:idx})),
+    ...(b.q2.gastosVar||[]).map((g,idx)=>({...g,_q:'q2',_field:'gastosVar',_idx:idx})),
+  ];
+  const tiTotal=allIngresos.reduce((s,i)=>s+i.valor,0);
+  const gfTotal=allFijos.reduce((s,g)=>s+g.valor,0);
+  const gvTotal=allVars.reduce((s,g)=>s+g.valor,0);
+
+  const itemRowM=(item)=>
+    '<div class="bud-item">'
+    +chip(item._q==='q1'?'Q1':'Q2',item._q)
+    +(item.fecha?'<span style="font-size:10px;color:var(--text3);margin-right:4px">'+fd(item.fecha)+'</span>':'')
+    +'<span class="bud-item-name">'+item.nombre+'</span>'
+    +'<span class="bud-item-val '+(item._field==='gastosFijos'?'c-amber':'c-green')+'">'+fmt(item.valor)+'</span>'
+    +'<button class="bud-del" style="color:var(--amber);background:rgba(255,167,38,.12)" onclick="editBudItemQ(\''+item._field+'\','+item._idx+',\''+item._q+'\')">✏</button>'
+    +'<button class="bud-del" onclick="delBudItemQ(\''+item._field+'\','+item._idx+',\''+item._q+'\')">✕</button>'
+    +'</div>';
+
+  const gvRowM=(g)=>{
+    const cat=gvCat(g.categoria||'otros');
+    return '<div class="bud-item">'
+      +chip(g._q==='q1'?'Q1':'Q2',g._q)
+      +'<span style="font-size:10px;color:var(--text3);margin-right:4px">'+(g.fecha?fd(g.fecha):'')+' '+cat.icon+'</span>'
+      +'<span class="bud-item-name">'+g.nombre+'</span>'
+      +'<span class="bud-item-val c-red">'+fmt(g.valor)+'</span>'
+      +'<button class="bud-del" onclick="delBudItemVarQ('+g._idx+',\''+g._q+'\')">✕</button>'
+      +'</div>';
+  };
+
+  let html='';
+  // Ingresos
+  html+='<div class="bud-section">'
+    +'<div class="bud-section-title">💵 Ingresos del mes'
+    +' <button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="addBudItemQ(\'ingresos\')">+ Q1</button>'
+    +' <button class="btn" style="font-size:10px;padding:3px 8px" onclick="addBudItemQ2(\'ingresos\')">+ Q2</button>'
+    +'</div>'
+    +(allIngresos.length?allIngresos.map(itemRowM).join('')
+      :'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin ingresos este mes</div>')
+    +(tiTotal>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total ingresos: <strong class="c-green">'+fmt(tiTotal)+'</strong></div>':'')
+    +'</div>';
+  // Gastos fijos
+  html+='<div class="bud-section">'
+    +'<div class="bud-section-title">🏠 Gastos Fijos del mes '+tip('Gastos fijos','Compromisos fijos del mes completo.')
+    +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItemQ(\'gastosFijos\')">+ Q1</button>'
+    +' <button class="btn" style="font-size:10px;padding:3px 8px" onclick="addBudItemQ2(\'gastosFijos\')">+ Q2</button>'
+    +'</div>'
+    +(allFijos.length?allFijos.map(itemRowM).join('')
+      :'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos este mes</div>')
+    +(gfTotal>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total fijos: <strong class="c-amber">'+fmt(gfTotal)+'</strong></div>':'')
+    +'</div>';
+  // Gastos variables
+  html+='<div class="bud-section">'
+    +'<div class="bud-section-title">🎉 Gastos Variables del mes</div>'
+    +(allVars.length?allVars.map(gvRowM).join('')
+      :'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos variables</div>')
+    +(gvTotal>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total variables: <strong class="c-red">'+fmt(gvTotal)+'</strong></div>':'')
+    +'</div>';
+  return html;
+}
+
+// Helpers para vista mensual: agregar/eliminar con quincena explícita
+function addBudItemQ(field){activeBudgetQ='q1';addBudItem(field);}
+function addBudItemQ2(field){activeBudgetQ='q2';addBudItem(field);}
+function editBudItemQ(field,idx,q){activeBudgetQ=q;editBudItem(field,idx);}
+function delBudItemQ(field,idx,q){
+  const arr=loadBudgets();const b=arr.find(b=>b.key===activeBudgetKey);if(!b) return;
+  b[q][field].splice(idx,1);saveBudgets(arr);renderBudget(document.getElementById('dd-content'));
+}
+function delBudItemVarQ(idx,q){
+  const arr=loadBudgets();const b=arr.find(b=>b.key===activeBudgetKey);if(!b) return;
+  b[q].gastosVar.splice(idx,1);saveBudgets(arr);renderBudget(document.getElementById('dd-content'));
+}
+
 function budItemRow(item,idx,field,colorClass){
-  const fechaLabel=item.fecha?'<span style="font-size:10px;color:var(--text3);margin-right:4px;font-family:DM Mono,monospace">'+fd(item.fecha)+'</span>':'';
+  const fechaLabel=item.fecha?'<span style="font-size:10px;color:var(--text3);margin-right:4px">'+fd(item.fecha)+'</span>':'';
   return'<div class="bud-item">'
     +fechaLabel
     +'<span class="bud-item-name">'+item.nombre+'</span>'
     +'<span class="bud-item-val '+colorClass+'">'+fmt(item.valor)+'</span>'
-    +'<button class="bud-del" style="color:var(--amber)" onclick="editBudItem(&quot;'+field+'&quot;,'+idx+')">✏</button>'
-    +'<button class="bud-del" onclick="delBudItem(&quot;'+field+'&quot;,'+idx+')">✕</button>'
+    +'<button class="bud-del" style="color:var(--amber);background:rgba(255,167,38,.12)" onclick="editBudItem(\''+field+'\','+idx+')">✏</button>'
+    +'<button class="bud-del" onclick="delBudItem(\''+field+'\','+idx+')">✕</button>'
     +'</div>';
 }
 
@@ -2232,45 +2298,6 @@ function eliminarMesPpto(key){
 function switchBudgetQ(q){
   activeBudgetQ=q;
   renderBudget(document.getElementById('dd-content'));
-}
-
-function setBudgetModo(modo){
-  const arr=loadBudgets();
-  const b=arr.find(x=>x.key===activeBudgetKey);
-  if(!b) return;
-  b.modoMensual=(modo==='mensual');
-  // En modo mensual, resetear quincena a q1 para que addBudItem use q1
-  if(b.modoMensual) activeBudgetQ='q1';
-  saveBudgets(arr);
-  renderBudget(document.getElementById('dd-content'));
-}
-
-function budItemRowFull(item,idx,field,colorClass,q){
-  const qLabel=q==='q1'?'<span style="font-size:9px;background:rgba(112,112,255,.15);color:var(--accent);border-radius:3px;padding:1px 5px;margin-right:4px">Q1</span>':'<span style="font-size:9px;background:rgba(0,230,120,.12);color:var(--green);border-radius:3px;padding:1px 5px;margin-right:4px">Q2</span>';
-  const fechaLabel=item.fecha?'<span style="font-size:10px;color:var(--text3);margin-right:4px;font-family:DM Mono,monospace">'+fd(item.fecha)+'</span>':'';
-  const onEdit='editBudItemQ(&quot;'+field+'&quot;,'+idx+',&quot;'+q+'&quot;)';
-  const onDel='delBudItemQ(&quot;'+field+'&quot;,'+idx+',&quot;'+q+'&quot;)';
-  return'<div class="bud-item">'
-    +fechaLabel+qLabel
-    +'<span class="bud-item-name">'+item.nombre+'</span>'
-    +'<span class="bud-item-val '+colorClass+'">'+fmt(item.valor)+'</span>'
-    +'<button class="bud-del" style="color:var(--amber)" onclick="'+onEdit+'">✏</button>'
-    +'<button class="bud-del" onclick="'+onDel+'">✕</button>'
-    +'</div>';
-}
-
-function editBudItemQ(field,idx,q){
-  const savedQ=activeBudgetQ;
-  activeBudgetQ=q;
-  editBudItem(field,idx);
-  activeBudgetQ=savedQ;
-}
-
-function delBudItemQ(field,idx,q){
-  const savedQ=activeBudgetQ;
-  activeBudgetQ=q;
-  delBudItem(field,idx);
-  activeBudgetQ=savedQ;
 }
 
 function crearNuevoMes(){
@@ -2305,52 +2332,53 @@ function crearNuevoMes(){
   toast('Mes '+nombre+' creado');
 }
 
-let _budEditCtx={field:null,idx:null}; // null idx = nuevo item
-
 function addBudItem(field){
-  _budEditCtx={field,idx:null};
   const labels={ingresos:'Ingreso',otrosIngresos:'Otro ingreso',gastosFijos:'Gasto fijo'};
-  document.getElementById('bud-item-modal-title').textContent=labels[field]||'Item';
-  document.getElementById('bud-item-nombre').value='';
-  document.getElementById('bud-item-valor').value='';
-  document.getElementById('bud-item-fecha').value=today();
-  document.getElementById('bud-item-btn').textContent='Agregar';
+  document.getElementById('bud-item-title').innerHTML=(labels[field]||'Ítem')+' <button class="modal-close" onclick="closeModal(\'modal-bud-item\')">✕</button>';
+  document.getElementById('bi-nombre').value='';
+  document.getElementById('bi-valor').value='';
+  document.getElementById('bi-fecha').value=today();
+  document.getElementById('bi-field').value=field;
+  document.getElementById('bi-edit-idx').value='';
+  document.getElementById('bi-fecha-row').style.display='';
   openModal('modal-bud-item');
 }
-
 function editBudItem(field,idx){
-  const b=getBudget(activeBudgetKey);
+  const arr=loadBudgets();
+  const b=arr.find(b=>b.key===activeBudgetKey);
   if(!b) return;
   const item=b[activeBudgetQ][field][idx];
   if(!item) return;
-  _budEditCtx={field,idx};
-  const labels={ingresos:'Ingreso',otrosIngresos:'Otro ingreso',gastosFijos:'Gasto fijo'};
-  document.getElementById('bud-item-modal-title').textContent='Editar '+( labels[field]||'item').toLowerCase();
-  document.getElementById('bud-item-nombre').value=item.nombre||'';
-  document.getElementById('bud-item-valor').value=item.valor||'';
-  document.getElementById('bud-item-fecha').value=item.fecha||today();
-  document.getElementById('bud-item-btn').textContent='Guardar cambios';
+  const labels={ingresos:'Editar ingreso',otrosIngresos:'Editar otro ingreso',gastosFijos:'Editar gasto fijo'};
+  document.getElementById('bud-item-title').innerHTML=(labels[field]||'Editar ítem')+' <button class="modal-close" onclick="closeModal(\'modal-bud-item\')">✕</button>';
+  document.getElementById('bi-nombre').value=item.nombre||'';
+  document.getElementById('bi-valor').value=item.valor||'';
+  document.getElementById('bi-fecha').value=item.fecha||today();
+  document.getElementById('bi-field').value=field;
+  document.getElementById('bi-edit-idx').value=idx;
+  document.getElementById('bi-fecha-row').style.display='';
   openModal('modal-bud-item');
 }
-
 function guardarBudItem(){
-  const nombre=document.getElementById('bud-item-nombre').value.trim();
-  const valor=parseFloat(document.getElementById('bud-item-valor').value);
-  const fecha=document.getElementById('bud-item-fecha').value||today();
+  const nombre=document.getElementById('bi-nombre').value.trim();
+  const valor=parseFloat(document.getElementById('bi-valor').value);
+  const fecha=document.getElementById('bi-fecha').value||today();
+  const field=document.getElementById('bi-field').value;
+  const editIdx=document.getElementById('bi-edit-idx').value;
   if(!nombre){toast('Ingrese un nombre','error');return;}
   if(!valor||valor<=0){toast('Ingrese un valor válido','error');return;}
   const arr=loadBudgets();
-  const b=arr.find(x=>x.key===activeBudgetKey);
+  const b=arr.find(b=>b.key===activeBudgetKey);
   if(!b) return;
-  const {field,idx}=_budEditCtx;
-  if(idx===null){
-    b[activeBudgetQ][field].push({nombre,valor,fecha});
+  if(editIdx!=='' && editIdx!==null && editIdx!==undefined && editIdx!==''){
+    b[activeBudgetQ][field][editIdx]={...b[activeBudgetQ][field][editIdx],nombre,valor,fecha};
   } else {
-    b[activeBudgetQ][field][idx]={...b[activeBudgetQ][field][idx],nombre,valor,fecha};
+    b[activeBudgetQ][field].push({nombre,valor,fecha});
   }
   saveBudgets(arr);
   closeModal('modal-bud-item');
   renderBudget(document.getElementById('dd-content'));
+  toast('Ítem guardado');
 }
 
 function delBudItem(field,idx){
@@ -2400,7 +2428,6 @@ function renderGastosVarAgrupados(gastosVar){
       html+='<span style="font-size:10px;color:var(--text3);margin-right:5px">'+fd(g.fecha)+'</span>';
       html+='<span class="bud-item-name">'+g.nombre+'</span>';
       html+='<span class="bud-item-val c-red">'+fmt(g.valor)+'</span>';
-      html+='<button class="bud-del" style="color:var(--amber)" onclick="editGastoVar('+g.origIdx+')">✏</button>';
       html+='<button class="bud-del" onclick="delBudItemVar('+g.origIdx+')">✕</button>';
       html+='</div>';
     });
@@ -2413,16 +2440,14 @@ function addGastoVar(){
   const nombre=document.getElementById('gv-nombre')?.value.trim();
   const valor=parseFloat(document.getElementById('gv-valor')?.value);
   const categoria=document.getElementById('gv-cat')?.value||'otros';
-  const fecha=document.getElementById('gv-fecha')?.value||today();
   if(!nombre){toast('Ingrese un concepto','error');return;}
   if(!valor||valor<=0){toast('Ingrese un valor','error');return;}
   const arr=loadBudgets();
   const b=arr.find(b=>b.key===activeBudgetKey);
   if(!b) return;
-  b[activeBudgetQ].gastosVar.push({nombre,valor,categoria,fecha});
+  b[activeBudgetQ].gastosVar.push({nombre,valor,categoria,fecha:today()});
   document.getElementById('gv-nombre').value='';
   document.getElementById('gv-valor').value='';
-  // mantener la fecha para facilitar registro de varios gastos del mismo dia
   saveBudgets(arr);
   renderBudget(document.getElementById('dd-content'));
 }
@@ -2432,43 +2457,6 @@ function delBudItemVar(idx){
   const b=arr.find(b=>b.key===activeBudgetKey);
   if(!b) return;
   b[activeBudgetQ].gastosVar.splice(idx,1);
-  saveBudgets(arr);
-  renderBudget(document.getElementById('dd-content'));
-}
-
-let _gvEditIdx=null;
-function editGastoVar(idx){
-  const b=getBudget(activeBudgetKey);
-  if(!b) return;
-  const g=b[activeBudgetQ].gastosVar[idx];
-  if(!g) return;
-  _gvEditIdx=idx;
-  // Rellenar campos del formulario con los datos del gasto
-  const catEl=document.getElementById('gv-cat');
-  const nomEl=document.getElementById('gv-nombre');
-  const valEl=document.getElementById('gv-valor');
-  const fecEl=document.getElementById('gv-fecha');
-  if(catEl) catEl.value=g.categoria||'otros';
-  if(nomEl) nomEl.value=g.nombre||'';
-  if(valEl) valEl.value=g.valor||'';
-  if(fecEl) fecEl.value=g.fecha||today();
-  // Cambiar botón a modo edición
-  const btn=document.querySelector('.expense-add-btn');
-  if(btn){ btn.textContent='✓'; btn.style.background='var(--amber)'; btn.onclick=()=>guardarGastoVar(); }
-  if(nomEl) nomEl.focus();
-}
-
-function guardarGastoVar(){
-  const nombre=document.getElementById('gv-nombre')?.value.trim();
-  const valor=parseFloat(document.getElementById('gv-valor')?.value);
-  const categoria=document.getElementById('gv-cat')?.value||'otros';
-  const fecha=document.getElementById('gv-fecha')?.value||today();
-  if(!nombre||!valor||valor<=0){toast('Complete los campos','error');return;}
-  const arr=loadBudgets();
-  const b=arr.find(x=>x.key===activeBudgetKey);
-  if(!b) return;
-  b[activeBudgetQ].gastosVar[_gvEditIdx]={nombre,valor,categoria,fecha};
-  _gvEditIdx=null;
   saveBudgets(arr);
   renderBudget(document.getElementById('dd-content'));
 }
@@ -7257,8 +7245,12 @@ function calcEqual(){
 
 // ── SAVINGS POCKETS ────────────────────────────────────────────────────────────
 let activePocketId=null;
+let budViewMode='quincenal'; // 'quincenal' | 'mensual'
+function toggleBudViewMode(){
+  budViewMode=budViewMode==='quincenal'?'mensual':'quincenal';
+  renderBudget(document.getElementById('dd-content'));
+}
 function renderSavings(el){
-  migrarPockets();
   const total=pockets.reduce(function(s,p){return s+p.ahorrado;},0);
   // Obtener saldo libre del presupuesto para sugerencias
   const _bArrSav=loadBudgets();
@@ -7361,9 +7353,31 @@ function renderSavings(el){
       +(pct>=100?'<span style="color:var(--green);font-weight:700">🎉 Meta alcanzada!</span>':'<span>Faltan '+fmt(falta)+'</span>')
       +'</div>'
       +smartLines
-      +renderHistorialPocket(p)
+      +(function(pocket){
+        if(!pocket.abonos) pocket.abonos=[];
+        if(pocket.abonos.length===0 && pocket.ahorrado>0){
+          pocket.abonos=[{valor:pocket.ahorrado,fecha:pocket.creado||today(),nota:'Saldo inicial'}];
+        }
+        if(pocket.abonos.length===0) return '';
+        const ultimos5=pocket.abonos.slice().reverse().slice(0,5);
+        let h='<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px">';
+        h+='<div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">Últimos abonos</div>';
+        ultimos5.forEach(function(ab,i){
+          const realIdx=pocket.abonos.length-1-i;
+          h+='<div style="display:flex;align-items:center;gap:6px;font-size:11px;padding:3px 0;border-bottom:1px solid var(--border)">';
+          h+='<span style="color:var(--text3);flex-shrink:0">'+fd(ab.fecha)+'</span>';
+          h+='<span style="font-weight:700;color:var(--green);flex-shrink:0">+'+fmt(ab.valor)+'</span>';
+          if(ab.nota) h+='<span style="color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+ab.nota+'</span>';
+          else h+='<span style="flex:1"></span>';
+          h+='<button class="bud-del" style="color:var(--amber);background:rgba(255,167,38,.12)" onclick="abrirDeposito('+pocket.id+','+realIdx+')">✏</button>';
+          h+='<button class="bud-del" onclick="eliminarAbono('+pocket.id+','+realIdx+')">✕</button>';
+          h+='</div>';
+        });
+        h+='</div>';
+        return h;
+      })(p)
       +'<div class="pocket-actions">'
-      +'<button class="btn btn-green" style="flex:1" onclick="abrirDeposito('+p.id+')">+ Ahorrar</button>'
+      +'<button class="btn btn-green" style="flex:1" onclick="abrirDeposito('+p.id+')">+ Ahorrar ahora</button>'
       +'<button class="btn btn-amber" onclick="editarPocket('+p.id+')">✏</button>'
       +'<button class="btn btn-red" onclick="eliminarPocket('+p.id+')">✕</button>'
       +'</div></div>';
@@ -7371,24 +7385,6 @@ function renderSavings(el){
 
   el.innerHTML=html;
 }
-function renderHistorialPocket(p){
-  const movs=(p.movimientos||[]).slice().sort((a,b)=>b.fecha>a.fecha?1:-1);
-  if(!movs.length) return '';
-  const rows=movs.slice(0,5).map(m=>
-    '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">'
-    +'<span style="color:var(--text3);font-family:DM Mono,monospace;flex-shrink:0">'+fd(m.fecha)+'</span>'
-    +'<span style="flex:1;color:var(--text2)">'+(m.nota||'Abono')+'</span>'
-    +'<span style="font-weight:700;color:var(--green);font-family:DM Mono,monospace">+'+fmt(m.valor)+'</span>'
-    +'<button onclick="editarAbonoPocket('+p.id+','+m.id+')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--amber);cursor:pointer;padding:1px 5px;font-size:10px">✏</button>'
-    +'<button onclick="eliminarAbonoPocket('+p.id+','+m.id+')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--red);cursor:pointer;padding:1px 5px;font-size:10px">✕</button>'
-    +'</div>'
-  ).join('');
-  const verMas=movs.length>5?'<div style="font-size:10px;color:var(--text3);text-align:center;margin-top:4px">'+movs.length+' abonos en total</div>':'';
-  return '<div style="margin:8px 0 4px">'
-    +'<div style="font-size:10px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Historial de abonos</div>'
-    +rows+verMas+'</div>';
-}
-
 function abrirNuevoPocket(){
   activePocketId=null;
   document.getElementById('pocket-title').innerHTML='Nuevo bolsillo <button class="modal-close" onclick="closeModal(\'modal-pocket\')">✕</button>';
@@ -7443,72 +7439,58 @@ function guardarPocket(){
     const p=pockets.find(x=>x.id===activePocketId);
     Object.assign(p,{nombre,meta,mensual,emoji,fechaMeta});
   } else {
-    pockets.push({id:Date.now(),nombre,meta,mensual,emoji,fechaMeta,ahorrado:0,creado:today()});
+    const newP={id:Date.now(),nombre,meta,mensual,emoji,fechaMeta,ahorrado:0,creado:today(),abonos:[]};
+    pockets.push(newP);
   }
   save();closeModal('modal-pocket');renderSavings(document.getElementById('dd-content'));toast('Bolsillo guardado');
 }
-function abrirDeposito(id){
+function abrirDeposito(id, editIdx){
   activePocketId=id;
-  _editDepositId=null;
   const p=pockets.find(x=>x.id===id);
-  document.getElementById('dep-title').innerHTML='Ahorrar en "'+p.nombre+'" <button class="modal-close" onclick="closeModal(\'modal-deposit\')">✕</button>';
-  document.getElementById('dep-valor').value=p.mensual||'';
-  document.getElementById('dep-fecha').value=today();
-  document.getElementById('dep-nota').value='';
-  document.getElementById('dep-btn-guardar').textContent='Agregar';
+  const isEdit = editIdx !== undefined && editIdx !== null && editIdx !== '';
+  document.getElementById('dep-title').innerHTML=(isEdit?'Editar abono en':'Ahorrar en')+' "'+p.nombre+'" <button class="modal-close" onclick="closeModal(\'modal-deposit\')">✕</button>';
+  if(isEdit){
+    const abono=(p.abonos||[])[editIdx];
+    document.getElementById('dep-valor').value=abono?abono.valor:'';
+    document.getElementById('dep-fecha').value=abono?abono.fecha:today();
+    document.getElementById('dep-nota').value=abono?abono.nota||'':'';
+    document.getElementById('dep-edit-idx').value=editIdx;
+  } else {
+    document.getElementById('dep-valor').value=p.mensual||'';
+    document.getElementById('dep-fecha').value=today();
+    document.getElementById('dep-nota').value='';
+    document.getElementById('dep-edit-idx').value='';
+  }
   openModal('modal-deposit');
 }
-let _editDepositId = null; // null = nuevo abono, número = id de abono a editar
-
 function depositarPocket(){
   const valor=parseFloat(document.getElementById('dep-valor').value)||0;
+  if(!valor||valor<=0){toast('Ingrese un valor','error');return;}
   const fecha=document.getElementById('dep-fecha').value||today();
   const nota=document.getElementById('dep-nota').value.trim();
-  if(!valor||valor<=0){toast('Ingrese un valor','error');return;}
+  const editIdx=document.getElementById('dep-edit-idx').value;
   const p=pockets.find(x=>x.id===activePocketId);
-  if(!p) return;
-  if(!p.movimientos) p.movimientos=[];
-  if(_editDepositId!==null){
-    // Editar abono existente
-    const mov=p.movimientos.find(m=>m.id===_editDepositId);
-    if(mov){ mov.valor=valor; mov.fecha=fecha; mov.nota=nota; }
+  if(!p.abonos) p.abonos=[];
+  if(editIdx!=='' && editIdx!==null && editIdx!==undefined){
+    const oldValor=p.abonos[editIdx]?p.abonos[editIdx].valor:0;
+    p.ahorrado=Math.max(0,(p.ahorrado||0)-oldValor+valor);
+    p.abonos[editIdx]={valor,fecha,nota};
+    toast('Abono actualizado');
   } else {
-    // Nuevo abono
-    p.movimientos.push({id:Date.now(),valor,fecha,nota});
+    p.ahorrado=Math.min((p.ahorrado||0)+valor,p.meta*1.5);
+    p.abonos.push({valor,fecha,nota});
+    toast('+'+fmt(valor)+' guardado en "'+p.nombre+'"');
   }
-  // Recalcular ahorrado desde historial
-  p.ahorrado=p.movimientos.reduce((s,m)=>s+m.valor,0);
-  save();
-  closeModal('modal-deposit');
-  renderSavings(document.getElementById('dd-content'));
-  toast(_editDepositId!==null?'Abono editado ✓':'+'+fmt(valor)+' guardado en "'+p.nombre+'"');
-  _editDepositId=null;
+  save();closeModal('modal-deposit');renderSavings(document.getElementById('dd-content'));
 }
-
-function editarAbonoPocket(pocketId, movidId){
+function eliminarAbono(pocketId, abonoIdx){
   const p=pockets.find(x=>x.id===pocketId);
-  if(!p||!p.movimientos) return;
-  const mov=p.movimientos.find(m=>m.id===movidId);
-  if(!mov) return;
-  activePocketId=pocketId;
-  _editDepositId=movidId;
-  document.getElementById('dep-title').innerHTML='Editar abono <button class="modal-close" onclick="closeModal(&quot;modal-deposit&quot;)">✕</button>';
-  document.getElementById('dep-valor').value=mov.valor;
-  document.getElementById('dep-fecha').value=mov.fecha||today();
-  document.getElementById('dep-nota').value=mov.nota||'';
-  document.getElementById('dep-btn-guardar').textContent='Guardar cambios';
-  openModal('modal-deposit');
-}
-
-function eliminarAbonoPocket(pocketId, movidId){
-  if(!confirm('¿Eliminar este abono?')) return;
-  const p=pockets.find(x=>x.id===pocketId);
-  if(!p||!p.movimientos) return;
-  p.movimientos=p.movimientos.filter(m=>m.id!==movidId);
-  p.ahorrado=p.movimientos.reduce((s,m)=>s+m.valor,0);
-  save();
-  renderSavings(document.getElementById('dd-content'));
-  toast('Abono eliminado');
+  if(!p||!p.abonos) return;
+  const abono=p.abonos[abonoIdx];
+  if(!abono) return;
+  p.ahorrado=Math.max(0,(p.ahorrado||0)-abono.valor);
+  p.abonos.splice(abonoIdx,1);
+  save();renderSavings(document.getElementById('dd-content'));toast('Abono eliminado');
 }
 function eliminarPocket(id){
   if(!confirm('¿Eliminar este bolsillo?'))return;
@@ -8996,11 +8978,7 @@ function compartirEstadoEnlace(id){
         +'<td style="text-align:center;color:#555">'+(p[2]||'Efectivo')+'</td></tr>';
     });
   });
-  var css='*{box-sizing:border-box;margin:0;padding:0}
-/* Banner offline */
-#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
-#offline-banner.show{display:block}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+  var css='*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:Segoe UI,Arial,sans-serif;background:#f4f6fb;color:#1a1a2e;padding:0}'
     +'.w{max-width:460px;margin:0 auto;padding:14px}'
     +'.hdr{background:linear-gradient(135deg,#1a0040,#2D0060);color:#fff;border-radius:14px;padding:18px;margin-bottom:12px;text-align:center}'
@@ -9238,21 +9216,6 @@ function getDKDeudas(){
 let deudas=[];
 let pagoDeudaCtx={did:null};
 let clienteTabActual='dashboard';
-
-function migrarPockets(){
-  // Migrar bolsillos que solo tienen p.ahorrado sin historial de movimientos
-  let migrado=false;
-  pockets.forEach(p=>{
-    if(!p.movimientos){
-      p.movimientos=[];
-      if(p.ahorrado>0){
-        p.movimientos.push({id:Date.now()+p.id,valor:p.ahorrado,fecha:p.creado||today(),nota:'Saldo inicial'});
-      }
-      migrado=true;
-    }
-  });
-  if(migrado) save();
-}
 
 function loadDeudas(){
   try{
@@ -11997,11 +11960,7 @@ function cierreDiario(){
   var fechaLabel=hoyFecha.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var hora=hoyFecha.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 
-  var css='*{box-sizing:border-box;margin:0;padding:0}
-/* Banner offline */
-#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
-#offline-banner.show{display:block}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
+  var css='*{box-sizing:border-box;margin:0;padding:0}'
     +'body{font-family:Segoe UI,Arial,sans-serif;background:#f9f9f9;padding:14px}'
     +'.page{max-width:440px;margin:0 auto}'
     +'.hdr{background:#1a1a2e;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:10px}'
@@ -13472,17 +13431,6 @@ function volEnviarAPresupuesto(){
 }
 // ════════════════════════════════════════════════════════════════════════════
 
-// Detector de red offline/online
-window.addEventListener('online', ()=>{
-  const b = document.getElementById('offline-banner');
-  if(b){ b.classList.remove('show'); }
-  toast('Conexión restaurada ✓','success',3000);
-});
-window.addEventListener('offline', ()=>{
-  const b = document.getElementById('offline-banner');
-  if(b){ b.classList.add('show'); }
-});
-
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
   // Esperar a que Firebase este listo antes de verificar sesion
@@ -13715,9 +13663,6 @@ window.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
-
-<!-- Banner offline/online -->
-<div id="offline-banner">⚠ Sin conexión — los cambios se guardarán al reconectarse</div>
 
 <!-- Splash Screen -->
 <div id="splash-screen" class="splash-screen">
