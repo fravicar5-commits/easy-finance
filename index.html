@@ -21,7 +21,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -36,6 +36,15 @@
   const app = initializeApp(firebaseConfig);
   window._db = getFirestore(app);
   window._auth = getAuth(app);
+
+  // Persistencia offline: las escrituras se encolan sin red y sincronizan al reconectarse
+  enableIndexedDbPersistence(window._db).catch(err => {
+    if(err.code === 'failed-precondition'){
+      console.warn('[Cuadre] Persistencia offline no disponible: múltiples pestañas abiertas');
+    } else if(err.code === 'unimplemented'){
+      console.warn('[Cuadre] Este navegador no soporta persistencia offline');
+    }
+  });
   window._fbSignIn = signInWithEmailAndPassword;
   window._fbCreateUser = createUserWithEmailAndPassword;
   window._fbSignOut = signOut;
@@ -169,6 +178,10 @@ body.light-mode .hdr-ico-btn.hdr-ico-del{background:rgba(201,42,42,.07)!importan
   .hdr-ico-btn{width:30px;height:30px}
 }
 *{box-sizing:border-box;margin:0;padding:0}
+/* Banner offline */
+#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
+#offline-banner.show{display:block}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Nunito',sans-serif;font-size:14px;line-height:1.5;overflow:hidden}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 @keyframes pulse-red{0%,100%{box-shadow:0 0 0 0 rgba(239,83,80,.4)}50%{box-shadow:0 0 0 6px rgba(239,83,80,0)}}
@@ -8757,7 +8770,11 @@ function compartirEstadoEnlace(id){
         +'<td style="text-align:center;color:#555">'+(p[2]||'Efectivo')+'</td></tr>';
     });
   });
-  var css='*{box-sizing:border-box;margin:0;padding:0}'
+  var css='*{box-sizing:border-box;margin:0;padding:0}
+/* Banner offline */
+#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
+#offline-banner.show{display:block}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
     +'body{font-family:Segoe UI,Arial,sans-serif;background:#f4f6fb;color:#1a1a2e;padding:0}'
     +'.w{max-width:460px;margin:0 auto;padding:14px}'
     +'.hdr{background:linear-gradient(135deg,#1a0040,#2D0060);color:#fff;border-radius:14px;padding:18px;margin-bottom:12px;text-align:center}'
@@ -11739,7 +11756,11 @@ function cierreDiario(){
   var fechaLabel=hoyFecha.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   var hora=hoyFecha.toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
 
-  var css='*{box-sizing:border-box;margin:0;padding:0}'
+  var css='*{box-sizing:border-box;margin:0;padding:0}
+/* Banner offline */
+#offline-banner{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1a2e;border-top:1px solid rgba(255,167,38,.4);padding:8px 16px;text-align:center;font-size:12px;font-weight:700;color:#FFB300;font-family:'Nunito',sans-serif;animation:slideUp .3s ease}
+#offline-banner.show{display:block}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}'
     +'body{font-family:Segoe UI,Arial,sans-serif;background:#f9f9f9;padding:14px}'
     +'.page{max-width:440px;margin:0 auto}'
     +'.hdr{background:#1a1a2e;color:#fff;border-radius:12px;padding:14px 18px;margin-bottom:10px}'
@@ -13210,6 +13231,17 @@ function volEnviarAPresupuesto(){
 }
 // ════════════════════════════════════════════════════════════════════════════
 
+// Detector de red offline/online
+window.addEventListener('online', ()=>{
+  const b = document.getElementById('offline-banner');
+  if(b){ b.classList.remove('show'); }
+  toast('Conexión restaurada ✓','success',3000);
+});
+window.addEventListener('offline', ()=>{
+  const b = document.getElementById('offline-banner');
+  if(b){ b.classList.add('show'); }
+});
+
 window.addEventListener('DOMContentLoaded',()=>{
   try{ updateDriveStatus(); }catch(e){}
   // Esperar a que Firebase este listo antes de verificar sesion
@@ -13442,6 +13474,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
+
+<!-- Banner offline/online -->
+<div id="offline-banner">⚠ Sin conexión — los cambios se guardarán al reconectarse</div>
 
 <!-- Splash Screen -->
 <div id="splash-screen" class="splash-screen">
