@@ -21,7 +21,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -34,17 +34,18 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  window._db = getFirestore(app);
+  // Inicializar Firestore con persistencia offline (SDK v10)
+  try {
+    window._db = initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+    });
+  } catch(e) {
+    // Fallback si persistencia no está disponible (ej: Safari privado)
+    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    window._db = getFirestore(app);
+    console.warn('[Cuadre] Persistencia offline no disponible, usando memoria:', e.message);
+  }
   window._auth = getAuth(app);
-
-  // Persistencia offline: las escrituras se encolan sin red y sincronizan al reconectarse
-  enableIndexedDbPersistence(window._db).catch(err => {
-    if(err.code === 'failed-precondition'){
-      console.warn('[Cuadre] Persistencia offline no disponible: múltiples pestañas abiertas');
-    } else if(err.code === 'unimplemented'){
-      console.warn('[Cuadre] Este navegador no soporta persistencia offline');
-    }
-  });
   window._fbSignIn = signInWithEmailAndPassword;
   window._fbCreateUser = createUserWithEmailAndPassword;
   window._fbSignOut = signOut;
