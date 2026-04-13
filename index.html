@@ -21,7 +21,7 @@
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
   import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
   const firebaseConfig = {
@@ -34,17 +34,7 @@
   };
 
   const app = initializeApp(firebaseConfig);
-  // Inicializar Firestore con persistencia offline (SDK v10)
-  try {
-    window._db = initializeFirestore(app, {
-      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
-    });
-  } catch(e) {
-    // Fallback si persistencia no está disponible (ej: Safari privado)
-    const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    window._db = getFirestore(app);
-    console.warn('[Cuadre] Persistencia offline no disponible, usando memoria:', e.message);
-  }
+  window._db = getFirestore(app);
   window._auth = getAuth(app);
   window._fbSignIn = signInWithEmailAndPassword;
   window._fbCreateUser = createUserWithEmailAndPassword;
