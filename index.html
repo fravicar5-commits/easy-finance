@@ -2317,6 +2317,19 @@ function _fsUid(){
   return _adminUid || (window._auth&&window._auth.currentUser&&window._auth.currentUser.uid) || null;
 }
 
+function _cleanUndefined(obj){
+  // Firestore no acepta undefined — reemplazar por null recursivamente
+  if(Array.isArray(obj)) return obj.map(_cleanUndefined);
+  if(obj !== null && typeof obj === 'object'){
+    const clean = {};
+    for(const k of Object.keys(obj)){
+      if(obj[k] !== undefined) clean[k] = _cleanUndefined(obj[k]);
+    }
+    return clean;
+  }
+  return obj;
+}
+
 async function _fsSave(data){
   const uid = _fsUid();
   if(!uid||!window._db){
@@ -2325,8 +2338,9 @@ async function _fsSave(data){
     return;
   }
   try{
-    await window._fbSetDoc(window._fbDoc(window._db,'cuadre',uid), data, {merge:true});
-    console.log('[Cuadre] _fsSave OK → cuadre/'+uid, Object.keys(data));
+    const cleanData = _cleanUndefined(data);
+    await window._fbSetDoc(window._fbDoc(window._db,'cuadre',uid), cleanData, {merge:true});
+    console.log('[Cuadre] _fsSave OK → cuadre/'+uid, Object.keys(cleanData));
   }catch(e){
     console.error('[Cuadre] _fsSave ERROR:',e.code, e.message);
     toast('⚠ Error guardando en nube: '+e.message,'error',5000);
