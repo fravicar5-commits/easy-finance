@@ -2064,13 +2064,15 @@ function renderBudget(el){
     // Modo mensual/quincenal toggle
     +(()=>{
       const esMensual=b.modoMensual||false;
+      const bgQ=esMensual?'var(--surface2)':'var(--ef-pink)';
+      const clQ=esMensual?'var(--text3)':'white';
+      const bgM=esMensual?'var(--ef-pink)':'var(--surface2)';
+      const clM=esMensual?'white':'var(--text3)';
       return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
         +'<div style="font-size:11px;font-weight:700;color:var(--text3)">MODO DE VISTA</div>'
         +'<div style="display:flex;gap:0;border:1px solid var(--border2);border-radius:var(--radius-xs);overflow:hidden">'
-        +'<button onclick="setBudgetModo('quincenal')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+(esMensual?'var(--surface2)':'var(--ef-pink)' )+';color:'+(esMensual?'var(--text3)':'white')+'">'
-        +'Quincenal</button>'
-        +'<button onclick="setBudgetModo('mensual')" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+(esMensual?'var(--ef-pink)':'var(--surface2)')+';color:'+(esMensual?'white':'var(--text3)')+'">'
-        +'Mensual</button>'
+        +'<button onclick="setBudgetModo(&quot;quincenal&quot;)" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+bgQ+';color:'+clQ+'">Quincenal</button>'
+        +'<button onclick="setBudgetModo(&quot;mensual&quot;)" style="padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;border:none;font-family:Nunito,sans-serif;background:'+bgM+';color:'+clM+'">Mensual</button>'
         +'</div></div>';
     })()
 
@@ -2197,8 +2199,8 @@ function budItemRow(item,idx,field,colorClass){
     +fechaLabel
     +'<span class="bud-item-name">'+item.nombre+'</span>'
     +'<span class="bud-item-val '+colorClass+'">'+fmt(item.valor)+'</span>'
-    +'<button class="bud-del" style="color:var(--amber)" onclick="editBudItem(''+field+'','+idx+')">✏</button>'
-    +'<button class="bud-del" onclick="delBudItem(''+field+'','+idx+')">✕</button>'
+    +'<button class="bud-del" style="color:var(--amber)" onclick="editBudItem(&quot;'+field+'&quot;,'+idx+')">✏</button>'
+    +'<button class="bud-del" onclick="delBudItem(&quot;'+field+'&quot;,'+idx+')">✕</button>'
     +'</div>';
 }
 
@@ -2244,15 +2246,16 @@ function setBudgetModo(modo){
 }
 
 function budItemRowFull(item,idx,field,colorClass,q){
-  // Versión del row para modo mensual donde se muestra quincena de origen
   const qLabel=q==='q1'?'<span style="font-size:9px;background:rgba(112,112,255,.15);color:var(--accent);border-radius:3px;padding:1px 5px;margin-right:4px">Q1</span>':'<span style="font-size:9px;background:rgba(0,230,120,.12);color:var(--green);border-radius:3px;padding:1px 5px;margin-right:4px">Q2</span>';
   const fechaLabel=item.fecha?'<span style="font-size:10px;color:var(--text3);margin-right:4px;font-family:DM Mono,monospace">'+fd(item.fecha)+'</span>':'';
+  const onEdit='editBudItemQ(&quot;'+field+'&quot;,'+idx+',&quot;'+q+'&quot;)';
+  const onDel='delBudItemQ(&quot;'+field+'&quot;,'+idx+',&quot;'+q+'&quot;)';
   return'<div class="bud-item">'
     +fechaLabel+qLabel
     +'<span class="bud-item-name">'+item.nombre+'</span>'
     +'<span class="bud-item-val '+colorClass+'">'+fmt(item.valor)+'</span>'
-    +'<button class="bud-del" style="color:var(--amber)" onclick="editBudItemQ(''+field+'','+idx+',''+q+'')">✏</button>'
-    +'<button class="bud-del" onclick="delBudItemQ(''+field+'','+idx+',''+q+'')">✕</button>'
+    +'<button class="bud-del" style="color:var(--amber)" onclick="'+onEdit+'">✏</button>'
+    +'<button class="bud-del" onclick="'+onDel+'">✕</button>'
     +'</div>';
 }
 
@@ -7374,7 +7377,7 @@ function renderHistorialPocket(p){
   const rows=movs.slice(0,5).map(m=>
     '<div style="display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">'
     +'<span style="color:var(--text3);font-family:DM Mono,monospace;flex-shrink:0">'+fd(m.fecha)+'</span>'
-    +'<span style="flex:1;color:var(--text2)">'+( m.nota||'Abono')+'</span>'
+    +'<span style="flex:1;color:var(--text2)">'+(m.nota||'Abono')+'</span>'
     +'<span style="font-weight:700;color:var(--green);font-family:DM Mono,monospace">+'+fmt(m.valor)+'</span>'
     +'<button onclick="editarAbonoPocket('+p.id+','+m.id+')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--amber);cursor:pointer;padding:1px 5px;font-size:10px">✏</button>'
     +'<button onclick="eliminarAbonoPocket('+p.id+','+m.id+')" style="background:none;border:1px solid var(--border2);border-radius:4px;color:var(--red);cursor:pointer;padding:1px 5px;font-size:10px">✕</button>'
@@ -7489,7 +7492,7 @@ function editarAbonoPocket(pocketId, movidId){
   if(!mov) return;
   activePocketId=pocketId;
   _editDepositId=movidId;
-  document.getElementById('dep-title').innerHTML='Editar abono <button class="modal-close" onclick="closeModal('modal-deposit')">✕</button>';
+  document.getElementById('dep-title').innerHTML='Editar abono <button class="modal-close" onclick="closeModal(&quot;modal-deposit&quot;)">✕</button>';
   document.getElementById('dep-valor').value=mov.valor;
   document.getElementById('dep-fecha').value=mov.fecha||today();
   document.getElementById('dep-nota').value=mov.nota||'';
