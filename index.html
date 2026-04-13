@@ -661,6 +661,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .pocket-progress{height:8px;background:var(--surface3);border-radius:4px;margin:8px 0}
 .pocket-bar{height:100%;border-radius:4px;transition:width .5s}
 .pocket-actions{display:flex;gap:6px;margin-top:10px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* Tips */
 .tip-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--ef-pink2);border-radius:var(--radius);padding:14px;margin-bottom:10px}
@@ -1867,6 +1868,26 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
   </div>
 </div>
 
+<!-- API Key config modal -->
+<div class="overlay" id="modal-apikey">
+  <div class="modal">
+    <div class="modal-title">🔑 API Key de Anthropic <button class="modal-close" onclick="closeModal('modal-apikey')">✕</button></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">
+      Ingresa tu API key de Anthropic para activar el análisis inteligente de presupuesto.<br>
+      Se guarda solo en este dispositivo (localStorage), nunca se envía a ningún servidor externo.
+    </div>
+    <div class="fr">
+      <label>API Key</label>
+      <input type="password" id="apikey-input" placeholder="sk-ant-api03-..." style="font-family:monospace;font-size:12px">
+    </div>
+    <div id="apikey-status" style="font-size:11px;min-height:16px;margin-top:4px"></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeModal('modal-apikey')">Cancelar</button>
+      <button class="btn btn-pink" onclick="guardarApiKey()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Budget item modal -->
 <div class="overlay" id="modal-bud-item">
   <div class="modal">
@@ -2056,7 +2077,7 @@ function renderBudget(el){
       return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">'        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'        +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">📊 Resumen · '+b.nombre+'</div>'        +'<div style="font-size:20px;font-weight:800;font-family:\'DM Mono\',monospace;color:'+sc+'">'+fmtS(saldo)+'</div>'        +'</div>'        +(last4.length>1          ?'<div class="hbw-bars" style="margin-bottom:6px">'+barsH+'</div>'           +'<div style="display:flex;gap:12px;margin-bottom:10px">'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Ingresos</span>'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>Gastos</span>'           +'</div>':'')        +(topC.length>0?'<div class="hbw-cats">'+topC.map(([cId,tot])=>{const cat=gvCat(cId);return '<span class="hbw-cat-pill" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text2)">'+cat.icon+' '+cat.label+' '+fmtS(tot)+'</span>';}).join('')+'</div>':'')        +'</div>';
     })()
     // Header
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'    +'<div style="display:flex;gap:6px">'    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'    +'<button class="btn" style="font-size:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none" onclick="analizarPresupuesto()">🤖 Analizar</button>'    +'</div>'    +'</div>'
     // Month nav
     +(arr.length>0?'<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+monthNav+'</div>':'')
 
@@ -2086,6 +2107,8 @@ function renderBudget(el){
 
     // Monthly total summary
     +alertHTML
+    // IA analysis card (se inserta dinámicamente por analizarPresupuesto)
+    +'<div id="bud-ai-card"></div>'
     +'<div class="metrics" style="margin-bottom:12px">'
     +'<div class="mc"><div class="mc-label">Ingresos mes</div><div class="mc-value c-green">'+fmt(ti)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Gastos fijos mes</div><div class="mc-value c-amber">'+fmt(gf)+'</div></div>'
@@ -7543,6 +7566,155 @@ async function fetchTips(){
   for(let i=0;i<4;i++) result.push(TIPS_STATIC[(start+i)%TIPS_STATIC.length]);
   return result;
 }
+// ══ ANÁLISIS IA PRESUPUESTO ═════════════════════════════════════════════════
+function getAnthropicKey(){
+  return localStorage.getItem('ef_anthropic_key')||'';
+}
+function guardarApiKey(){
+  const val=document.getElementById('apikey-input').value.trim();
+  const st=document.getElementById('apikey-status');
+  if(!val.startsWith('sk-ant-')){
+    st.style.color='var(--red)';
+    st.textContent='⚠ La key debe comenzar con sk-ant-';
+    return;
+  }
+  localStorage.setItem('ef_anthropic_key',val);
+  st.style.color='var(--green)';
+  st.textContent='✓ API key guardada correctamente';
+  setTimeout(()=>closeModal('modal-apikey'),900);
+}
+function abrirConfigApiKey(){
+  const existing=getAnthropicKey();
+  const inp=document.getElementById('apikey-input');
+  if(inp) inp.value=existing;
+  const st=document.getElementById('apikey-status');
+  if(st) st.textContent=existing?'✓ Ya tienes una key guardada':'';
+  openModal('modal-apikey');
+}
+
+async function analizarPresupuesto(){
+  const key=getAnthropicKey();
+  if(!key){
+    // Preguntar si quiere configurar la key
+    const card=document.getElementById('bud-ai-card');
+    if(card) card.innerHTML='<div style="background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(118,75,162,.12));border:1px solid rgba(102,126,234,.3);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+      +'<div><div style="font-size:12px;font-weight:700;color:#7c6af7;margin-bottom:3px">🤖 Análisis IA no configurado</div>'
+      +'<div style="font-size:11px;color:var(--text3)">Agrega tu API key de Anthropic para activar el análisis inteligente.</div></div>'
+      +'<button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;font-size:11px;white-space:nowrap" onclick="abrirConfigApiKey()">🔑 Configurar</button>'
+      +'</div>';
+    return;
+  }
+
+  const b=ensureActiveBudget();
+  if(!b){toast('No hay presupuesto activo','error');return;}
+
+  const card=document.getElementById('bud-ai-card');
+  if(!card) return;
+
+  // Mostrar loading
+  card.innerHTML='<div style="background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));border:1px solid rgba(102,126,234,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:8px;color:#7c6af7;font-size:12px;font-weight:700">'
+    +'<span style="display:inline-block;animation:spin 1s linear infinite">⟳</span> Analizando tu presupuesto...</div>'
+    +'</div>';
+
+  // Recolectar datos reales del mes
+  const ti=budMonthIngresos(b);
+  const gf=budMonthGastosFijos(b);
+  const gv=budMonthGastosVar(b);
+  const saldo=ti-gf-gv;
+  const t50=Math.round(ti*0.5),t30=Math.round(ti*0.3),t20=Math.round(ti*0.2);
+
+  // Top categorías gastos variables
+  const allGV=[...(b.q1.gastosVar||[]),...(b.q2.gastosVar||[])];
+  const catT={};
+  allGV.forEach(g=>{const c=g.categoria||'otros';catT[c]=(catT[c]||0)+(g.valor||0);});
+  const topCats=Object.entries(catT).sort((a,c)=>c[1]-a[1]).slice(0,3)
+    .map(([id,v])=>{const cat=gvCat(id);return cat.label+': $'+Math.round(v).toLocaleString('es-CO');}).join(', ');
+
+  // Items gastos fijos
+  const fixedItems=[...(b.q1.gastosFijos||[]),...(b.q2.gastosFijos||[])]
+    .map(i=>i.nombre+' $'+Math.round(i.valor).toLocaleString('es-CO')).slice(0,6).join(', ');
+
+  // Bolsillos
+  const bolsillosInfo=(pockets||[]).map(p=>{
+    const pct=p.meta>0?Math.round(p.ahorrado/p.meta*100):0;
+    return p.nombre+' '+pct+'% ('+fmt(p.ahorrado)+'/'+fmt(p.meta)+')';
+  }).join('; ')||'Sin bolsillos';
+
+  const pctGF=ti>0?Math.round(gf/ti*100):0;
+  const pctGV=ti>0?Math.round(gv/ti*100):0;
+  const pctAhorro=ti>0?Math.round(Math.max(saldo,0)/ti*100):0;
+
+  const prompt=`Eres un asesor financiero personal para un colombiano. Analiza este presupuesto del mes "${b.nombre}" y da un diagnóstico CONCRETO y ACCIONABLE en máximo 4 oraciones cortas. Usa lenguaje colombiano natural, directo y amigable. NO uses listas con guiones. Escribe en prosa fluida.
+
+DATOS DEL MES:
+- Ingresos totales: $${Math.round(ti).toLocaleString('es-CO')}
+- Gastos fijos: $${Math.round(gf).toLocaleString('es-CO')} (${pctGF}% del ingreso, meta ≤50%)
+- Gastos variables: $${Math.round(gv).toLocaleString('es-CO')} (${pctGV}% del ingreso, meta ≤30%)
+- Saldo libre: $${Math.round(saldo).toLocaleString('es-CO')} (${pctAhorro}% del ingreso, meta ≥20%)
+- Gastos fijos principales: ${fixedItems||'ninguno registrado'}
+- Top categorías variables: ${topCats||'ninguna registrada'}
+- Bolsillos de ahorro: ${bolsillosInfo}
+
+Regla 50/30/20: fijos ${pctGF}%${pctGF>50?' ⚠ EXCEDE':' ✓'}, variables ${pctGV}%${pctGV>30?' ⚠ EXCEDE':' ✓'}, ahorro ${pctAhorro}%${pctAhorro<20?' ⚠ BAJO':' ✓'}.
+
+Da el diagnóstico en 3-4 oraciones: qué está bien, qué hay que mejorar y UNA acción concreta para esta semana.`;
+
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:300,
+        messages:[{role:'user',content:prompt}]
+      })
+    });
+    const d=await r.json();
+    if(d.error){
+      const msg=d.error.message||'Error desconocido';
+      const isKey=msg.toLowerCase().includes('api key')||msg.toLowerCase().includes('auth')||d.error.type==='authentication_error';
+      card.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:12px">'
+        +'<span style="color:var(--red);font-weight:700">⚠ Error API: </span><span style="color:var(--text2)">'+msg+'</span>'
+        +(isKey?'<div style="margin-top:8px"><button class="btn" style="font-size:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none" onclick="abrirConfigApiKey()">🔑 Actualizar key</button></div>':'')
+        +'</div>';
+      return;
+    }
+    const texto=d.content?.find(b=>b.type==='text')?.text||'';
+    if(!texto){card.innerHTML='';return;}
+
+    // Determinar tono general para el color del card
+    const hayProblema=pctGF>50||pctGV>30||pctAhorro<20||saldo<0;
+    const gradiente=hayProblema
+      ?'linear-gradient(135deg,rgba(255,167,38,.1),rgba(255,107,107,.08))'
+      :'linear-gradient(135deg,rgba(61,220,132,.08),rgba(0,188,212,.06))';
+    const borde=hayProblema?'rgba(255,167,38,.3)':'rgba(61,220,132,.25)';
+    const icono=hayProblema?'⚠️':'✅';
+
+    card.innerHTML='<div style="background:'+gradiente+';border:1px solid '+borde+';border-radius:var(--radius);padding:14px;margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
+      +'<div style="font-size:11px;font-weight:700;color:#7c6af7;text-transform:uppercase;letter-spacing:.05em">'+icono+' Análisis IA · '+b.nombre+'</div>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="bud-del" style="color:#7c6af7;background:rgba(102,126,234,.12);padding:3px 8px;border-radius:var(--radius-xs);font-size:10px;width:auto" onclick="analizarPresupuesto()">↻</button>'
+      +'<button class="bud-del" style="color:var(--text3);font-size:10px;width:auto;padding:3px 7px" onclick="document.getElementById(\'bud-ai-card\').innerHTML=\'\'" >✕</button>'
+      +'</div>'
+      +'</div>'
+      +'<div style="font-size:12px;color:var(--text);line-height:1.6">'+texto+'</div>'
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(102,126,234,.15);display:flex;justify-content:space-between;align-items:center">'
+      +'<span style="font-size:10px;color:var(--text3)">Generado con Claude Haiku · Solo lectura, no modifica tus datos</span>'
+      +'<button class="btn" style="font-size:10px;padding:2px 8px;background:transparent;border:1px solid rgba(102,126,234,.3);color:#7c6af7" onclick="abrirConfigApiKey()">🔑</button>'
+      +'</div>'
+      +'</div>';
+  }catch(e){
+    card.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:12px;color:var(--red)">⚠ Error de conexión: '+e.message+'</div>';
+  }
+}
+
 async function renderTips(el){
   const fecha=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
