@@ -13360,226 +13360,333 @@ function _volLeer(file,res){
   reader.readAsArrayBuffer(file);
 }
 function _volAnalizar(rows,res){
-  const fmt=n=>'$'+Math.round(n).toLocaleString('es-CO');
+  const fmtV=n=>'$'+Math.round(n).toLocaleString('es-CO');
   const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
-  const toNum=v=>{ if(!v&&v!==0) return 0; const n=parseFloat(String(v).replace(/[$,.\s]/g,'').replace(/[,]/g,'')); const n2=parseFloat(String(v).replace(/[$\s]/g,'').replace(/\./g,'').replace(',','.')); const best=isNaN(n2)?n:n2; return isNaN(best)?0:Math.abs(best); };
-  // toNum mejorado: maneja formato colombiano (puntos miles, coma decimal) y americano
+
+  // ── toNumCO: maneja formato colombiano (1.234.567) y americano (1,234,567) ─
   const toNumCO=v=>{
-    if(!v&&v!==0) return 0;
+    if(v===null||v===undefined||v==='') return 0;
+    if(typeof v==='number') return Math.abs(v);
     const s=String(v).replace(/\s/g,'').replace(/[$COP]/gi,'').trim();
-    if(!s) return 0;
-    // Formato colombiano: 1.234.567 o 1.234.567,89
-    const co=s.replace(/\./g,'').replace(',','.');
-    const nco=parseFloat(co);
-    if(!isNaN(nco)&&nco>=0) return Math.abs(nco);
-    // Formato americano: 1,234,567 o 1,234,567.89
-    const us=s.replace(/,/g,'');
-    const nus=parseFloat(us);
-    if(!isNaN(nus)&&nus>=0) return Math.abs(nus);
+    if(!s||s==='-') return 0;
+    // formato colombiano: puntos como miles, coma como decimal
+    const co=parseFloat(s.replace(/\./g,'').replace(',','.'));
+    if(!isNaN(co)&&co>=0) return co;
+    // formato americano
+    const us=parseFloat(s.replace(/,/g,''));
+    if(!isNaN(us)&&us>=0) return Math.abs(us);
     return 0;
   };
 
-  // ── Metadatos: fecha, nombre, endeudamiento ───────────────────────────────
-  let fechaIni=null,nombre='',nivelEnd=0,prom12=0;
-  for(let i=0;i<Math.min(15,rows.length);i++){
-    const dr=rows[i].filter(c=>c instanceof Date||(typeof c==='string'&&/\d{4}-\d{2}-\d{2}/.test(c)));
-    if(dr.length>=1&&!fechaIni){ const d1=dr[0] instanceof Date?dr[0]:new Date(dr[0]); if(!isNaN(d1)) fechaIni=d1; }
-    rows[i].forEach((c,j)=>{
-      const cs=String(c||'');
-      if(/nombre.*empleado|empleado/i.test(cs)&&rows[i][j+1]&&!nombre) nombre=String(rows[i][j+1]).trim();
-      if(/nombre/i.test(cs)&&rows[i][j+2]&&!nombre) nombre=String(rows[i][j+2]).trim();
-      if(/endeudamiento/i.test(cs)){ const n=toNumCO(rows[i][j+1]); if(n>0&&n<100) nivelEnd=n; }
-      if(/promedio.*12|12.*mes/i.test(cs)){ const n=toNumCO(rows[i][j+2]||rows[i][j+1]); if(n>100000) prom12=n; }
-      // Buscar fecha en celdas de texto tipo "01/04/2026" o "01-04-2026"
-      if(!fechaIni&&typeof c==='string'){
-        const m=c.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-        if(m){ const d=new Date(+m[3],+m[2]-1,+m[1]); if(!isNaN(d)) fechaIni=d; }
+  // ── Buscar valor en una fila: recorre columnas buscando el primer número útil ─
+  const findVal=(row,minVal,preferCols)=>{
+    // Primero buscar en columnas preferidas
+    if(preferCols){
+      for(const c of preferCols){
+        if(c<row.length){const n=toNumCO(row[c]);if(n>=minVal)return n;}
       }
-    });
+    }
+    // Luego barrer toda la fila
+    for(let c=row.length-1;c>=0;c--){
+      const n=toNumCO(row[c]);
+      if(n>=minVal) return n;
+    }
+    return 0;
+  };
+
+  // ── PASO 1: Detectar fecha del período ────────────────────────────────────
+  // Este formato Sura/Compensar tiene: col11=fecha_ini (serial Excel), col18=fecha_fin
+  let fechaIni=null, periodoLabel='Sin fecha', quincena=1, periodoKey='';
+  const ms=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+  for(let i=0;i<Math.min(5,rows.length);i++){
+    const row=rows[i];
+    for(let j=0;j<row.length;j++){
+      const v=row[j];
+      // Fecha como objeto Date (XLSX con cellDates:true)
+      if(v instanceof Date&&!isNaN(v)&&!fechaIni){
+        fechaIni=v; break;
+      }
+      // Fecha como serial Excel (número entre 40000 y 50000 ≈ años 2009-2036)
+      if(typeof v==='number'&&v>40000&&v<55000&&!fechaIni){
+        // Convertir serial Excel a fecha (epoch Excel = 1 ene 1900, con bug leap 1900)
+        const d=new Date(Math.round((v-25569)*86400*1000));
+        if(!isNaN(d)){fechaIni=d;break;}
+      }
+      // Fecha como string "YYYY-MM-DD" o "DD/MM/YYYY"
+      if(typeof v==='string'&&!fechaIni){
+        let d=null;
+        const m1=v.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if(m1) d=new Date(+m1[1],+m1[2]-1,+m1[3]);
+        const m2=v.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+        if(m2) d=new Date(+m2[3],+m2[2]-1,+m2[1]);
+        if(d&&!isNaN(d)){fechaIni=d;}
+      }
+    }
+    if(fechaIni) break;
   }
 
-  const ms=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  let periodoLabel='Sin fecha',quincena=1,periodoKey='';
   if(fechaIni){
     quincena=fechaIni.getDate()<=15?1:2;
     periodoLabel=ms[fechaIni.getMonth()]+' '+fechaIni.getFullYear();
     periodoKey=fechaIni.getFullYear()+'-'+String(fechaIni.getMonth()+1).padStart(2,'0');
   }
 
-  // ── Patrones de clasificación ─────────────────────────────────────────────
-  const K_F=/garantizado|salario|sueldo|basico|básico|transici[oó]n|b[aá]sico/i;
-  const K_C=/comisi[oó]n|bonus|incentivo|variable|prima.*ventas/i;
-  const K_A=/auxilio(?!.*p[oó]liz)|transporte|rodamiento/i;
-  const K_P=/pensi[oó]n|ivm|proteccion/i;
-  const K_S=/salud|eps|egm/i;
-  const K_R=/retenci[oó]n.*fuente|retencion/i;
-  const K_PR=/pr[eé]stamo|credito|libranza/i;
-  const K_PO=/p[oó]liza|seguro.*vida|vida.*grupo|arl(?!.*empresa)/i;
-  const K_DEV=/devengado|pagos|haberes|ingresos|earnings/i;
-  const K_DED=/deducci[oó]n|descuentos|deductions/i;
-  const K_TOT=/total.*pag|total.*dev|total.*ingres|total.*haber/i;
-  const K_DED_TOT=/total.*deducci|total.*descuent/i;
-  const K_NETO=/neto.*pagar|total.*pagar|a\s*pagar|net\s*pay|neto$/i;
-  const K_BRUTO=/bruto|gross/i;
-  const K_RESUMEN=/resumen|consolidado|summary/i;
-  const K_SKIP=/concepto|descripci[oó]n|código|code/i;
-
-  const devs=[],deds=[];
-  let secDev=false,secDed=false,inResumen=false;
-  let tpD=0,tdD=0,nD=0,brutoD=0;
-
-  // ── ESTRATEGIA 1: Detección por secciones (formato Sura, Compensar, etc.) ─
-  rows.forEach((row,ri)=>{
-    const cells=row.map(c=>String(c||'').trim());
-    const c0=cells[0]||'';
-    const c1=cells[1]||'';
-
-    if(K_RESUMEN.test(c0)) inResumen=true;
-
-    // Detectar inicio sección devengados
-    if(!inResumen&&(K_DEV.test(c0)||/otros.*conceptos.*pago/i.test(c0)||/conceptos.*pago/i.test(c0))){
-      secDev=true; secDed=false; return;
-    }
-    // Detectar inicio sección deducciones
-    if(!inResumen&&(K_DED.test(c0)||/otros.*conceptos.*deducci/i.test(c0)||/conceptos.*deducci/i.test(c0))){
-      secDed=true; secDev=false; return;
-    }
-    // Cabecera de tabla — skip
-    if(K_SKIP.test(c0)&&/valor|monto|amount/i.test(cells.join(' '))) return;
-
-    // En sección resumen: capturar totales
-    if(inResumen){
-      if(K_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) tpD=n; }
-      if(K_DED_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>0) tdD=n; }
-      if(K_NETO.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) nD=n; }
-      return;
-    }
-
-    // En secciones de detalle: capturar ítems
-    if((secDev||secDed)&&c0&&!/^\d+$/.test(c0)&&c0.length>2){
-      // Buscar valor: puede estar en col 1,2,3 o última columna no vacía
-      const vals=cells.slice(1).map(toNumCO).filter(n=>n>100);
-      const v=vals[0]||0;
-      if(!v) return;
-      if(secDev) devs.push({c:c0,v});
-      else deds.push({c:c0,v});
-    }
-
-    // Totales dentro de secciones
-    if(secDev&&K_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000){tpD=n;secDev=false;}}
-    if(secDed&&K_DED_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>0){tdD=n;secDed=false;}}
-    if(K_NETO.test(c0)&&!inResumen){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) nD=n; }
-    if(K_BRUTO.test(c0)&&!inResumen&&!/deducci/i.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) brutoD=n; }
-  });
-
-  // ── ESTRATEGIA 2: Scan global si secciones no encontraron nada ─────────────
-  if(devs.length===0&&deds.length===0&&nD===0){
-    rows.forEach(row=>{
-      const cells=row.map(c=>String(c||'').trim());
-      const c0=cells[0]||'';
-      if(!c0||c0.length<3) return;
-      const vals=cells.slice(1).map(toNumCO).filter(n=>n>10000); // valores laborales > 10k
-      const v=vals[0]||0;
-      if(K_NETO.test(c0)&&v>1000){ nD=nD||v; return; }
-      if(K_TOT.test(c0)&&v>1000){ tpD=tpD||v; return; }
-      if(K_DED_TOT.test(c0)&&v>0){ tdD=tdD||v; return; }
-      if(K_BRUTO.test(c0)&&v>1000){ brutoD=brutoD||v; return; }
-      if(v>10000){
-        if(K_F.test(c0)||K_C.test(c0)||K_A.test(c0)) devs.push({c:c0,v});
-        else if(K_P.test(c0)||K_S.test(c0)||K_R.test(c0)||K_PR.test(c0)||K_PO.test(c0)) deds.push({c:c0,v});
+  // ── PASO 2: Metadatos (nombre, endeudamiento, promedio12) ─────────────────
+  let nombre='', nivelEnd=0, prom12=0;
+  for(let i=0;i<Math.min(15,rows.length);i++){
+    const row=rows[i];
+    const line=row.map(c=>String(c||'')).join('|').toLowerCase();
+    // Nombre: buscar celda con "nombre:" y tomar valor de cols siguientes
+    row.forEach((c,j)=>{
+      if(/nombre:/i.test(String(c||''))&&!nombre){
+        // Buscar en columnas siguientes el valor del nombre
+        for(let k=j+1;k<Math.min(j+8,row.length);k++){
+          const v=String(row[k]||'').trim();
+          if(v&&v.length>3&&!/^\d+$/.test(v)){nombre=v;break;}
+        }
+      }
+      if(/endeudamiento/i.test(String(c||''))){
+        // El nivel es un número entre 0 y 100
+        for(let k=j+1;k<Math.min(j+10,row.length);k++){
+          const n=toNumCO(row[k]);
+          if(n>0&&n<100){nivelEnd=n;break;}
+        }
+      }
+      if(/promedio.*12|12.*mes/i.test(String(c||''))){
+        for(let k=j+1;k<Math.min(j+8,row.length);k++){
+          const n=toNumCO(row[k]);
+          if(n>100000){prom12=n;break;}
+        }
       }
     });
   }
 
-  // ── ESTRATEGIA 3: Buscar neto/bruto en cualquier celda numérica grande ─────
-  if(nD===0&&tpD===0&&devs.length===0){
-    const bigNums=[];
-    rows.forEach(row=>row.forEach(c=>{
-      const n=toNumCO(c);
-      if(n>200000&&n<50000000) bigNums.push(n);
-    }));
-    if(bigNums.length>=2){
-      bigNums.sort((a,b)=>b-a);
-      tpD=bigNums[0]; // mayor = bruto
-      nD=bigNums[1];  // segundo = neto (aproximación)
-      // Solo si hay diferencia razonable (deducciones entre 5% y 40%)
-      const diff=tpD-nD;
-      if(diff<0||diff/tpD>0.5){ tpD=0; nD=0; } // no parece nomina
-    }
-  }
+  // ── PASO 3: Parsear secciones con estrategia de columnas variables ─────────
+  // Estrategia: para cada sección, encontrar qué columna tiene el encabezado
+  // "Valor" o "VALOR" y usar esa columna para leer los números
+  const K_F=/garantizado|salario|sueldo|basico|básico|transici[oó]n/i;
+  const K_C=/comisi[oó]n|bonus|incentivo|variable/i;
+  const K_A=/auxilio(?!.*p[oó]liz.*(?:vida|salud|contribu))|transporte|rodamiento/i;
+  const K_P=/i\.v\.m|pensi[oó]n|ivm|proteccion/i;
+  const K_S=/e\.g\.m|salud|eps|egm/i;
+  const K_R=/retenci[oó]n.*fuente|retenci[oó]n.*asoass|retencion/i;
+  const K_PR=/pr[eé]stamo|credito|libranza/i;
+  const K_PO=/p[oó]liza(?!.*contribu)|seguro.*vida|vida.*grupo/i;
+  const K_AUX_DED=/auxilio.*p[oó]liz|auxilio.*salud|auxilio.*vida/i; // Auxilios que van en deducciones (son descuentos de pólizas)
 
-  // ── Clasificar devengados ─────────────────────────────────────────────────
+  const devs=[], deds=[];
+  let tpD=0, tdD=0, nD=0;
+  let secMode=null; // 'pagos_otros'|'deds_otros'|'pagos_total'|'deds_total'|'resumen'
+  let valCol=-1; // columna donde están los valores en la sección actual
+
+  // Función para detectar la columna de valores en una fila de encabezado
+  const detectValCol=(row)=>{
+    for(let j=0;j<row.length;j++){
+      if(/^valor$/i.test(String(row[j]||'').trim())) return j;
+    }
+    return -1;
+  };
+
+  rows.forEach((row,ri)=>{
+    const c0=String(row[0]||'').trim();
+    const c1=String(row[1]||'').trim();
+    const c2=String(row[2]||'').trim();
+    const allText=row.map(c=>String(c||'')).join('|');
+
+    // ── Detectar inicio de sección ───────────────────────────────────────
+    if(/resumen\s*consolidado/i.test(c1)||/resumen\s*consolidado/i.test(c0)){
+      secMode='resumen'; valCol=-1; return;
+    }
+    if(/otros\s*conceptos\s*de\s*pago/i.test(c1)||/otros\s*conceptos\s*de\s*pago/i.test(c0)){
+      secMode='pagos_otros'; valCol=-1; return;
+    }
+    if(/otros\s*conceptos\s*de\s*deducci/i.test(c1)||/otros\s*conceptos\s*de\s*deducci/i.test(c0)||/otros\s*conceptos\s*de\s*deducci/i.test(c2)){
+      secMode='deds_otros'; valCol=-1; return;
+    }
+    if(/^total\s*de\s*pagos$/i.test(c1)){
+      secMode='pagos_total'; valCol=-1; return;
+    }
+    if(/^total\s*deducciones$/i.test(c1)){
+      secMode='deds_total'; valCol=-1; return;
+    }
+
+    // ── Detectar fila de encabezado de columnas (tiene "CONCEPTO" y "Valor") ─
+    if(/concepto/i.test(allText)&&/valor/i.test(allText)){
+      const vc=detectValCol(row);
+      if(vc>=0) valCol=vc;
+      return;
+    }
+
+    // ── Procesar según sección activa ────────────────────────────────────
+    if(!secMode) return;
+
+    // RESUMEN CONSOLIDADO: leer TOTAL PAGOS, TOTAL DEDUCCIONES, TOTAL A PAGAR
+    if(secMode==='resumen'){
+      const concept=row.map(c=>String(c||'')).join(' ');
+      const v=valCol>=0?toNumCO(row[valCol]):findVal(row,1000,[26,25,24,23,22,21,20]);
+      if(/total\s*pagos/i.test(concept)&&v>0) tpD=tpD||v;
+      if(/total\s*deducciones/i.test(concept)&&v>0) tdD=tdD||v;
+      if(/total\s*a\s*pagar|total\s*pagar|neto/i.test(concept)&&v>0) nD=nD||v;
+      return;
+    }
+
+    // SECCIÓN PAGOS (otros conceptos de pago o total de pagos)
+    if(secMode==='pagos_otros'||secMode==='pagos_total'){
+      const c_conc=row[6]||row[3]||row[1]||''; // columna concepto varía
+      const concepto=String(c_conc).trim();
+      if(!concepto||concepto.length<3) return;
+      if(/total\s*pagos/i.test(concepto)){
+        const v=valCol>=0?toNumCO(row[valCol]):findVal(row,1000,[26,25,24]);
+        if(v>0) tpD=tpD||v;
+        return;
+      }
+      if(/concepto/i.test(concepto)) return; // saltar encabezado
+      const v=valCol>=0?toNumCO(row[valCol]):findVal(row,100,[26,25,24]);
+      if(!v) return;
+      if(K_C.test(concepto)) devs.push({c:concepto,v});
+      else if(K_A.test(concepto)&&!K_AUX_DED.test(concepto)) devs.push({c:concepto,v});
+      else if(K_F.test(concepto)) devs.push({c:concepto,v});
+      else if(K_AUX_DED.test(concepto)) deds.push({c:concepto,v}); // auxilios-póliza van en deds
+      else devs.push({c:concepto,v}); // default: devengado
+      return;
+    }
+
+    // SECCIÓN DEDUCCIONES (otros conceptos deducción o total deducciones)
+    if(secMode==='deds_otros'||secMode==='deds_total'){
+      const c_conc=row[3]||row[6]||row[1]||'';
+      const concepto=String(c_conc).trim();
+      if(!concepto||concepto.length<3) return;
+      if(/total.*deducci|total.*otros.*conceptos/i.test(concepto)){
+        const v=valCol>=0?toNumCO(row[valCol]):findVal(row,1000,[29,26,25,24]);
+        if(v>0) tdD=tdD||v;
+        return;
+      }
+      if(/concepto/i.test(concepto)) return;
+      const v=valCol>=0?toNumCO(row[valCol]):findVal(row,100,[29,26,25,24]);
+      if(!v) return;
+      if(K_P.test(concepto)) deds.push({c:concepto,v});
+      else if(K_S.test(concepto)) deds.push({c:concepto,v});
+      else if(K_R.test(concepto)) deds.push({c:concepto,v});
+      else if(K_PR.test(concepto)) deds.push({c:concepto,v});
+      else if(K_PO.test(concepto)) deds.push({c:concepto,v});
+      else deds.push({c:concepto,v});
+      return;
+    }
+  });
+
+  // ── PASO 4: Calcular totales finales ──────────────────────────────────────
   let fijo=0,com=0,aux=0;
   devs.forEach(d=>{
     if(K_C.test(d.c)) com+=d.v;
-    else if(K_A.test(d.c)) aux+=d.v;
-    else if(K_F.test(d.c)||K_DEV.test(d.c)) fijo+=d.v;
-    else fijo+=d.v; // default: asumir fijo
+    else if(K_A.test(d.c)&&!K_AUX_DED.test(d.c)) aux+=d.v;
+    else fijo+=d.v;
   });
 
-  // ── Calcular bruto y neto finales ─────────────────────────────────────────
-  const bruto=tpD||brutoD||devs.reduce((s,d)=>s+d.v,0);
-  const tDed=tdD||deds.reduce((s,d)=>s+d.v,0);
-  const neto=nD||(bruto>0&&tDed>=0?bruto-tDed:0);
+  const bruto = tpD || devs.reduce((s,d)=>s+d.v,0);
+  const tDed  = tdD || deds.reduce((s,d)=>s+d.v,0);
+  const neto  = nD  || (bruto>0?bruto-tDed:0);
 
-  // ── Clasificar deducciones ────────────────────────────────────────────────
   let dPen=0,dSal=0,dPr=0,dPo=0,dRet=0,dOt=0;
   deds.forEach(d=>{
     if(K_P.test(d.c)) dPen+=d.v;
     else if(K_S.test(d.c)) dSal+=d.v;
     else if(K_R.test(d.c)) dRet+=d.v;
     else if(K_PR.test(d.c)) dPr+=d.v;
-    else if(K_PO.test(d.c)) dPo+=d.v;
+    else if(K_PO.test(d.c)||K_AUX_DED.test(d.c)) dPo+=d.v;
     else dOt+=d.v;
   });
 
-  // Si todo sigue en 0: mostrar error útil con diagnóstico
+  // ── PASO 5: Si todo sigue en 0, fallback scan global ──────────────────────
   if(!bruto&&!neto){
-    // Mostrar primeras filas para diagnóstico
-    const preview=rows.slice(0,8).map((r,i)=>'<tr><td style="color:var(--text3);padding:2px 6px;font-size:10px">'+(i+1)+'</td>'+r.slice(0,5).map(c=>'<td style="padding:2px 8px;font-size:11px;border-left:1px solid var(--border)">'+String(c||'').substring(0,30)+'</td>').join('')+'</tr>').join('');
-    res.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px">'
+    // Mostrar diagnóstico
+    const preview=rows.slice(90,105).map((r,i)=>{
+      const ni=90+i;
+      const ne=r.map((c,j)=>c!==''&&c!==null?`<td style="padding:2px 8px;font-size:10px;border-left:1px solid var(--border)">[${j}]${String(c).substring(0,20)}</td>`:'').filter(Boolean).join('');
+      return ne?`<tr><td style="color:var(--text3);padding:2px 6px;font-size:10px">F${ni}</td>${ne}</tr>`:'';
+    }).filter(Boolean).join('');
+    res.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:var(--radius);padding:14px">'
       +'<div style="font-weight:700;color:var(--red);margin-bottom:8px">⚠ No se pudo extraer información de este volante</div>'
-      +'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">El archivo fue leído correctamente pero su estructura no coincide con los formatos soportados. Primeras filas detectadas:</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">Estructura no reconocida. Filas clave detectadas:</div>'
       +'<div style="overflow-x:auto"><table style="border-collapse:collapse;font-family:monospace">'+preview+'</table></div>'
-      +'<div style="font-size:11px;color:var(--text3);margin-top:10px">Si tu empresa usa un formato especial, puedes ingresar los valores manualmente usando el módulo de Presupuesto.</div>'
       +'</div>';
     return;
   }
 
-  // ── Guardar y mostrar ─────────────────────────────────────────────────────
+  // ── PASO 6: Guardar en historial ──────────────────────────────────────────
   volanteHistorial=_vLoad();
   volanteHistorial=volanteHistorial.filter(v=>!(v.periodoKey===periodoKey&&v.quincena===quincena));
-  volanteHistorial.push({periodoKey,periodo:periodoLabel,quincena,bruto,comisiones:com,fijo,auxilios:aux,deducciones:tDed,neto,deducPension:dPen,deducSalud:dSal,deducPrestamos:dPr,deducPolizas:dPo,deducRet:dRet,deducOtros:dOt,fecha:new Date().toISOString()});
+  volanteHistorial.push({
+    periodoKey,periodo:periodoLabel,quincena,
+    bruto,comisiones:com,fijo,auxilios:aux,
+    deducciones:tDed,neto,
+    deducPension:dPen,deducSalud:dSal,deducPrestamos:dPr,
+    deducPolizas:dPo,deducRet:dRet,deducOtros:dOt,
+    fecha:new Date().toISOString()
+  });
   _vSave(volanteHistorial);
 
+  // ── PASO 7: Alertas ───────────────────────────────────────────────────────
   const alertas=[];
-  const pv=bruto>0?com/bruto*100:0,pp=neto>0?dPr/neto*100:0;
+  const pv=bruto>0?com/bruto*100:0, pp=neto>0?dPr/neto*100:0;
   if(pv>50) alertas.push({t:'amber',tx:'⚡ El '+pv.toFixed(0)+'% del bruto es variable. Un mes flojo afecta fuertemente el neto.'});
-  if(pp>60) alertas.push({t:'red',tx:'🔴 Cuotas de préstamos: '+fmt(dPr)+' ('+pp.toFixed(0)+'% del neto). Margen ajustado.'});
-  if(nivelEnd>70) alertas.push({t:'red',tx:'🔴 Nivel de endeudamiento: '+nivelEnd+'%. Supera el 70% recomendado.'});
-  if(prom12>0&&neto<prom12*0.85) alertas.push({t:'amber',tx:'⚠️ Neto ('+fmt(neto)+') está '+Math.round((1-neto/prom12)*100)+'% bajo el promedio 12m ('+fmt(prom12)+').'});
-  if(fijo>0&&dPr>fijo) alertas.push({t:'red',tx:'🔴 Cuotas ('+fmt(dPr)+') superan el salario fijo ('+fmt(fijo)+'). Solo sostenible con comisiones constantes.'});
+  if(pp>60) alertas.push({t:'red',tx:'🔴 Cuotas de préstamos: '+fmtV(dPr)+' ('+pp.toFixed(0)+'% del neto). Margen ajustado.'});
+  if(nivelEnd>70) alertas.push({t:'red',tx:'🔴 Nivel de endeudamiento: '+nivelEnd.toFixed(1)+'%. Supera el 70% recomendado.'});
+  if(prom12>0&&neto<prom12*0.85) alertas.push({t:'amber',tx:'⚠️ Neto ('+fmtV(neto)+') está '+Math.round((1-neto/prom12)*100)+'% bajo el promedio 12m ('+fmtV(prom12)+').'});
+  if(fijo>0&&dPr>fijo) alertas.push({t:'red',tx:'🔴 Cuotas ('+fmtV(dPr)+') superan el garantizado ('+fmtV(fijo)+'). Solo sostenible con comisiones constantes.'});
 
+  // Comparativo con quincena anterior del mismo mes
   let compHtml='';
   const qa=volanteHistorial.find(v=>v.periodoKey===periodoKey&&v.quincena!==quincena);
-  if(qa){ const df=neto-qa.neto,dp=qa.neto>0?df/qa.neto*100:0,co=df>=0?'var(--green)':'var(--red)',si=df>=0?'+':'';
-    compHtml='<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase">vs Q'+(quincena===1?2:1)+' mismo mes</div><div style="font-size:13px;color:var(--text);margin-top:2px">Anterior: '+fmt(qa.neto)+'</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:800;color:'+co+'">'+si+fmt(df)+'</div><div style="font-size:11px;color:'+co+'">'+si+dp.toFixed(1)+'%</div></div></div>'; }
+  if(qa){
+    const df=neto-qa.neto,dp=qa.neto>0?df/qa.neto*100:0;
+    const co=df>=0?'var(--green)':'var(--red)',si=df>=0?'+':'';
+    compHtml='<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center">'
+      +'<div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase">vs Q'+(quincena===1?2:1)+' mismo mes</div>'
+      +'<div style="font-size:13px;color:var(--text);margin-top:2px">Anterior: '+fmtV(qa.neto)+'</div></div>'
+      +'<div style="text-align:right"><div style="font-size:18px;font-weight:800;color:'+co+'">'+si+fmtV(df)+'</div>'
+      +'<div style="font-size:11px;color:'+co+'">'+si+dp.toFixed(1)+'%</div></div></div>';
+  }
 
   const ql='Quincena '+quincena+(quincena===1?' (fuerte)':' (liviana)');
   const ah=alertas.map(a=>'<div style="background:'+(a.t==='red'?'var(--red-bg)':'var(--amber-bg)')+';border:1px solid '+(a.t==='red'?'var(--red-bdr)':'var(--amber-bdr)')+';border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text)">'+a.tx+'</div>').join('');
-  const fd=(lb,v)=>v>0?'<tr><td style="padding:5px 0;color:var(--text2)">'+lb+'</td><td style="text-align:right;color:var(--red);font-weight:600">−'+fmt(v)+'</td></tr>':'';
+  const fd=(lb,v)=>v>0?'<tr><td style="padding:5px 0;color:var(--text2)">'+lb+'</td><td style="text-align:right;color:var(--red);font-weight:600">−'+fmtV(v)+'</td></tr>':'';
 
-  res.innerHTML='<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:14px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.04em">'+periodoLabel+' · '+ql+'</div>'+(nombre?'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+nombre+'</div>':'')+'</div><button onclick="document.getElementById(\'vol-resultado\').innerHTML=\'\'" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:\'Nunito\',sans-serif">✕</button></div>'
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Bruto</div><div style="font-size:18px;font-weight:800;color:var(--text)">'+fmt(bruto)+'</div></div>'
-    +'<div style="background:var(--green-bg);border:1px solid var(--green-bdr);border-radius:var(--radius-sm);padding:12px;text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Neto</div><div style="font-size:18px;font-weight:800;color:var(--green)">'+fmt(neto)+'</div></div></div>'
+  // ── PASO 8: Renderizar resultado ──────────────────────────────────────────
+  res.innerHTML=
+    '<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:14px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">'
+    +'<div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.04em">'+periodoLabel+' · '+ql+'</div>'
+    +(nombre?'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+nombre+'</div>':'')
+    +'</div>'
+    +'<button onclick="document.getElementById(\'vol-resultado\').innerHTML=\'\'" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:\'Nunito\',sans-serif">✕</button>'
+    +'</div>'
+    // Bruto / Neto cards
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">'
+    +'<div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;text-align:center">'
+    +'<div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Bruto</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--text)">'+fmtV(bruto)+'</div></div>'
+    +'<div style="background:var(--green-bg);border:1px solid var(--green-bdr);border-radius:var(--radius-sm);padding:12px;text-align:center">'
+    +'<div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Neto</div>'
+    +'<div style="font-size:18px;font-weight:800;color:var(--green)">'+fmtV(neto)+'</div></div></div>'
+    // Devengados
     +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Devengados</div>'
-    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'+(fijo?'<tr><td style="padding:5px 0;color:var(--text2)">Salario / Garantizado</td><td style="text-align:right;color:var(--text);font-weight:600">'+fmt(fijo)+'</td></tr>':'')+(com?'<tr><td style="padding:5px 0;color:var(--text2)">Comisiones <span style="color:var(--amber);font-size:10px">('+pct(com,bruto)+')</span></td><td style="text-align:right;color:var(--accent);font-weight:600">'+fmt(com)+'</td></tr>':'')+(aux?'<tr><td style="padding:5px 0;color:var(--text2)">Auxilios</td><td style="text-align:right;color:var(--text)">'+fmt(aux)+'</td></tr>':'')
-    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total bruto</td><td style="text-align:right;font-weight:800;color:var(--text)">'+fmt(bruto)+'</td></tr></table>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px">'
+    +(fijo?'<tr><td style="padding:5px 0;color:var(--text2)">Salario / Garantizado</td><td style="text-align:right;color:var(--text);font-weight:600">'+fmtV(fijo)+'</td></tr>':'')
+    +(com?'<tr><td style="padding:5px 0;color:var(--text2)">Comisiones <span style="color:var(--amber);font-size:10px">('+pct(com,bruto)+')</span></td><td style="text-align:right;color:var(--accent);font-weight:600">'+fmtV(com)+'</td></tr>':'')
+    +(aux?'<tr><td style="padding:5px 0;color:var(--text2)">Auxilios</td><td style="text-align:right;color:var(--text)">'+fmtV(aux)+'</td></tr>':'')
+    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total bruto</td>'
+    +'<td style="text-align:right;font-weight:800;color:var(--text)">'+fmtV(bruto)+'</td></tr></table>'
+    // Deducciones
     +'<div style="font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">Deducciones</div>'
-    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">'+fd('Pensión',dPen)+fd('Salud (EPS)',dSal)+fd('Préstamos',dPr)+fd('Pólizas / Seguros',dPo)+fd('Retención en fuente',dRet)+(dOt?fd('Otros descuentos',dOt):'')
-    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total deducciones</td><td style="text-align:right;font-weight:800;color:var(--red)">−'+fmt(tDed)+'</td></tr></table></div>'
-    +compHtml+(ah?'<div style="margin-bottom:4px">'+ah+'</div>':'')
+    +'<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:4px">'
+    +fd('Pensión',dPen)+fd('Salud (EPS)',dSal)+fd('Préstamos / Libranzas',dPr)
+    +fd('Pólizas y auxilios',dPo)+fd('Retención / ICA',dRet)+(dOt?fd('Otros descuentos',dOt):'')
+    +'<tr style="border-top:1px solid var(--border)"><td style="padding:6px 0;font-weight:700;color:var(--text)">Total deducciones</td>'
+    +'<td style="text-align:right;font-weight:800;color:var(--red)">−'+fmtV(tDed)+'</td></tr></table>'
+    +'</div>'
+    +compHtml
+    +(ah?'<div style="margin-bottom:4px">'+ah+'</div>':'')
     +'<button class="btn btn-pink" style="width:100%;margin-top:10px" onclick="volEnviarAPresupuesto()">📊 Usar neto en Presupuesto</button>';
 }
 
