@@ -661,7 +661,6 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .pocket-progress{height:8px;background:var(--surface3);border-radius:4px;margin:8px 0}
 .pocket-bar{height:100%;border-radius:4px;transition:width .5s}
 .pocket-actions{display:flex;gap:6px;margin-top:10px}
-@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
 /* Tips */
 .tip-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--ef-pink2);border-radius:var(--radius);padding:14px;margin-bottom:10px}
@@ -1868,26 +1867,6 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
   </div>
 </div>
 
-<!-- API Key config modal -->
-<div class="overlay" id="modal-apikey">
-  <div class="modal">
-    <div class="modal-title">🔑 API Key de Anthropic <button class="modal-close" onclick="closeModal('modal-apikey')">✕</button></div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">
-      Ingresa tu API key de Anthropic para activar el análisis inteligente de presupuesto.<br>
-      Se guarda solo en este dispositivo (localStorage), nunca se envía a ningún servidor externo.
-    </div>
-    <div class="fr">
-      <label>API Key</label>
-      <input type="password" id="apikey-input" placeholder="sk-ant-api03-..." style="font-family:monospace;font-size:12px">
-    </div>
-    <div id="apikey-status" style="font-size:11px;min-height:16px;margin-top:4px"></div>
-    <div class="form-actions">
-      <button class="btn" onclick="closeModal('modal-apikey')">Cancelar</button>
-      <button class="btn btn-pink" onclick="guardarApiKey()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <!-- Budget item modal -->
 <div class="overlay" id="modal-bud-item">
   <div class="modal">
@@ -2077,7 +2056,7 @@ function renderBudget(el){
       return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">'        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'        +'<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em">📊 Resumen · '+b.nombre+'</div>'        +'<div style="font-size:20px;font-weight:800;font-family:\'DM Mono\',monospace;color:'+sc+'">'+fmtS(saldo)+'</div>'        +'</div>'        +(last4.length>1          ?'<div class="hbw-bars" style="margin-bottom:6px">'+barsH+'</div>'           +'<div style="display:flex;gap:12px;margin-bottom:10px">'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--green);display:inline-block"></span>Ingresos</span>'           +'<span style="font-size:9px;color:var(--text3);display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;border-radius:2px;background:var(--red);display:inline-block"></span>Gastos</span>'           +'</div>':'')        +(topC.length>0?'<div class="hbw-cats">'+topC.map(([cId,tot])=>{const cat=gvCat(cId);return '<span class="hbw-cat-pill" style="background:var(--surface3);border:1px solid var(--border2);color:var(--text2)">'+cat.icon+' '+cat.label+' '+fmtS(tot)+'</span>';}).join('')+'</div>':'')        +'</div>';
     })()
     // Header
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'    +'<div style="display:flex;gap:6px">'    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'    +'<button class="btn" style="font-size:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none" onclick="analizarPresupuesto()">🤖 Analizar</button>'    +'</div>'    +'</div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'    +'<div><div class="sec-label">💼 Presupuesto Personal</div>'    +'<div style="font-size:13px;font-weight:700;color:var(--text)">'+b.nombre+'</div></div>'    +'<button class="btn btn-pink" style="font-size:11px" onclick="crearNuevoMes()">+ Nuevo mes</button>'    +'<button class="btn btn-green" style="font-size:11px" onclick="exportBudgetXLSX()">↓ Excel</button>'    +'</div>'
     // Month nav
     +(arr.length>0?'<div style="display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:12px">'+monthNav+'</div>':'')
 
@@ -2107,8 +2086,6 @@ function renderBudget(el){
 
     // Monthly total summary
     +alertHTML
-    // IA analysis card (se inserta dinámicamente por analizarPresupuesto)
-    +'<div id="bud-ai-card"></div>'
     +'<div class="metrics" style="margin-bottom:12px">'
     +'<div class="mc"><div class="mc-label">Ingresos mes</div><div class="mc-value c-green">'+fmt(ti)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Gastos fijos mes</div><div class="mc-value c-amber">'+fmt(gf)+'</div></div>'
@@ -7566,155 +7543,6 @@ async function fetchTips(){
   for(let i=0;i<4;i++) result.push(TIPS_STATIC[(start+i)%TIPS_STATIC.length]);
   return result;
 }
-// ══ ANÁLISIS IA PRESUPUESTO ═════════════════════════════════════════════════
-function getAnthropicKey(){
-  return localStorage.getItem('ef_anthropic_key')||'';
-}
-function guardarApiKey(){
-  const val=document.getElementById('apikey-input').value.trim();
-  const st=document.getElementById('apikey-status');
-  if(!val.startsWith('sk-ant-')){
-    st.style.color='var(--red)';
-    st.textContent='⚠ La key debe comenzar con sk-ant-';
-    return;
-  }
-  localStorage.setItem('ef_anthropic_key',val);
-  st.style.color='var(--green)';
-  st.textContent='✓ API key guardada correctamente';
-  setTimeout(()=>closeModal('modal-apikey'),900);
-}
-function abrirConfigApiKey(){
-  const existing=getAnthropicKey();
-  const inp=document.getElementById('apikey-input');
-  if(inp) inp.value=existing;
-  const st=document.getElementById('apikey-status');
-  if(st) st.textContent=existing?'✓ Ya tienes una key guardada':'';
-  openModal('modal-apikey');
-}
-
-async function analizarPresupuesto(){
-  const key=getAnthropicKey();
-  if(!key){
-    // Preguntar si quiere configurar la key
-    const card=document.getElementById('bud-ai-card');
-    if(card) card.innerHTML='<div style="background:linear-gradient(135deg,rgba(102,126,234,.12),rgba(118,75,162,.12));border:1px solid rgba(102,126,234,.3);border-radius:var(--radius);padding:14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-      +'<div><div style="font-size:12px;font-weight:700;color:#7c6af7;margin-bottom:3px">🤖 Análisis IA no configurado</div>'
-      +'<div style="font-size:11px;color:var(--text3)">Agrega tu API key de Anthropic para activar el análisis inteligente.</div></div>'
-      +'<button class="btn" style="background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;font-size:11px;white-space:nowrap" onclick="abrirConfigApiKey()">🔑 Configurar</button>'
-      +'</div>';
-    return;
-  }
-
-  const b=ensureActiveBudget();
-  if(!b){toast('No hay presupuesto activo','error');return;}
-
-  const card=document.getElementById('bud-ai-card');
-  if(!card) return;
-
-  // Mostrar loading
-  card.innerHTML='<div style="background:linear-gradient(135deg,rgba(102,126,234,.1),rgba(118,75,162,.1));border:1px solid rgba(102,126,234,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px">'
-    +'<div style="display:flex;align-items:center;gap:8px;color:#7c6af7;font-size:12px;font-weight:700">'
-    +'<span style="display:inline-block;animation:spin 1s linear infinite">⟳</span> Analizando tu presupuesto...</div>'
-    +'</div>';
-
-  // Recolectar datos reales del mes
-  const ti=budMonthIngresos(b);
-  const gf=budMonthGastosFijos(b);
-  const gv=budMonthGastosVar(b);
-  const saldo=ti-gf-gv;
-  const t50=Math.round(ti*0.5),t30=Math.round(ti*0.3),t20=Math.round(ti*0.2);
-
-  // Top categorías gastos variables
-  const allGV=[...(b.q1.gastosVar||[]),...(b.q2.gastosVar||[])];
-  const catT={};
-  allGV.forEach(g=>{const c=g.categoria||'otros';catT[c]=(catT[c]||0)+(g.valor||0);});
-  const topCats=Object.entries(catT).sort((a,c)=>c[1]-a[1]).slice(0,3)
-    .map(([id,v])=>{const cat=gvCat(id);return cat.label+': $'+Math.round(v).toLocaleString('es-CO');}).join(', ');
-
-  // Items gastos fijos
-  const fixedItems=[...(b.q1.gastosFijos||[]),...(b.q2.gastosFijos||[])]
-    .map(i=>i.nombre+' $'+Math.round(i.valor).toLocaleString('es-CO')).slice(0,6).join(', ');
-
-  // Bolsillos
-  const bolsillosInfo=(pockets||[]).map(p=>{
-    const pct=p.meta>0?Math.round(p.ahorrado/p.meta*100):0;
-    return p.nombre+' '+pct+'% ('+fmt(p.ahorrado)+'/'+fmt(p.meta)+')';
-  }).join('; ')||'Sin bolsillos';
-
-  const pctGF=ti>0?Math.round(gf/ti*100):0;
-  const pctGV=ti>0?Math.round(gv/ti*100):0;
-  const pctAhorro=ti>0?Math.round(Math.max(saldo,0)/ti*100):0;
-
-  const prompt=`Eres un asesor financiero personal para un colombiano. Analiza este presupuesto del mes "${b.nombre}" y da un diagnóstico CONCRETO y ACCIONABLE en máximo 4 oraciones cortas. Usa lenguaje colombiano natural, directo y amigable. NO uses listas con guiones. Escribe en prosa fluida.
-
-DATOS DEL MES:
-- Ingresos totales: $${Math.round(ti).toLocaleString('es-CO')}
-- Gastos fijos: $${Math.round(gf).toLocaleString('es-CO')} (${pctGF}% del ingreso, meta ≤50%)
-- Gastos variables: $${Math.round(gv).toLocaleString('es-CO')} (${pctGV}% del ingreso, meta ≤30%)
-- Saldo libre: $${Math.round(saldo).toLocaleString('es-CO')} (${pctAhorro}% del ingreso, meta ≥20%)
-- Gastos fijos principales: ${fixedItems||'ninguno registrado'}
-- Top categorías variables: ${topCats||'ninguna registrada'}
-- Bolsillos de ahorro: ${bolsillosInfo}
-
-Regla 50/30/20: fijos ${pctGF}%${pctGF>50?' ⚠ EXCEDE':' ✓'}, variables ${pctGV}%${pctGV>30?' ⚠ EXCEDE':' ✓'}, ahorro ${pctAhorro}%${pctAhorro<20?' ⚠ BAJO':' ✓'}.
-
-Da el diagnóstico en 3-4 oraciones: qué está bien, qué hay que mejorar y UNA acción concreta para esta semana.`;
-
-  try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json',
-        'x-api-key':key,
-        'anthropic-version':'2023-06-01',
-        'anthropic-dangerous-direct-browser-access':'true'
-      },
-      body:JSON.stringify({
-        model:'claude-haiku-4-5-20251001',
-        max_tokens:300,
-        messages:[{role:'user',content:prompt}]
-      })
-    });
-    const d=await r.json();
-    if(d.error){
-      const msg=d.error.message||'Error desconocido';
-      const isKey=msg.toLowerCase().includes('api key')||msg.toLowerCase().includes('auth')||d.error.type==='authentication_error';
-      card.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:12px">'
-        +'<span style="color:var(--red);font-weight:700">⚠ Error API: </span><span style="color:var(--text2)">'+msg+'</span>'
-        +(isKey?'<div style="margin-top:8px"><button class="btn" style="font-size:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none" onclick="abrirConfigApiKey()">🔑 Actualizar key</button></div>':'')
-        +'</div>';
-      return;
-    }
-    const texto=d.content?.find(b=>b.type==='text')?.text||'';
-    if(!texto){card.innerHTML='';return;}
-
-    // Determinar tono general para el color del card
-    const hayProblema=pctGF>50||pctGV>30||pctAhorro<20||saldo<0;
-    const gradiente=hayProblema
-      ?'linear-gradient(135deg,rgba(255,167,38,.1),rgba(255,107,107,.08))'
-      :'linear-gradient(135deg,rgba(61,220,132,.08),rgba(0,188,212,.06))';
-    const borde=hayProblema?'rgba(255,167,38,.3)':'rgba(61,220,132,.25)';
-    const icono=hayProblema?'⚠️':'✅';
-
-    card.innerHTML='<div style="background:'+gradiente+';border:1px solid '+borde+';border-radius:var(--radius);padding:14px;margin-bottom:12px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">'
-      +'<div style="font-size:11px;font-weight:700;color:#7c6af7;text-transform:uppercase;letter-spacing:.05em">'+icono+' Análisis IA · '+b.nombre+'</div>'
-      +'<div style="display:flex;gap:6px">'
-      +'<button class="bud-del" style="color:#7c6af7;background:rgba(102,126,234,.12);padding:3px 8px;border-radius:var(--radius-xs);font-size:10px;width:auto" onclick="analizarPresupuesto()">↻</button>'
-      +'<button class="bud-del" style="color:var(--text3);font-size:10px;width:auto;padding:3px 7px" onclick="document.getElementById(\'bud-ai-card\').innerHTML=\'\'" >✕</button>'
-      +'</div>'
-      +'</div>'
-      +'<div style="font-size:12px;color:var(--text);line-height:1.6">'+texto+'</div>'
-      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(102,126,234,.15);display:flex;justify-content:space-between;align-items:center">'
-      +'<span style="font-size:10px;color:var(--text3)">Generado con Claude Haiku · Solo lectura, no modifica tus datos</span>'
-      +'<button class="btn" style="font-size:10px;padding:2px 8px;background:transparent;border:1px solid rgba(102,126,234,.3);color:#7c6af7" onclick="abrirConfigApiKey()">🔑</button>'
-      +'</div>'
-      +'</div>';
-  }catch(e){
-    card.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.2);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:12px;color:var(--red)">⚠ Error de conexión: '+e.message+'</div>';
-  }
-}
-
 async function renderTips(el){
   const fecha=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   el.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">'
@@ -13534,38 +13362,196 @@ function _volLeer(file,res){
 function _volAnalizar(rows,res){
   const fmt=n=>'$'+Math.round(n).toLocaleString('es-CO');
   const pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'—';
-  const toNum=v=>{ if(!v&&v!==0) return 0; const n=parseFloat(String(v).replace(/[$,\s]/g,'')); return isNaN(n)?0:Math.abs(n); };
+  const toNum=v=>{ if(!v&&v!==0) return 0; const n=parseFloat(String(v).replace(/[$,.\s]/g,'').replace(/[,]/g,'')); const n2=parseFloat(String(v).replace(/[$\s]/g,'').replace(/\./g,'').replace(',','.')); const best=isNaN(n2)?n:n2; return isNaN(best)?0:Math.abs(best); };
+  // toNum mejorado: maneja formato colombiano (puntos miles, coma decimal) y americano
+  const toNumCO=v=>{
+    if(!v&&v!==0) return 0;
+    const s=String(v).replace(/\s/g,'').replace(/[$COP]/gi,'').trim();
+    if(!s) return 0;
+    // Formato colombiano: 1.234.567 o 1.234.567,89
+    const co=s.replace(/\./g,'').replace(',','.');
+    const nco=parseFloat(co);
+    if(!isNaN(nco)&&nco>=0) return Math.abs(nco);
+    // Formato americano: 1,234,567 o 1,234,567.89
+    const us=s.replace(/,/g,'');
+    const nus=parseFloat(us);
+    if(!isNaN(nus)&&nus>=0) return Math.abs(nus);
+    return 0;
+  };
+
+  // ── Metadatos: fecha, nombre, endeudamiento ───────────────────────────────
   let fechaIni=null,nombre='',nivelEnd=0,prom12=0;
-  for(let i=0;i<Math.min(10,rows.length);i++){
+  for(let i=0;i<Math.min(15,rows.length);i++){
     const dr=rows[i].filter(c=>c instanceof Date||(typeof c==='string'&&/\d{4}-\d{2}-\d{2}/.test(c)));
-    if(dr.length>=2&&!fechaIni){ const d1=dr[0] instanceof Date?dr[0]:new Date(dr[0]); if(!isNaN(d1)) fechaIni=d1; }
-    rows[i].forEach((c,j)=>{ const cs=String(c); if(/nombre/i.test(cs)&&rows[i][j+2]&&!nombre) nombre=String(rows[i][j+2]).trim(); if(/endeudamiento/i.test(cs)){ const n=toNum(rows[i][j+1]); if(n>0&&n<100) nivelEnd=n; } if(/promedio.*12|12.*mes/i.test(cs)){ const n=toNum(rows[i][j+2]||rows[i][j+1]); if(n>100000) prom12=n; } });
+    if(dr.length>=1&&!fechaIni){ const d1=dr[0] instanceof Date?dr[0]:new Date(dr[0]); if(!isNaN(d1)) fechaIni=d1; }
+    rows[i].forEach((c,j)=>{
+      const cs=String(c||'');
+      if(/nombre.*empleado|empleado/i.test(cs)&&rows[i][j+1]&&!nombre) nombre=String(rows[i][j+1]).trim();
+      if(/nombre/i.test(cs)&&rows[i][j+2]&&!nombre) nombre=String(rows[i][j+2]).trim();
+      if(/endeudamiento/i.test(cs)){ const n=toNumCO(rows[i][j+1]); if(n>0&&n<100) nivelEnd=n; }
+      if(/promedio.*12|12.*mes/i.test(cs)){ const n=toNumCO(rows[i][j+2]||rows[i][j+1]); if(n>100000) prom12=n; }
+      // Buscar fecha en celdas de texto tipo "01/04/2026" o "01-04-2026"
+      if(!fechaIni&&typeof c==='string'){
+        const m=c.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+        if(m){ const d=new Date(+m[3],+m[2]-1,+m[1]); if(!isNaN(d)) fechaIni=d; }
+      }
+    });
   }
+
   const ms=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  let periodoLabel='Sin fecha',quincena=0,periodoKey='';
-  if(fechaIni){ quincena=fechaIni.getDate()<=15?1:2; periodoLabel=ms[fechaIni.getMonth()]+' '+fechaIni.getFullYear(); periodoKey=fechaIni.getFullYear()+'-'+String(fechaIni.getMonth()+1).padStart(2,'0'); }
-  const K_F=/garantizado|salario|sueldo|basico|básico|transici[oó]n/i,K_C=/comisi[oó]n|bonus|incentivo/i,K_A=/auxilio(?!.*poliz)|transporte/i,K_P=/pensi[oó]n|ivm|proteccion/i,K_S=/salud|eps|egm/i,K_R=/retenci[oó]n.*fuente/i,K_PR=/pr[eé]stamo|credito/i,K_PO=/p[oó]liza|seguro.*vida|vida.*grupo/i;
+  let periodoLabel='Sin fecha',quincena=1,periodoKey='';
+  if(fechaIni){
+    quincena=fechaIni.getDate()<=15?1:2;
+    periodoLabel=ms[fechaIni.getMonth()]+' '+fechaIni.getFullYear();
+    periodoKey=fechaIni.getFullYear()+'-'+String(fechaIni.getMonth()+1).padStart(2,'0');
+  }
+
+  // ── Patrones de clasificación ─────────────────────────────────────────────
+  const K_F=/garantizado|salario|sueldo|basico|básico|transici[oó]n|b[aá]sico/i;
+  const K_C=/comisi[oó]n|bonus|incentivo|variable|prima.*ventas/i;
+  const K_A=/auxilio(?!.*p[oó]liz)|transporte|rodamiento/i;
+  const K_P=/pensi[oó]n|ivm|proteccion/i;
+  const K_S=/salud|eps|egm/i;
+  const K_R=/retenci[oó]n.*fuente|retencion/i;
+  const K_PR=/pr[eé]stamo|credito|libranza/i;
+  const K_PO=/p[oó]liza|seguro.*vida|vida.*grupo|arl(?!.*empresa)/i;
+  const K_DEV=/devengado|pagos|haberes|ingresos|earnings/i;
+  const K_DED=/deducci[oó]n|descuentos|deductions/i;
+  const K_TOT=/total.*pag|total.*dev|total.*ingres|total.*haber/i;
+  const K_DED_TOT=/total.*deducci|total.*descuent/i;
+  const K_NETO=/neto.*pagar|total.*pagar|a\s*pagar|net\s*pay|neto$/i;
+  const K_BRUTO=/bruto|gross/i;
+  const K_RESUMEN=/resumen|consolidado|summary/i;
+  const K_SKIP=/concepto|descripci[oó]n|código|code/i;
+
   const devs=[],deds=[];
-  let secDev=false,secDed=false,resumen=false,tpD=0,tdD=0,nD=0;
-  rows.forEach(row=>{ const c0=String(row[0]||'').trim();
-    if(/resumen.*consolidado/i.test(c0)) resumen=true;
-    if(/otros.*conceptos.*pago/i.test(c0)&&!resumen){secDev=true;secDed=false;return;}
-    if(/otros.*conceptos.*deducci/i.test(c0)&&!resumen){secDed=true;secDev=false;return;}
-    if(/concepto/i.test(c0)&&/valor/i.test(String(row[3]||row[2]||''))) return;
-    if(resumen){ if(/total.*pagos/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)tpD=n;} if(/total.*deducci/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)tdD=n;} if(/total.*pagar|neto/i.test(c0)){const n=toNum(row[3]||row[2]);if(n)nD=n;} return; }
-    if((secDev||secDed)&&c0&&!/^\d+$/.test(c0)){ const v=toNum(row[3]||row[2]||row[1]); if(!v) return; if(secDev) devs.push({c:c0,v}); else deds.push({c:c0,v}); }
+  let secDev=false,secDed=false,inResumen=false;
+  let tpD=0,tdD=0,nD=0,brutoD=0;
+
+  // ── ESTRATEGIA 1: Detección por secciones (formato Sura, Compensar, etc.) ─
+  rows.forEach((row,ri)=>{
+    const cells=row.map(c=>String(c||'').trim());
+    const c0=cells[0]||'';
+    const c1=cells[1]||'';
+
+    if(K_RESUMEN.test(c0)) inResumen=true;
+
+    // Detectar inicio sección devengados
+    if(!inResumen&&(K_DEV.test(c0)||/otros.*conceptos.*pago/i.test(c0)||/conceptos.*pago/i.test(c0))){
+      secDev=true; secDed=false; return;
+    }
+    // Detectar inicio sección deducciones
+    if(!inResumen&&(K_DED.test(c0)||/otros.*conceptos.*deducci/i.test(c0)||/conceptos.*deducci/i.test(c0))){
+      secDed=true; secDev=false; return;
+    }
+    // Cabecera de tabla — skip
+    if(K_SKIP.test(c0)&&/valor|monto|amount/i.test(cells.join(' '))) return;
+
+    // En sección resumen: capturar totales
+    if(inResumen){
+      if(K_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) tpD=n; }
+      if(K_DED_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>0) tdD=n; }
+      if(K_NETO.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) nD=n; }
+      return;
+    }
+
+    // En secciones de detalle: capturar ítems
+    if((secDev||secDed)&&c0&&!/^\d+$/.test(c0)&&c0.length>2){
+      // Buscar valor: puede estar en col 1,2,3 o última columna no vacía
+      const vals=cells.slice(1).map(toNumCO).filter(n=>n>100);
+      const v=vals[0]||0;
+      if(!v) return;
+      if(secDev) devs.push({c:c0,v});
+      else deds.push({c:c0,v});
+    }
+
+    // Totales dentro de secciones
+    if(secDev&&K_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000){tpD=n;secDev=false;}}
+    if(secDed&&K_DED_TOT.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>0){tdD=n;secDed=false;}}
+    if(K_NETO.test(c0)&&!inResumen){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) nD=n; }
+    if(K_BRUTO.test(c0)&&!inResumen&&!/deducci/i.test(c0)){ const n=toNumCO(cells[3]||cells[2]||cells[1]); if(n>1000) brutoD=n; }
   });
+
+  // ── ESTRATEGIA 2: Scan global si secciones no encontraron nada ─────────────
+  if(devs.length===0&&deds.length===0&&nD===0){
+    rows.forEach(row=>{
+      const cells=row.map(c=>String(c||'').trim());
+      const c0=cells[0]||'';
+      if(!c0||c0.length<3) return;
+      const vals=cells.slice(1).map(toNumCO).filter(n=>n>10000); // valores laborales > 10k
+      const v=vals[0]||0;
+      if(K_NETO.test(c0)&&v>1000){ nD=nD||v; return; }
+      if(K_TOT.test(c0)&&v>1000){ tpD=tpD||v; return; }
+      if(K_DED_TOT.test(c0)&&v>0){ tdD=tdD||v; return; }
+      if(K_BRUTO.test(c0)&&v>1000){ brutoD=brutoD||v; return; }
+      if(v>10000){
+        if(K_F.test(c0)||K_C.test(c0)||K_A.test(c0)) devs.push({c:c0,v});
+        else if(K_P.test(c0)||K_S.test(c0)||K_R.test(c0)||K_PR.test(c0)||K_PO.test(c0)) deds.push({c:c0,v});
+      }
+    });
+  }
+
+  // ── ESTRATEGIA 3: Buscar neto/bruto en cualquier celda numérica grande ─────
+  if(nD===0&&tpD===0&&devs.length===0){
+    const bigNums=[];
+    rows.forEach(row=>row.forEach(c=>{
+      const n=toNumCO(c);
+      if(n>200000&&n<50000000) bigNums.push(n);
+    }));
+    if(bigNums.length>=2){
+      bigNums.sort((a,b)=>b-a);
+      tpD=bigNums[0]; // mayor = bruto
+      nD=bigNums[1];  // segundo = neto (aproximación)
+      // Solo si hay diferencia razonable (deducciones entre 5% y 40%)
+      const diff=tpD-nD;
+      if(diff<0||diff/tpD>0.5){ tpD=0; nD=0; } // no parece nomina
+    }
+  }
+
+  // ── Clasificar devengados ─────────────────────────────────────────────────
   let fijo=0,com=0,aux=0;
-  devs.forEach(d=>{ if(K_C.test(d.c)) com+=d.v; else if(K_F.test(d.c)) fijo+=d.v; else if(K_A.test(d.c)) aux+=d.v; else com+=d.v; });
-  const bruto=tpD||devs.reduce((s,d)=>s+d.v,0);
-  const neto=nD||(bruto-(tdD||deds.reduce((s,d)=>s+d.v,0)));
-  let dPen=0,dSal=0,dPr=0,dPo=0,dRet=0,dOt=0;
-  deds.forEach(d=>{ if(K_P.test(d.c)) dPen+=d.v; else if(K_S.test(d.c)) dSal+=d.v; else if(K_R.test(d.c)) dRet+=d.v; else if(K_PR.test(d.c)) dPr+=d.v; else if(K_PO.test(d.c)) dPo+=d.v; else dOt+=d.v; });
+  devs.forEach(d=>{
+    if(K_C.test(d.c)) com+=d.v;
+    else if(K_A.test(d.c)) aux+=d.v;
+    else if(K_F.test(d.c)||K_DEV.test(d.c)) fijo+=d.v;
+    else fijo+=d.v; // default: asumir fijo
+  });
+
+  // ── Calcular bruto y neto finales ─────────────────────────────────────────
+  const bruto=tpD||brutoD||devs.reduce((s,d)=>s+d.v,0);
   const tDed=tdD||deds.reduce((s,d)=>s+d.v,0);
+  const neto=nD||(bruto>0&&tDed>=0?bruto-tDed:0);
+
+  // ── Clasificar deducciones ────────────────────────────────────────────────
+  let dPen=0,dSal=0,dPr=0,dPo=0,dRet=0,dOt=0;
+  deds.forEach(d=>{
+    if(K_P.test(d.c)) dPen+=d.v;
+    else if(K_S.test(d.c)) dSal+=d.v;
+    else if(K_R.test(d.c)) dRet+=d.v;
+    else if(K_PR.test(d.c)) dPr+=d.v;
+    else if(K_PO.test(d.c)) dPo+=d.v;
+    else dOt+=d.v;
+  });
+
+  // Si todo sigue en 0: mostrar error útil con diagnóstico
+  if(!bruto&&!neto){
+    // Mostrar primeras filas para diagnóstico
+    const preview=rows.slice(0,8).map((r,i)=>'<tr><td style="color:var(--text3);padding:2px 6px;font-size:10px">'+(i+1)+'</td>'+r.slice(0,5).map(c=>'<td style="padding:2px 8px;font-size:11px;border-left:1px solid var(--border)">'+String(c||'').substring(0,30)+'</td>').join('')+'</tr>').join('');
+    res.innerHTML='<div style="background:rgba(255,107,107,.08);border:1px solid rgba(255,107,107,.25);border-radius:var(--radius);padding:14px;margin-bottom:12px">'
+      +'<div style="font-weight:700;color:var(--red);margin-bottom:8px">⚠ No se pudo extraer información de este volante</div>'
+      +'<div style="font-size:12px;color:var(--text2);margin-bottom:10px">El archivo fue leído correctamente pero su estructura no coincide con los formatos soportados. Primeras filas detectadas:</div>'
+      +'<div style="overflow-x:auto"><table style="border-collapse:collapse;font-family:monospace">'+preview+'</table></div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:10px">Si tu empresa usa un formato especial, puedes ingresar los valores manualmente usando el módulo de Presupuesto.</div>'
+      +'</div>';
+    return;
+  }
+
+  // ── Guardar y mostrar ─────────────────────────────────────────────────────
   volanteHistorial=_vLoad();
   volanteHistorial=volanteHistorial.filter(v=>!(v.periodoKey===periodoKey&&v.quincena===quincena));
   volanteHistorial.push({periodoKey,periodo:periodoLabel,quincena,bruto,comisiones:com,fijo,auxilios:aux,deducciones:tDed,neto,deducPension:dPen,deducSalud:dSal,deducPrestamos:dPr,deducPolizas:dPo,deducRet:dRet,deducOtros:dOt,fecha:new Date().toISOString()});
   _vSave(volanteHistorial);
+
   const alertas=[];
   const pv=bruto>0?com/bruto*100:0,pp=neto>0?dPr/neto*100:0;
   if(pv>50) alertas.push({t:'amber',tx:'⚡ El '+pv.toFixed(0)+'% del bruto es variable. Un mes flojo afecta fuertemente el neto.'});
@@ -13573,13 +13559,16 @@ function _volAnalizar(rows,res){
   if(nivelEnd>70) alertas.push({t:'red',tx:'🔴 Nivel de endeudamiento: '+nivelEnd+'%. Supera el 70% recomendado.'});
   if(prom12>0&&neto<prom12*0.85) alertas.push({t:'amber',tx:'⚠️ Neto ('+fmt(neto)+') está '+Math.round((1-neto/prom12)*100)+'% bajo el promedio 12m ('+fmt(prom12)+').'});
   if(fijo>0&&dPr>fijo) alertas.push({t:'red',tx:'🔴 Cuotas ('+fmt(dPr)+') superan el salario fijo ('+fmt(fijo)+'). Solo sostenible con comisiones constantes.'});
+
   let compHtml='';
   const qa=volanteHistorial.find(v=>v.periodoKey===periodoKey&&v.quincena!==quincena);
   if(qa){ const df=neto-qa.neto,dp=qa.neto>0?df/qa.neto*100:0,co=df>=0?'var(--green)':'var(--red)',si=df>=0?'+':'';
     compHtml='<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:12px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase">vs Q'+(quincena===1?2:1)+' mismo mes</div><div style="font-size:13px;color:var(--text);margin-top:2px">Anterior: '+fmt(qa.neto)+'</div></div><div style="text-align:right"><div style="font-size:18px;font-weight:800;color:'+co+'">'+si+fmt(df)+'</div><div style="font-size:11px;color:'+co+'">'+si+dp.toFixed(1)+'%</div></div></div>'; }
+
   const ql='Quincena '+quincena+(quincena===1?' (fuerte)':' (liviana)');
   const ah=alertas.map(a=>'<div style="background:'+(a.t==='red'?'var(--red-bg)':'var(--amber-bg)')+';border:1px solid '+(a.t==='red'?'var(--red-bdr)':'var(--amber-bdr)')+';border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:8px;font-size:12px;color:var(--text)">'+a.tx+'</div>').join('');
   const fd=(lb,v)=>v>0?'<tr><td style="padding:5px 0;color:var(--text2)">'+lb+'</td><td style="text-align:right;color:var(--red);font-weight:600">−'+fmt(v)+'</td></tr>':'';
+
   res.innerHTML='<div style="background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:14px">'
     +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px"><div><div style="font-size:11px;color:var(--text2);font-weight:700;text-transform:uppercase;letter-spacing:.04em">'+periodoLabel+' · '+ql+'</div>'+(nombre?'<div style="font-size:12px;color:var(--text3);margin-top:2px">'+nombre+'</div>':'')+'</div><button onclick="document.getElementById(\'vol-resultado\').innerHTML=\'\'" style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:\'Nunito\',sans-serif">✕</button></div>'
     +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px"><div style="background:var(--surface3);border-radius:var(--radius-sm);padding:12px;text-align:center"><div style="font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;margin-bottom:4px">Bruto</div><div style="font-size:18px;font-weight:800;color:var(--text)">'+fmt(bruto)+'</div></div>'
@@ -13593,6 +13582,7 @@ function _volAnalizar(rows,res){
     +compHtml+(ah?'<div style="margin-bottom:4px">'+ah+'</div>':'')
     +'<button class="btn btn-pink" style="width:100%;margin-top:10px" onclick="volEnviarAPresupuesto()">📊 Usar neto en Presupuesto</button>';
 }
+
 function volEnviarAPresupuesto(){
   const h=_vLoad(); if(!h.length){toast('Primero importa un volante','error');return;}
   const ps=[...new Set(h.map(v=>v.periodoKey))].sort().reverse();
