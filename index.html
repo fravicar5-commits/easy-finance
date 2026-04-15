@@ -2516,6 +2516,8 @@ async function _fsLoad(uid){
 
 const VK='ef_volantes_v1';
 let volanteHistorial=[];
+const SSK='ef_segsocial_v1';
+let ssHistorial=[];
 
 function load(){
   try{clients=JSON.parse(localStorage.getItem(SK))||[];}catch{clients=[];}
@@ -2523,6 +2525,7 @@ function load(){
   try{notes=JSON.parse(localStorage.getItem(NK))||[];}catch{notes=[];}
   try{pockets=JSON.parse(localStorage.getItem(PK))||[];}catch{pockets=[];}
   try{volanteHistorial=JSON.parse(localStorage.getItem(VK))||[];}catch{volanteHistorial=[];}
+  try{ssHistorial=JSON.parse(localStorage.getItem(SSK))||[];}catch{ssHistorial=[];}
 }
 
 function save(){
@@ -2531,6 +2534,7 @@ function save(){
   localStorage.setItem(NK,JSON.stringify(notes));
   localStorage.setItem(PK,JSON.stringify(pockets));
   localStorage.setItem(VK,JSON.stringify(volanteHistorial));
+  localStorage.setItem(SSK,JSON.stringify(ssHistorial));
   renderSidebar();
   // Push to Firestore asynchronously
   _fsSave({
@@ -2539,6 +2543,7 @@ function save(){
     notes: notes,
     pockets: pockets,
     volantes: volanteHistorial,
+    segsocial: ssHistorial,
     budgets: loadBudgets(),
     updatedAt: new Date().toISOString()
   });
@@ -2553,6 +2558,7 @@ function _applyFirestoreData(data){
   if(data.notes){notes=data.notes;localStorage.setItem(NK,JSON.stringify(notes));}
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
+  if(data.segsocial){ssHistorial=data.segsocial;localStorage.setItem(SSK,JSON.stringify(ssHistorial));}
   // Deudas: buscar siempre por clave propia del usuario primero
   const _dUID = currentUser ? currentUser.user : null;
   const _deudaKeys = Object.keys(data).filter(k=>k.startsWith('deudas_'));
@@ -2608,6 +2614,7 @@ function _hasRealData(data){
          (data.notes&&data.notes.length>0) ||
          (data.pockets&&data.pockets.length>0) ||
          (data.volantes&&data.volantes.length>0) ||
+         (data.segsocial&&data.segsocial.length>0) ||
          tieneDeudas ||
          (data.budgets&&data.budgets.length>0);
 }
@@ -5205,6 +5212,79 @@ function renderSegSocial(el) {
     </div>
   </div>
 
+  <!-- Perfil del trabajador/empresa -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">👤 Datos del trabajador (opcionales — para historial y archivo PILA)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="${LS}">Nombre completo</label>
+        <input type="text" id="ss-nombre" placeholder="Ej: Juan Pérez" style="${IS}" oninput="ssCapturePerfil()">
+      </div>
+      <div>
+        <label style="${LS}">Tipo doc.</label>
+        <select id="ss-tipodoc" style="${IS}" onchange="ssCapturePerfil()">
+          <option value="CC">Cédula (CC)</option>
+          <option value="CE">Cédula Extranjería (CE)</option>
+          <option value="PA">Pasaporte (PA)</option>
+          <option value="TI">Tarjeta Identidad (TI)</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="${LS}">Número documento</label>
+        <input type="text" id="ss-numdoc" placeholder="Ej: 1234567890" style="${IS}" oninput="ssCapturePerfil()">
+      </div>
+      <div>
+        <label style="${LS}">NIT empleador</label>
+        <input type="text" id="ss-nit" placeholder="Ej: 900123456-1" style="${IS}" oninput="ssCapturePerfil()">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="${LS}">EPS</label>
+        <select id="ss-eps" style="${IS}" onchange="ssCapturePerfil()">
+          <option value="">— Seleccione —</option>
+          <option>Sura EPS</option><option>Nueva EPS</option><option>Sanitas</option>
+          <option>Compensar</option><option>Famisanar</option><option>Salud Total</option>
+          <option>Medimás</option><option>Coosalud</option><option>Mutual Ser</option>
+          <option>Aliansalud</option><option>Capital Salud</option><option>Emssanar</option>
+          <option value="_otro">Otra</option>
+        </select>
+      </div>
+      <div>
+        <label style="${LS}">AFP / Fondo pensiones</label>
+        <select id="ss-afp" style="${IS}" onchange="ssCapturePerfil()">
+          <option value="">— Seleccione —</option>
+          <option>Colpensiones</option><option>Porvenir</option><option>Protección</option>
+          <option>Colfondos</option><option>Old Mutual</option>
+          <option value="_otro">Otro</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div>
+        <label style="${LS}">ARL</label>
+        <select id="ss-arl-ent" style="${IS}" onchange="ssCapturePerfil()">
+          <option value="">— Seleccione —</option>
+          <option>Sura ARL</option><option>Positiva</option><option>Colmena</option>
+          <option>Axa Colpatria</option><option>Bolívar</option><option>Equidad</option>
+          <option value="_otro">Otra</option>
+        </select>
+      </div>
+      <div>
+        <label style="${LS}">Caja Compensación (CCF)</label>
+        <select id="ss-ccf-ent" style="${IS}" onchange="ssCapturePerfil()">
+          <option value="">— Seleccione —</option>
+          <option>Compensar</option><option>Cafam</option><option>Colsubsidio</option>
+          <option>Comfenalco Antioquia</option><option>Comfamiliar</option>
+          <option>Comfenalco Valle</option><option>Comfaboy</option>
+          <option value="_otro">Otra</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
   <!-- Tipo de trabajador -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px">
     <button id="ss-btn-dep" onclick="setSSModo('dependiente')" style="padding:10px 6px;border-radius:var(--radius-xs);border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;line-height:1.4">
@@ -5259,6 +5339,24 @@ function renderSegSocial(el) {
       </select>
     </div>
 
+    <!-- Días cotizados — aplica a dependientes e independientes -->
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <label style="${LS}">Días cotizados en el período</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start">
+        <div>
+          <input type="number" id="ss-dias" min="1" max="30" step="1" value="30"
+            style="${IS};font-size:14px;font-weight:700" oninput="calcSegSocial()">
+          <div id="ss-dias-info" style="font-size:10px;color:var(--text3);margin-top:3px">Mes completo</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px">
+          <button onclick="ssSetDias(30)" style="padding:7px 4px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface3);color:var(--text2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer" title="Mes completo">30</button>
+          <button onclick="ssSetDias(15)" style="padding:7px 4px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface3);color:var(--text2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer" title="Quincena">15</button>
+          <button onclick="ssSetDias(1)"  style="padding:7px 4px;border-radius:var(--radius-xs);border:1px solid var(--border2);background:var(--surface3);color:var(--text2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer" title="Ingresar días">✏</button>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin-top:4px">PILA usa base de 30 días. Si el trabajador ingresó o se retiró en el mes, ajuste los días efectivos.</div>
+    </div>
+
     <!-- ARL y CCF solo para independientes (opcional) -->
     <div id="ss-ind-opciones" style="display:none;margin-top:10px">
       <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:8px;padding-top:8px;border-top:1px solid var(--border)">Aportes opcionales para independientes</div>
@@ -5308,6 +5406,22 @@ function renderSegSocial(el) {
       Exportar PDF
     </button>
   </div>
+
+  <!-- Botón guardar en historial -->
+  <button id="ss-btn-guardar" onclick="ssSave()" style="display:none;width:100%;margin-top:8px;padding:10px;background:linear-gradient(135deg,#1565C0,#0D47A1);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:6px">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Guardar en historial
+  </button>
+
+  <!-- Historial de liquidaciones -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);margin-top:16px;overflow:hidden">
+    <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3)">📋 Historial de liquidaciones</div>
+      <div style="font-size:10px;color:var(--text3)">Máx. 24 · sincronizado en nube</div>
+    </div>
+    <div id="ss-hist-panel">${_ssRenderHistHTML(_ssLoad())}</div>
+  </div>
+
 </div>`;
   ssModo = 'dependiente';
   calcSegSocial();
@@ -5334,6 +5448,25 @@ function setSSModo(modo) {
   calcSegSocial();
 }
 
+function ssCapturePerfil(){
+  window._ssPerfilData = {
+    nombreTrabajador: document.getElementById('ss-nombre')?.value.trim()||'',
+    tipoDoc:          document.getElementById('ss-tipodoc')?.value||'CC',
+    numDoc:           document.getElementById('ss-numdoc')?.value.trim()||'',
+    nitEmpleador:     document.getElementById('ss-nit')?.value.trim()||'',
+    eps:              document.getElementById('ss-eps')?.value||'',
+    afp:              document.getElementById('ss-afp')?.value||'',
+    arlEntidad:       document.getElementById('ss-arl-ent')?.value||'',
+    ccfEntidad:       document.getElementById('ss-ccf-ent')?.value||'',
+    dias:             parseInt(document.getElementById('ss-dias')?.value)||30
+  };
+}
+
+function ssSetDias(n){
+  const el = document.getElementById('ss-dias');
+  if(el){ el.value = n; calcSegSocial(); }
+}
+
 function toggleSSIndARL(){
   const checked = document.getElementById('ss-ind-arl')?.checked;
   const sel = document.getElementById('ss-ind-arl-sel');
@@ -5346,6 +5479,20 @@ function calcSegSocial() {
   const infoEl= document.getElementById('ss-sal-info');
   const sal   = parseFloat(document.getElementById('ss-salario')?.value) || 0;
   const smmlv = NOM_CFG.smmlv; // 1.750.905 en 2026
+
+  // Días cotizados (PILA base 30)
+  const diasEl  = document.getElementById('ss-dias');
+  const dias    = Math.min(30, Math.max(1, parseInt(diasEl?.value)||30));
+  if(diasEl && parseInt(diasEl.value)!==dias) diasEl.value = dias;
+  const diasInfo = document.getElementById('ss-dias-info');
+  if(diasInfo){
+    if(dias===30) diasInfo.textContent='Mes completo';
+    else if(dias===15) diasInfo.textContent='Quincena — IBC y aportes al '+Math.round(dias/30*100)+'%';
+    else diasInfo.textContent=dias+' días — IBC y aportes al '+Math.round(dias/30*100)+'%';
+    diasInfo.style.color = dias<30 ? 'var(--amber)' : 'var(--text3)';
+  }
+  // Factor de prorrateo (PILA siempre sobre 30 días)
+  const factorDias = dias / 30;
 
   if (!sal || sal < 1) {
     if(phEl) phEl.style.display='block';
@@ -5377,18 +5524,16 @@ function calcSegSocial() {
           : (sal/smmlv).toFixed(2)+' SMMLV · '+(sal<=smmlv*2?'Tiene derecho a auxilio de transporte':'Sin auxilio de transporte');}
     }
 
-    // IBC (Ingreso Base de Cotización)
-    let ibc;
+    // IBC (Ingreso Base de Cotización) — prorateado por días
+    let ibcMes;
     if (esIntegral) {
-      // Art. 132 CST: cotización sobre 70% del salario integral
-      ibc = Math.round(sal * 0.70);
-      // No puede ser inferior a 1 SMMLV
-      ibc = Math.max(ibc, smmlv);
+      ibcMes = Math.round(sal * 0.70);
+      ibcMes = Math.max(ibcMes, smmlv);
     } else {
-      // Salario ordinario: IBC = salario, mínimo 1 SMMLV, máximo 25 SMMLV
-      ibc = Math.max(sal, smmlv);
-      ibc = Math.min(ibc, smmlv * 25);
+      ibcMes = Math.max(sal, smmlv);
+      ibcMes = Math.min(ibcMes, smmlv * 25);
     }
+    const ibc = dias < 30 ? Math.round(ibcMes * factorDias) : ibcMes;
 
     // Aportes empleado
     const empSalud   = Math.round(ibc * 0.04);   // 4% salud empleado
@@ -5411,7 +5556,7 @@ function calcSegSocial() {
     const pct = (v) => (v/ibc*100).toFixed(2)+'%';
 
     resEl.innerHTML = _ssCard([
-      {label:'IBC (Base de cotización)', val:ibc, color:'var(--blue)', sub: esIntegral?'70% del salario integral':'Salario (mín. 1 SMMLV, máx. 25 SMMLV)'},
+      {label:'IBC (Base de cotización)', val:ibc, color:'var(--blue)', sub: (esIntegral?'70% salario integral':'Salario mín. 1 SMMLV, máx. 25 SMMLV')+(dias<30?' · prorateado '+dias+'/30 días':'')},
     ], 'Base de cotización', '#1565C0')
     + _ssDivider('👔 Aportes del EMPLEADO', 'var(--text2)')
     + _ssCard([
@@ -5423,20 +5568,22 @@ function calcSegSocial() {
     + _ssCard([
       {label:'Salud (8.5%)',        val:emprSalud,   color:'var(--green)', sub:pct(emprSalud)},
       {label:'Pensión (12%)',       val:emprPension, color:'var(--blue)',  sub:pct(emprPension)},
-      {label:'ARL ('+riesgoARL+' '+( tasaARL*100).toFixed(3)+'%)', val:emprARL, color:'var(--amber)', sub:pct(emprARL)},
+      {label:'ARL ('+riesgoARL+' '+(tasaARL*100).toFixed(3)+'%)', val:emprARL, color:'var(--amber)', sub:pct(emprARL)},
       {label:'Caja compensación (4%)', val:emprCCF,  color:'var(--text2)',sub:pct(emprCCF)},
       {label:'ICBF (3%) *',         val:emprICBF,    color:'var(--text2)',sub:pct(emprICBF)},
       {label:'SENA (2%) *',         val:emprSENA,    color:'var(--text2)',sub:pct(emprSENA)},
       {label:'Total empleador',     val:totalEmpr,   color:'var(--red)',  sub:'Costo adicional para la empresa'},
     ], '', '')
-    + _ssTotalBig('Costo total seguridad social', totalGeneral, 'Empleado + Empleador')
+    + _ssTotalBig('Costo total seguridad social', totalGeneral, dias<30?'Período '+dias+' días · Empleado + Empleador':'Empleado + Empleador')
     + _ssCard([{label:'Neto aproximado empleado', val:netoRef, color:'var(--green)', sub:'Salario − aportes del empleado'}], '', '')
-    + _ssNota('* ICBF y SENA: aplica para empresas con más de 10 empleados (Ley 789/2002). ARL riesgo '+riesgoARL+' — tasa '+( tasaARL*100).toFixed(3)+'% (Decreto 1772/1994). Salario integral: factor salarial 70% / prestacional 30% (Art. 132 CST). Pensión sin fondo de solidaridad (aplica para sal. > 4 SMMLV).');
+    + _ssNota('* ICBF y SENA: aplica para empresas con más de 10 empleados (Ley 789/2002). ARL riesgo '+riesgoARL+' — tasa '+(tasaARL*100).toFixed(3)+'% (Decreto 1772/1994). Salario integral: factor salarial 70% / prestacional 30% (Art. 132 CST).'+(dias<30?' IBC prorateado: '+ibcMes.toLocaleString('es-CO')+' × '+dias+'/30 = '+ibc.toLocaleString('es-CO')+'.':''));
 
     // Guardar datos para exportar
-    window._ssLastData = { modo:'dependiente', sal, ibc, esIntegral, empSalud, empPension, totalEmp, emprSalud, emprPension, emprARL, emprCCF, emprICBF, emprSENA, totalEmpr, totalGeneral, netoRef, riesgoARL, tasaARL };
+    window._ssLastData = { modo:'dependiente', sal, ibc, ibcMes, dias, esIntegral, empSalud, empPension, totalEmp, emprSalud, emprPension, emprARL, emprCCF, emprICBF, emprSENA, totalEmpr, totalGeneral, netoRef, riesgoARL, tasaARL };
     const exportBtns = document.getElementById('ss-export-btns');
     if(exportBtns) exportBtns.style.display='flex';
+    const btnGuardar = document.getElementById('ss-btn-guardar');
+    if(btnGuardar) btnGuardar.style.display='flex';
 
   // ── INDEPENDIENTE ──────────────────────────────────────────────────────────
   } else {
@@ -5444,25 +5591,22 @@ function calcSegSocial() {
     const periodoMeses = {mensual:1,bimestral:2,trimestral:3,semestral:6,anual:12}[periodo]||1;
 
     // IBC independiente: Decreto 1273/2018
-    // Si ingreso > 2 SMMLV → IBC = 40% del ingreso
-    // Si 40% < 1 SMMLV → IBC = 1 SMMLV
-    // Si ingreso ≤ 2 SMMLV → IBC = ingreso (mínimo 1 SMMLV)
-    let ibc, regla, ibcBase40;
+    let ibcMes, regla, ibcBase40;
     if (sal > smmlv * 2) {
       ibcBase40 = Math.round(sal * 0.40);
       if (ibcBase40 < smmlv) {
-        ibc = smmlv;
+        ibcMes = smmlv;
         regla = '40% del ingreso ('+ibcBase40.toLocaleString('es-CO')+') < SMMLV → se toma SMMLV';
       } else {
-        ibc = ibcBase40;
+        ibcMes = ibcBase40;
         regla = '40% de $'+sal.toLocaleString('es-CO')+' (ingreso > 2 SMMLV — Decreto 1273/2018)';
       }
     } else {
-      ibc = Math.max(sal, smmlv);
+      ibcMes = Math.max(sal, smmlv);
       regla = 'Ingreso ≤ 2 SMMLV → IBC = '+(sal<smmlv?'SMMLV (mínimo)':'ingreso');
     }
-    // Máximo: 25 SMMLV
-    ibc = Math.min(ibc, smmlv * 25);
+    ibcMes = Math.min(ibcMes, smmlv * 25);
+    const ibc = dias < 30 ? Math.round(ibcMes * factorDias) : ibcMes;
 
     // Aportes por período
     const saludMes    = Math.round(ibc * 0.1250); // 12.50% salud independiente (Ley 1753)
@@ -5498,30 +5642,30 @@ function calcSegSocial() {
     resEl.innerHTML = _ssDivider('🧾 Independiente — IBC calculado', 'var(--text2)')
     + _ssCard([
       {label:'Ingreso reportado',    val:sal,   color:'var(--text)',  sub:(sal/smmlv).toFixed(2)+' SMMLV'},
-      {label:'IBC (base cotización)',val:ibc,   color:'var(--blue)',  sub:regla},
+      {label:'IBC (base cotización)',val:ibc,   color:'var(--blue)',  sub:regla+(dias<30?' · prorateado '+dias+'/30 días':'')},
     ], '', '')
     + _ssDivider('Aportes mensuales', 'var(--text2)')
     + _ssCard(rowsAportes, '', '')
     + (periodoMeses > 1
       ? _ssTotalBig('Total período '+periodo+' ('+periodoMeses+' meses)', totalPeriodo, '$'+totalMes.toLocaleString('es-CO')+'/mes × '+periodoMeses)
-      : _ssTotalBig('Total a pagar', totalMes, 'Pago mensual')
+      : _ssTotalBig('Total a pagar', totalMes, dias<30?'Período '+dias+' días':'Pago mensual')
     )
     + _ssCard([
       {label:'Ingreso neto aprox.', val:sal-totalMes, color:'var(--green)', sub:'Ingreso − aportes mensuales'},
     ], '', '')
     + _ssNota('Independientes: 12.5% salud + 16% pensión sobre el IBC (Ley 100/1993, Ley 1753/2015). '
       +'Ingresos > 2 SMMLV: IBC = 40% del ingreso (Decreto 1273/2018). '
-      +'Si ese 40% es < SMMLV, el IBC es el SMMLV. '
-      +(incluirARL?'ARL Riesgo '+riesgoARL_ind+': '+(tasaARL_ind*100).toFixed(3)+'% — aplica si hay contrato con entidad que exige ARL (Ley 1562/2012). ':
-        'Sin ARL (independientes sin contrato directo que lo exija). ')
-      +(incluirCCF?'CCF 4%: afiliación voluntaria para acceder a beneficios. ':'')
-      +'Pueden cotizar en períodos hasta 12 meses (Decreto 1273/2018). '
+      +(dias<30?'IBC prorateado '+dias+'/30 días: $'+ibcMes.toLocaleString('es-CO')+' × '+dias+'/30 = $'+ibc.toLocaleString('es-CO')+'. ':'')
+      +(incluirARL?'ARL Riesgo '+riesgoARL_ind+': '+(tasaARL_ind*100).toFixed(3)+'%. ':'Sin ARL. ')
+      +(incluirCCF?'CCF 4%: afiliación voluntaria. ':'')
       +'IMPORTANTE: independientes con ingresos < 1 SMMLV NO están obligados a cotizar.');
 
     // Guardar datos para exportar
-    window._ssLastData = { modo:'independiente', sal, ibc, regla, saludMes, pensionMes, arlMes, ccfMes, totalMes, totalPeriodo, periodo, periodoMeses, incluirARL, incluirCCF, riesgoARL_ind, tasaARL_ind };
+    window._ssLastData = { modo:'independiente', sal, ibc, ibcMes, dias, regla, saludMes, pensionMes, arlMes, ccfMes, totalMes, totalPeriodo, periodo, periodoMeses, incluirARL, incluirCCF, riesgoARL_ind, tasaARL_ind };
     const exportBtns = document.getElementById('ss-export-btns');
     if(exportBtns) exportBtns.style.display='flex';
+    const btnGuardar = document.getElementById('ss-btn-guardar');
+    if(btnGuardar) btnGuardar.style.display='flex';
   }
 }
 
@@ -5549,6 +5693,57 @@ function _ssTotalBig(label, val, sub) {
 function _ssNota(txt) {
   return '<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;font-size:10px;color:var(--text3);line-height:1.6;margin-top:4px">'
     +'ℹ️ '+txt+'</div>';
+}
+
+// ── Persistencia Seguridad Social ────────────────────────────────────────────
+function _ssLoad(){ try{ return JSON.parse(localStorage.getItem(SSK)||'[]'); }catch{ return []; } }
+function _ssSaveHist(arr){ ssHistorial=arr; localStorage.setItem(SSK,JSON.stringify(arr)); _fsSave({segsocial:arr,updatedAt:new Date().toISOString()}); }
+
+function ssSave(){
+  const d = window._ssLastData;
+  if(!d) return;
+  const perfil = window._ssPerfilData||{};
+  const ahora = new Date();
+  const periodoKey = ahora.getFullYear()+'-'+(String(ahora.getMonth()+1).padStart(2,'0'));
+  const registro = Object.assign({}, d, perfil, {
+    periodoKey,
+    fechaGuardado: ahora.toISOString(),
+    ano: NOM_ANO
+  });
+  const hist = _ssLoad();
+  // Reemplazar si ya existe mismo período y modo
+  const idx = hist.findIndex(r=>r.periodoKey===periodoKey && r.modo===d.modo);
+  if(idx>=0) hist[idx]=registro; else hist.unshift(registro);
+  // Mantener máximo 24 registros
+  if(hist.length>24) hist.length=24;
+  _ssSaveHist(hist);
+  toast('Liquidación guardada ✓','success');
+  // Refrescar historial en pantalla si está visible
+  const hp = document.getElementById('ss-hist-panel');
+  if(hp) hp.innerHTML = _ssRenderHistHTML(_ssLoad());
+}
+
+function ssEliminarRegistro(periodoKey, modo){
+  if(!confirm('¿Eliminar registro '+periodoKey+'?')) return;
+  const hist = _ssLoad().filter(r=>!(r.periodoKey===periodoKey && r.modo===modo));
+  _ssSaveHist(hist);
+  const hp = document.getElementById('ss-hist-panel');
+  if(hp) hp.innerHTML = _ssRenderHistHTML(_ssLoad());
+  toast('Registro eliminado','info');
+}
+
+function _ssRenderHistHTML(hist){
+  if(!hist||!hist.length) return '<div style="text-align:center;padding:18px;color:var(--text3);font-size:11px">Sin liquidaciones guardadas aún</div>';
+  const f=v=>'$'+Math.round(v||0).toLocaleString('es-CO');
+  return hist.map(r=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--border);gap:8px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text)">${r.periodoKey} <span style="font-size:10px;font-weight:400;color:var(--text3)">${r.modo==='dependiente'?'👔 Dep.':'🧾 Ind.'}</span></div>
+        ${r.nombreTrabajador?'<div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+r.nombreTrabajador+'</div>':''}
+        <div style="font-size:10px;color:var(--text3);font-family:\'DM Mono\',monospace">IBC ${f(r.ibc)} · ${r.modo==='dependiente'?'Total '+f(r.totalGeneral):'Total mes '+f(r.totalMes)}</div>
+      </div>
+      <button onclick="ssEliminarRegistro('${r.periodoKey}','${r.modo}')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;flex-shrink:0" title="Eliminar">✕</button>
+    </div>`).join('');
 }
 
 // ── Exportar Seguridad Social ────────────────────────────────────────────────
