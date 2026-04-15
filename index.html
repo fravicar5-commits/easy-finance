@@ -3520,9 +3520,11 @@ function renderCobrosDelDia(el) {
     if (saldoPendiente(c) === 0) return;
     const mora = diasMora(c);
     const pp = proximoPago(c);
-    if (mora > 0) {
-      cobroraMora.push({ c, mora, pp });
-    } else if (pp) {
+    // Mora: siempre se registra si aplica
+    if (mora > 0) cobroraMora.push({ c, mora, pp });
+    // Hoy y Próximos: se evalúan INDEPENDIENTEMENTE de la mora
+    // Un cliente en mora puede tener también una cuota venciendo hoy o pronto
+    if (pp) {
       const ppDate = new Date(pp.fecha + 'T00:00:00');
       if (pp.fecha === hoyStr) cobrosHoy.push({ c, pp });
       else if (ppDate > hoy && ppDate <= en7) cobrosProx.push({ c, pp, ppDate });
@@ -5396,14 +5398,21 @@ function renderSegSocial(el) {
   </div>
 
   <!-- Botones de exportación -->
-  <div id="ss-export-btns" style="display:none;gap:8px;margin-top:4px">
-    <button onclick="ssExportarExcel()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#1b5e20,#2e7d32);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
-      Exportar Excel
-    </button>
-    <button onclick="ssExportarPDF()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#b71c1c,#c62828);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-      Exportar PDF
+  <div id="ss-export-btns" style="display:none;gap:8px;margin-top:4px;flex-direction:column">
+    <div style="display:flex;gap:8px">
+      <button onclick="ssExportarExcel()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#1b5e20,#2e7d32);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/></svg>
+        Exportar Excel
+      </button>
+      <button onclick="ssExportarPDF()" style="flex:1;padding:9px 10px;background:linear-gradient(135deg,#b71c1c,#c62828);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Exportar PDF
+      </button>
+    </div>
+    <!-- Botón PILA — Fase 2 -->
+    <button onclick="ssGenerarPILA()" style="width:100%;padding:10px;background:linear-gradient(135deg,#4A148C,#6A1B9A);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/><path d="M6 7h4m-4 4h8m-8 3h3"/></svg>
+      Generar archivo PILA (.txt)
     </button>
   </div>
 
@@ -5744,6 +5753,176 @@ function _ssRenderHistHTML(hist){
       </div>
       <button onclick="ssEliminarRegistro('${r.periodoKey}','${r.modo}')" style="background:none;border:none;color:var(--text3);font-size:16px;cursor:pointer;padding:2px 6px;flex-shrink:0" title="Eliminar">✕</button>
     </div>`).join('');
+}
+
+// ── Generador archivo plano PILA (Tipo 1 — trabajador individual) ─────────────
+// Formato PILA estándar Colombia — compatible con Aportes en Línea, SOI, Mi Planilla
+// Ref: Circular 001/2004 Ministerio de Protección Social · campos separados por ";"
+function ssGenerarPILA() {
+  const d = window._ssLastData;
+  if (!d) { toast('Primero calcule la liquidación', 'error'); return; }
+  const p = window._ssPerfilData || {};
+
+  // Validaciones de campos mínimos para el archivo
+  const faltantes = [];
+  if (!p.numDoc)      faltantes.push('Número de documento');
+  if (!p.nitEmpleador && d.modo === 'dependiente') faltantes.push('NIT del empleador');
+  if (!p.eps)         faltantes.push('EPS');
+  if (!p.afp)         faltantes.push('AFP / Fondo de pensiones');
+  if (faltantes.length) {
+    toast('Complete el perfil para generar PILA: ' + faltantes.join(', '), 'error', 5000);
+    return;
+  }
+
+  // Período (AAAAMM) — usa periodoKey del último cálculo o mes actual
+  const ahora = new Date();
+  const periodoKey = (window._ssLastData.periodoKey || (ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0')));
+  const periodo = periodoKey.replace('-',''); // → YYYYMM
+
+  // Valores calculados
+  const dias      = d.dias || 30;
+  const ibc       = Math.round(d.ibc || 0);
+  const ibcMes    = Math.round(d.ibcMes || ibc);
+
+  // Dependiente
+  const vSalud    = d.modo === 'dependiente'
+    ? Math.round((d.empSalud  || 0) + (d.emprSalud  || 0))
+    : Math.round(d.saludMes  || 0);
+  const vPension  = d.modo === 'dependiente'
+    ? Math.round((d.empPension|| 0) + (d.emprPension || 0))
+    : Math.round(d.pensionMes || 0);
+  const vARL      = d.modo === 'dependiente'
+    ? Math.round(d.emprARL   || 0)
+    : Math.round(d.arlMes    || 0);
+  const vCCF      = d.modo === 'dependiente'
+    ? Math.round(d.emprCCF   || 0)
+    : Math.round(d.ccfMes    || 0);
+
+  // Helper: pad a string to fixed length with spaces (right-pad)
+  const rp  = (v, n) => String(v ?? '').substring(0, n).padEnd(n, ' ');
+  // Helper: pad a number to fixed length with leading zeros
+  const lz  = (v, n) => String(Math.round(v || 0)).padStart(n, '0');
+  // Helper: pad number right-aligned (monetary fields)
+  const mon = (v, n) => String(Math.round(v || 0)).padStart(n, '0');
+
+  // ── ENCABEZADO (registro tipo 1) ──────────────────────────────────────────
+  // Campos: Tipo_Reg;NIT_Aport;Dv;Razon_Social;Periodo;Clase_Aport;Modalidad;Naturaleza;TipoMoneda;Nro_Planilla
+  const nitLimpio = (p.nitEmpleador || '').replace(/[^0-9]/g, '');
+  const nitBase   = nitLimpio.slice(0, -1) || nitLimpio;
+  const dvNit     = nitLimpio.slice(-1) || '0';
+  const razon     = rp(p.nombreTrabajador || 'TRABAJADOR', 60);
+
+  const encabezado = [
+    '01',          // Tipo registro encabezado
+    rp(nitBase, 10),
+    rp(dvNit, 1),
+    razon,
+    periodo,       // AAAAMM
+    d.modo === 'dependiente' ? '1' : '3', // 1=dependiente, 3=independiente
+    '1',           // Modalidad pago (1=normal)
+    '1',           // Naturaleza (1=privado, 2=público)
+    'COP',         // Moneda
+    rp('001', 10)  // Nro planilla
+  ].join(';');
+
+  // ── DETALLE TRABAJADOR (registro tipo 2) ──────────────────────────────────
+  // Campos principales PILA: Tipo_Reg;Tipo_Doc;Num_Doc;Primer_Apellido;Segundo_Apellido;
+  //   Primer_Nombre;Segundo_Nombre;Dias_Salud;IBC_Salud;Valor_Salud;Cod_EPS;
+  //   Dias_Pension;IBC_Pension;Valor_Pension;Cod_AFP;Dias_ARL;IBC_ARL;Valor_ARL;Clase_Riesgo;Cod_ARL;
+  //   Dias_CCF;IBC_CCF;Valor_CCF;Cod_CCF;...
+  const nombrePartes = (p.nombreTrabajador || '').trim().split(' ');
+  const apell1 = rp(nombrePartes[0] || '', 20);
+  const apell2 = rp(nombrePartes[1] || '', 20);
+  const nomb1  = rp(nombrePartes[2] || '', 20);
+  const nomb2  = rp(nombrePartes[3] || '', 20);
+
+  // Códigos de entidades (simplificados — el operador los valida)
+  const codEPS  = rp((p.eps  || '').substring(0,3).toUpperCase(), 6);
+  const codAFP  = rp((p.afp  || '').substring(0,3).toUpperCase(), 6);
+  const codARL  = rp((p.arlEntidad || '').substring(0,3).toUpperCase(), 6);
+  const codCCF  = rp((p.ccfEntidad || '').substring(0,3).toUpperCase(), 6);
+  const claseRiesgo = d.riesgoARL || d.riesgoARL_ind || 'I';
+
+  const detalle = [
+    '02',                      // Tipo registro detalle
+    rp(p.tipoDoc || 'CC', 2), // Tipo documento
+    rp(p.numDoc  || '', 16),   // Número documento
+    apell1, apell2, nomb1, nomb2,
+    lz(dias, 2),               // Días salud
+    mon(ibc, 12),              // IBC salud
+    mon(vSalud, 12),           // Valor salud
+    codEPS,                    // Código EPS
+    lz(dias, 2),               // Días pensión
+    mon(ibc, 12),              // IBC pensión
+    mon(vPension, 12),         // Valor pensión
+    codAFP,                    // Código AFP
+    vARL > 0 ? lz(dias,2) : '00',   // Días ARL
+    vARL > 0 ? mon(ibc,12) : mon(0,12),
+    mon(vARL, 12),             // Valor ARL
+    claseRiesgo,               // Clase riesgo ARL
+    codARL,                    // Código ARL
+    vCCF > 0 ? lz(dias,2) : '00',   // Días CCF
+    vCCF > 0 ? mon(ibc,12) : mon(0,12),
+    mon(vCCF, 12),             // Valor CCF
+    codCCF,                    // Código CCF
+    mon(d.totalGeneral || d.totalMes || 0, 12) // Total aporte
+  ].join(';');
+
+  // ── TOTALES (registro tipo 3) ─────────────────────────────────────────────
+  const total = Math.round(d.totalGeneral || d.totalMes || 0);
+  const pie = [
+    '03',
+    '1',           // Número de registros detalle
+    mon(total, 12) // Total planilla
+  ].join(';');
+
+  const contenido = [encabezado, detalle, pie].join('\r\n');
+
+  // ── Preview modal + descarga ──────────────────────────────────────────────
+  const nombreArchivo = 'PILA_' + periodo + '_' + (p.numDoc || 'SIN_DOC') + '.txt';
+
+  // Mostrar preview antes de descargar
+  const previewId = 'ss-pila-preview';
+  let prev = document.getElementById(previewId);
+  if (!prev) {
+    prev = document.createElement('div');
+    prev.id = previewId;
+    prev.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(prev);
+  }
+  prev.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--text)">🗂 Archivo PILA generado</div>
+          <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${nombreArchivo}</div>
+        </div>
+        <button onclick="document.getElementById('${previewId}').remove()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--green);word-break:break-all;white-space:pre-wrap;margin-bottom:14px;line-height:1.8">${contenido.replace(/</g,'&lt;')}</div>
+      <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:var(--radius-xs);padding:10px 12px;font-size:10px;color:var(--amber);margin-bottom:14px;line-height:1.6">
+        ⚠️ <strong>Antes de subir al operador:</strong> verifique los códigos de EPS/AFP/ARL/CCF con su operador (Aportes en Línea, SOI, Mi Planilla). Los primeros 3 caracteres se usan como código aproximado — el operador los valida al importar.
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="ssPILADescargar('${nombreArchivo}',\`${contenido.replace(/`/g,'\\`')}\`)" style="flex:1;padding:10px;background:linear-gradient(135deg,#4A148C,#6A1B9A);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+          ⬇ Descargar ${nombreArchivo}
+        </button>
+        <button onclick="document.getElementById('${previewId}').remove()" style="padding:10px 16px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text2);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+          Cerrar
+        </button>
+      </div>
+    </div>`;
+  prev.style.display = 'flex';
+}
+
+function ssPILADescargar(nombre, contenido) {
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + contenido], { type: 'text/plain;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre; a.click();
+  URL.revokeObjectURL(url);
+  toast('Archivo PILA descargado ✓', 'success');
 }
 
 // ── Exportar Seguridad Social ────────────────────────────────────────────────
