@@ -5220,9 +5220,96 @@ function renderSegSocial(el) {
     </div>
   </div>
 
-  <!-- Perfil del trabajador/empresa -->
+  <!-- Perfil PILA — datos completos para generación del archivo plano -->
   <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px">
-    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">👤 Datos del trabajador (opcionales — para historial y archivo PILA)</div>
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);margin-bottom:12px">🗂 Datos para PILA</div>
+
+    <!-- Fila 1: Período y tipo de planilla -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div>
+        <label style="${LS}">Período a liquidar</label>
+        <input type="month" id="ss-periodo-pila" style="${IS}" oninput="ssCapturePerfil();ssPeriodoChange()" value="${new Date().getFullYear()+'-'+String(new Date().getMonth()).padStart(2,'0')}">
+        <div id="ss-periodo-info" style="font-size:10px;color:var(--text3);margin-top:3px">Se paga mes vencido</div>
+      </div>
+      <div>
+        <label style="${LS}">Tipo de planilla</label>
+        <select id="ss-tipo-planilla" style="${IS}" onchange="ssCapturePerfil();ssTipoPlanillaChange()">
+          <option value="E">E — Empleados (dependientes)</option>
+          <option value="I">I — Independientes (cuenta propia)</option>
+          <option value="Y">Y — Independientes con empresa (prestación)</option>
+          <option value="A">A — Ingreso (novedad primer mes)</option>
+          <option value="S">S — Servicio doméstico</option>
+          <option value="M">M — Mora (periodos vencidos)</option>
+          <option value="N">N — Correcciones</option>
+        </select>
+        <div id="ss-planilla-desc" style="font-size:10px;color:var(--text3);margin-top:3px">Planilla mensual para dependientes</div>
+      </div>
+    </div>
+
+    <!-- Fila 2: Tipo de cotizante -->
+    <div style="margin-bottom:8px">
+      <label style="${LS}">Tipo de cotizante</label>
+      <select id="ss-tipo-cotizante" style="${IS}" onchange="ssCapturePerfil()">
+        <optgroup label="Dependientes">
+          <option value="01">01 — Dependiente (empleado con contrato)</option>
+          <option value="12">12 — Dependiente pensionado que sigue trabajando</option>
+          <option value="19">19 — Aprendiz SENA etapa productiva</option>
+          <option value="22">22 — Docente afiliado Fondo Nacional Prestaciones</option>
+          <option value="51">51 — Trabajador tiempo parcial (&lt;30h/sem)</option>
+        </optgroup>
+        <optgroup label="Independientes">
+          <option value="02">02 — Independiente (trabajador por cuenta propia)</option>
+          <option value="03">03 — Independiente — aporta solo salud y pensión</option>
+          <option value="55">55 — Independiente con contrato prestación servicios</option>
+          <option value="57">57 — Independiente voluntario ARL</option>
+          <option value="59">59 — Independiente contratista con ARL obligatoria</option>
+        </optgroup>
+        <optgroup label="Otros">
+          <option value="05">05 — Estudiante (práctica empresarial)</option>
+          <option value="15">15 — Colombiano residente exterior cot. voluntaria</option>
+          <option value="42">42 — Beneficiario UPC adicional</option>
+          <option value="65">65 — Dependiente piso protección social</option>
+          <option value="66">66 — Independiente piso protección social</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <!-- Fila 3: Novedad -->
+    <div style="margin-bottom:8px">
+      <label style="${LS}">Novedad del período <span style="font-weight:400;text-transform:none">(si aplica)</span></label>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px" id="ss-novedades-grid">
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-ing" value="ING" onchange="ssCapturePerfil();ssNovedadChange()" style="accent-color:var(--green)"> ING — Ingreso
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-ret" value="RET" onchange="ssCapturePerfil();ssNovedadChange()" style="accent-color:var(--red)"> RET — Retiro
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-vsp" value="VSP" onchange="ssCapturePerfil()" style="accent-color:var(--accent)"> VSP — Var. salario
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-ige" value="IGE" onchange="ssCapturePerfil()" style="accent-color:var(--amber)"> IGE — Incapacidad
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-vac" value="VAC" onchange="ssCapturePerfil()" style="accent-color:var(--blue)"> VAC — Vacaciones
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-sln" value="SLN" onchange="ssCapturePerfil()" style="accent-color:var(--amber)"> SLN — Lic. no rem.
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-lma" value="LMA" onchange="ssCapturePerfil()" style="accent-color:#E91E8C"> LMA — Mat./Patern.
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-tae" value="TAE" onchange="ssCapturePerfil()" style="accent-color:var(--accent)"> TAE — Traslado EPS
+        </label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);cursor:pointer;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:6px 8px">
+          <input type="checkbox" id="ss-nov-tap" value="TAP" onchange="ssCapturePerfil()" style="accent-color:var(--accent)"> TAP — Traslado AFP
+        </label>
+      </div>
+      <div id="ss-novedad-info" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+    </div>
+
+    <!-- Fila 4: Nombre y documento -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
         <label style="${LS}">Nombre completo</label>
@@ -5235,62 +5322,88 @@ function renderSegSocial(el) {
           <option value="CE">Cédula Extranjería (CE)</option>
           <option value="PA">Pasaporte (PA)</option>
           <option value="TI">Tarjeta Identidad (TI)</option>
+          <option value="NIT">NIT</option>
         </select>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
         <label style="${LS}">Número documento</label>
-        <input type="text" id="ss-numdoc" placeholder="Ej: 1234567890" style="${IS}" oninput="ssCapturePerfil()">
+        <input type="text" id="ss-numdoc" placeholder="Ej: 1234567890" style="${IS}" oninput="ssCapturePerfil();ssFechaVencimiento()">
       </div>
       <div>
-        <label style="${LS}">NIT empleador</label>
-        <input type="text" id="ss-nit" placeholder="Ej: 900123456-1" style="${IS}" oninput="ssCapturePerfil()">
+        <label style="${LS}">NIT / ID aportante</label>
+        <input type="text" id="ss-nit" placeholder="Ej: 900123456-1" style="${IS}" oninput="ssCapturePerfil();ssFechaVencimiento()">
+        <div id="ss-fecha-venc" style="font-size:10px;color:var(--amber);margin-top:3px"></div>
       </div>
     </div>
+
+    <!-- Fila 5: Entidades -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
       <div>
-        <label style="${LS}">EPS</label>
+        <label style="${LS}">EPS <span style="font-weight:400">(código)</span></label>
         <select id="ss-eps" style="${IS}" onchange="ssCapturePerfil()">
           <option value="">— Seleccione —</option>
-          <option>Sura EPS</option><option>Nueva EPS</option><option>Sanitas</option>
-          <option>Compensar</option><option>Famisanar</option><option>Salud Total</option>
-          <option>Medimás</option><option>Coosalud</option><option>Mutual Ser</option>
-          <option>Aliansalud</option><option>Capital Salud</option><option>Emssanar</option>
-          <option value="_otro">Otra</option>
+          <option value="EPS010">Sura EPS (EPS010)</option>
+          <option value="EPS037">Nueva EPS (EPS037)</option>
+          <option value="EPS015">Sanitas (EPS015)</option>
+          <option value="EPS016">Compensar (EPS016)</option>
+          <option value="EPS017">Famisanar (EPS017)</option>
+          <option value="EPS002">Salud Total (EPS002)</option>
+          <option value="EPS040">Medimás (EPS040)</option>
+          <option value="EPS042">Coosalud (EPS042)</option>
+          <option value="EPS045">Mutual Ser (EPS045)</option>
+          <option value="EPS001">Aliansalud (EPS001)</option>
+          <option value="EPS038">Capital Salud (EPS038)</option>
+          <option value="EPS041">Emssanar (EPS041)</option>
+          <option value="_otro">Otra — ingresar código</option>
         </select>
       </div>
       <div>
-        <label style="${LS}">AFP / Fondo pensiones</label>
+        <label style="${LS}">AFP / Pensiones <span style="font-weight:400">(código)</span></label>
         <select id="ss-afp" style="${IS}" onchange="ssCapturePerfil()">
           <option value="">— Seleccione —</option>
-          <option>Colpensiones</option><option>Porvenir</option><option>Protección</option>
-          <option>Colfondos</option><option>Old Mutual</option>
-          <option value="_otro">Otro</option>
+          <option value="01-25">Colpensiones (25-01)</option>
+          <option value="01-26">Porvenir (26-01)</option>
+          <option value="01-27">Protección (27-01)</option>
+          <option value="01-28">Colfondos (28-01)</option>
+          <option value="01-29">Old Mutual (29-01)</option>
+          <option value="_otro">Otro — ingresar código</option>
         </select>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
       <div>
-        <label style="${LS}">ARL</label>
+        <label style="${LS}">ARL <span style="font-weight:400">(código)</span></label>
         <select id="ss-arl-ent" style="${IS}" onchange="ssCapturePerfil()">
           <option value="">— Seleccione —</option>
-          <option>Sura ARL</option><option>Positiva</option><option>Colmena</option>
-          <option>Axa Colpatria</option><option>Bolívar</option><option>Equidad</option>
-          <option value="_otro">Otra</option>
+          <option value="ARL011">Sura ARL (ARL011)</option>
+          <option value="ARL001">Positiva (ARL001)</option>
+          <option value="ARL004">Colmena (ARL004)</option>
+          <option value="ARL003">Axa Colpatria (ARL003)</option>
+          <option value="ARL007">Bolívar (ARL007)</option>
+          <option value="ARL009">Equidad (ARL009)</option>
+          <option value="_otro">Otra — ingresar código</option>
         </select>
       </div>
       <div>
-        <label style="${LS}">Caja Compensación (CCF)</label>
+        <label style="${LS}">Caja CCF <span style="font-weight:400">(código)</span></label>
         <select id="ss-ccf-ent" style="${IS}" onchange="ssCapturePerfil()">
           <option value="">— Seleccione —</option>
-          <option>Compensar</option><option>Cafam</option><option>Colsubsidio</option>
-          <option>Comfenalco Antioquia</option><option>Comfamiliar</option>
-          <option>Comfenalco Valle</option><option>Comfaboy</option>
-          <option value="_otro">Otra</option>
+          <option value="CCF016">Compensar (CCF016)</option>
+          <option value="CCF007">Cafam (CCF007)</option>
+          <option value="CCF013">Colsubsidio (CCF013)</option>
+          <option value="CCF010">Comfenalco Ant. (CCF010)</option>
+          <option value="CCF019">Comfamiliar (CCF019)</option>
+          <option value="CCF023">Comfenalco Valle (CCF023)</option>
+          <option value="CCF004">Comfaboy (CCF004)</option>
+          <option value="_otro">Otra — ingresar código</option>
         </select>
       </div>
     </div>
+
+    <!-- Alerta fecha de vencimiento -->
+    <div id="ss-venc-alerta" style="display:none;background:rgba(245,166,35,.1);border:1px solid rgba(245,166,35,.3);border-radius:var(--radius-xs);padding:8px 10px;margin-top:10px;font-size:11px;color:var(--amber)"></div>
   </div>
 
   <!-- Tipo de trabajador -->
@@ -5464,17 +5577,137 @@ function setSSModo(modo) {
 }
 
 function ssCapturePerfil(){
+  // Novedades seleccionadas
+  const novedades = [];
+  ['ing','ret','vsp','ige','vac','sln','lma','tae','tap'].forEach(cod=>{
+    const el = document.getElementById('ss-nov-'+cod);
+    if(el && el.checked) novedades.push(cod.toUpperCase());
+  });
+
   window._ssPerfilData = {
+    // Identificación
     nombreTrabajador: document.getElementById('ss-nombre')?.value.trim()||'',
     tipoDoc:          document.getElementById('ss-tipodoc')?.value||'CC',
     numDoc:           document.getElementById('ss-numdoc')?.value.trim()||'',
     nitEmpleador:     document.getElementById('ss-nit')?.value.trim()||'',
+    // Planilla
+    tipoPlanilla:     document.getElementById('ss-tipo-planilla')?.value||'I',
+    tipoCotizante:    document.getElementById('ss-tipo-cotizante')?.value||'02',
+    periodoLiquidar:  document.getElementById('ss-periodo-pila')?.value||'',
+    novedades,
+    // Entidades con código
     eps:              document.getElementById('ss-eps')?.value||'',
     afp:              document.getElementById('ss-afp')?.value||'',
     arlEntidad:       document.getElementById('ss-arl-ent')?.value||'',
     ccfEntidad:       document.getElementById('ss-ccf-ent')?.value||'',
     dias:             parseInt(document.getElementById('ss-dias')?.value)||30
   };
+}
+
+// Tabla días hábiles de vencimiento por últimos 2 dígitos (Decreto 1990/2016)
+const SS_TABLA_VENCIMIENTO = {
+  '00-06':2,'07-10':3,'11-15':4,'16-20':5,'21-25':6,
+  '26-30':7,'31-35':8,'36-40':9,'41-45':10,'46-50':11,
+  '51-55':12,'56-60':13,'61-65':14,'66-70':15,'71-75':16,
+  '76-79':2,'80-84':3,'85-89':4,'90-94':5,'95-99':6
+};
+
+function ssGetDiasHabiles(doc){
+  if(!doc) return null;
+  const ult = doc.replace(/[^0-9]/g,'').slice(-2);
+  const n = parseInt(ult);
+  for(const [rango, dia] of Object.entries(SS_TABLA_VENCIMIENTO)){
+    const [a,b] = rango.split('-').map(Number);
+    if(n>=a && n<=b) return dia;
+  }
+  return null;
+}
+
+function ssFechaVencimiento(){
+  const doc = (document.getElementById('ss-nit')?.value || document.getElementById('ss-numdoc')?.value || '').trim();
+  const periodo = document.getElementById('ss-periodo-pila')?.value || '';
+  const infoEl = document.getElementById('ss-fecha-venc');
+  const alertEl = document.getElementById('ss-venc-alerta');
+  if(!doc || !periodo || !infoEl) return;
+
+  const diaHabil = ssGetDiasHabiles(doc);
+  if(!diaHabil){ if(infoEl) infoEl.textContent=''; return; }
+
+  // Calcular mes de pago (mes siguiente al período)
+  const [y,m] = periodo.split('-').map(Number);
+  const mesPago = m === 12 ? `${y+1}-01` : `${y}-${String(m+1).padStart(2,'0')}`;
+  const [yp,mp] = mesPago.split('-').map(Number);
+
+  // Calcular fecha límite aproximada (día hábil del mes de pago)
+  // Simplificado: asume ~23 días hábiles/mes, ~1.05 días corridos por hábil
+  const fechaBase = new Date(yp, mp-1, Math.ceil(diaHabil * 1.4));
+  const opts = {day:'2-digit',month:'long',year:'numeric'};
+  const fechaStr = fechaBase.toLocaleDateString('es-CO', opts);
+
+  if(infoEl) infoEl.textContent = `Día hábil ${diaHabil} → aprox. ${fechaStr}`;
+
+  // Alerta si ya pasó
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  if(alertEl){
+    if(fechaBase < hoy){
+      alertEl.style.display='block';
+      alertEl.textContent = `⚠️ El período ${periodo} puede estar vencido. Verifica en el operador si hay mora. Día hábil ${diaHabil} del mes de pago.`;
+    } else {
+      alertEl.style.display='none';
+    }
+  }
+}
+
+function ssPeriodoChange(){
+  ssFechaVencimiento();
+  // Actualizar info mes vencido
+  const periodo = document.getElementById('ss-periodo-pila')?.value || '';
+  const infoEl = document.getElementById('ss-periodo-info');
+  if(!infoEl || !periodo) return;
+  const [y,m] = periodo.split('-').map(Number);
+  const nombres = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const mesPago = m===12 ? `Ene ${y+1}` : `${nombres[m]} ${y}`;
+  infoEl.textContent = `${nombres[m-1]} ${y} → se paga en ${mesPago}`;
+}
+
+const SS_PLANILLA_DESC = {
+  E:'Empleados dependientes — planilla mensual ordinaria',
+  I:'Independientes cuenta propia — sin empleador',
+  Y:'Independientes en empresa — contrato prestación de servicios',
+  A:'Novedad de ingreso — primer mes del cotizante',
+  S:'Empleados del servicio doméstico',
+  M:'Mora — pago de períodos vencidos (con intereses)',
+  N:'Correcciones — ajuste de IBC, días o tarifas ya pagadas'
+};
+
+function ssTipoPlanillaChange(){
+  const tipo = document.getElementById('ss-tipo-planilla')?.value;
+  const desc = document.getElementById('ss-planilla-desc');
+  const btnDep = document.getElementById('ss-btn-dep');
+  const btnInd = document.getElementById('ss-btn-ind');
+  if(desc) desc.textContent = SS_PLANILLA_DESC[tipo]||'';
+  // Sincronizar modo dependiente/independiente con tipo de planilla
+  if(tipo==='E'||tipo==='S'||tipo==='A'){
+    if(ssModo!=='dependiente') setSSModo('dependiente');
+    // Actualizar tipo cotizante sugerido
+    const tc = document.getElementById('ss-tipo-cotizante');
+    if(tc && (tc.value==='02'||tc.value==='55'||tc.value==='59')) tc.value='01';
+  } else if(tipo==='I'||tipo==='Y'){
+    if(ssModo!=='independiente') setSSModo('independiente');
+    const tc = document.getElementById('ss-tipo-cotizante');
+    if(tc && tc.value==='01') tc.value = tipo==='Y'?'55':'02';
+  }
+}
+
+function ssNovedadChange(){
+  const ing = document.getElementById('ss-nov-ing')?.checked;
+  const ret = document.getElementById('ss-nov-ret')?.checked;
+  const infoEl = document.getElementById('ss-novedad-info');
+  if(!infoEl) return;
+  if(ing && ret) infoEl.textContent='ING+RET: cotiza por los días efectivos del mes.';
+  else if(ing) infoEl.textContent='ING: primer mes — usa planilla A o reporta novedad de ingreso.';
+  else if(ret) infoEl.textContent='RET: último mes — ajusta días cotizados según fecha de retiro.';
+  else infoEl.textContent='';
 }
 
 function ssSetDias(n){
@@ -5769,156 +6002,177 @@ function ssGenerarPILA() {
   if (!d) { toast('Primero calcule la liquidación', 'error'); return; }
   const p = window._ssPerfilData || {};
 
-  // Validaciones de campos mínimos para el archivo
+  // Validaciones mínimas
   const faltantes = [];
-  if (!p.numDoc)      faltantes.push('Número de documento');
-  if (!p.nitEmpleador && d.modo === 'dependiente') faltantes.push('NIT del empleador');
-  if (!p.eps)         faltantes.push('EPS');
-  if (!p.afp)         faltantes.push('AFP / Fondo de pensiones');
+  if (!p.numDoc) faltantes.push('Número de documento');
+  if (!p.eps)    faltantes.push('EPS');
+  if (!p.afp)    faltantes.push('AFP / Fondo de pensiones');
   if (faltantes.length) {
-    toast('Complete el perfil para generar PILA: ' + faltantes.join(', '), 'error', 5000);
+    toast('Complete el perfil: ' + faltantes.join(', '), 'error', 5000);
     return;
   }
 
-  // Período (AAAAMM) — usa periodoKey del último cálculo o mes actual
-  const ahora = new Date();
-  const periodoKey = (window._ssLastData.periodoKey || (ahora.getFullYear() + '-' + String(ahora.getMonth()+1).padStart(2,'0')));
-  const periodo = periodoKey.replace('-',''); // → YYYYMM
+  // ── Período y tipo planilla ──────────────────────────────────────────────
+  const periodoRaw = p.periodoLiquidar || '';
+  const periodo = periodoRaw ? periodoRaw.replace('-','') :
+    (() => { const n=new Date(); return n.getFullYear()+String(n.getMonth()).padStart(2,'0'); })();
+  const tipoPlanilla = p.tipoPlanilla || (d.modo==='dependiente'?'E':'I');
+  const tipoCotizante = p.tipoCotizante || (d.modo==='dependiente'?'01':'02');
+  const novedades = (p.novedades||[]).join(',');
 
-  // Valores calculados
-  const dias      = d.dias || 30;
-  const ibc       = Math.round(d.ibc || 0);
-  const ibcMes    = Math.round(d.ibcMes || ibc);
+  // ── Valores calculados ───────────────────────────────────────────────────
+  const dias     = d.dias || 30;
+  const ibc      = Math.round(d.ibc || 0);
+  const vSalud   = d.modo==='dependiente' ? Math.round((d.empSalud||0)+(d.emprSalud||0)) : Math.round(d.saludMes||0);
+  const vPension = d.modo==='dependiente' ? Math.round((d.empPension||0)+(d.emprPension||0)) : Math.round(d.pensionMes||0);
+  const vARL     = d.modo==='dependiente' ? Math.round(d.emprARL||0) : Math.round(d.arlMes||0);
+  const vCCF     = d.modo==='dependiente' ? Math.round(d.emprCCF||0) : Math.round(d.ccfMes||0);
+  const vICBF    = Math.round(d.emprICBF||0);
+  const vSENA    = Math.round(d.emprSENA||0);
+  const total    = Math.round(d.totalGeneral || d.totalMes || 0);
 
-  // Dependiente
-  const vSalud    = d.modo === 'dependiente'
-    ? Math.round((d.empSalud  || 0) + (d.emprSalud  || 0))
-    : Math.round(d.saludMes  || 0);
-  const vPension  = d.modo === 'dependiente'
-    ? Math.round((d.empPension|| 0) + (d.emprPension || 0))
-    : Math.round(d.pensionMes || 0);
-  const vARL      = d.modo === 'dependiente'
-    ? Math.round(d.emprARL   || 0)
-    : Math.round(d.arlMes    || 0);
-  const vCCF      = d.modo === 'dependiente'
-    ? Math.round(d.emprCCF   || 0)
-    : Math.round(d.ccfMes    || 0);
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  const rp  = (v,n) => String(v??'').substring(0,n).padEnd(n,' ');
+  const lz  = (v,n) => String(Math.round(v||0)).padStart(n,'0');
+  const mon = (v)   => String(Math.round(v||0)).padStart(12,'0');
+  const zd  = (v)   => v>0 ? lz(dias,2) : '00';
+  const zi  = (v)   => v>0 ? mon(ibc)   : mon(0);
 
-  // Helper: pad a string to fixed length with spaces (right-pad)
-  const rp  = (v, n) => String(v ?? '').substring(0, n).padEnd(n, ' ');
-  // Helper: pad a number to fixed length with leading zeros
-  const lz  = (v, n) => String(Math.round(v || 0)).padStart(n, '0');
-  // Helper: pad number right-aligned (monetary fields)
-  const mon = (v, n) => String(Math.round(v || 0)).padStart(n, '0');
+  // ── NIT aportante ─────────────────────────────────────────────────────────
+  const nitStr = (p.nitEmpleador||p.numDoc||'').replace(/[^0-9]/g,'');
+  const nitBase = nitStr.length>1 ? nitStr.slice(0,-1) : nitStr;
+  const dvNit   = nitStr.length>1 ? nitStr.slice(-1)   : '0';
 
-  // ── ENCABEZADO (registro tipo 1) ──────────────────────────────────────────
-  // Campos: Tipo_Reg;NIT_Aport;Dv;Razon_Social;Periodo;Clase_Aport;Modalidad;Naturaleza;TipoMoneda;Nro_Planilla
-  const nitLimpio = (p.nitEmpleador || '').replace(/[^0-9]/g, '');
-  const nitBase   = nitLimpio.slice(0, -1) || nitLimpio;
-  const dvNit     = nitLimpio.slice(-1) || '0';
-  const razon     = rp(p.nombreTrabajador || 'TRABAJADOR', 60);
+  // ── Nombre desglosado ────────────────────────────────────────────────────
+  const partes = (p.nombreTrabajador||'').trim().split(/\s+/);
+  // Formato PILA: Apellido1 Apellido2 Nombre1 Nombre2 (asume orden Apellido Apellido Nombre Nombre)
+  const ap1 = rp(partes[0]||'',20);
+  const ap2 = rp(partes[1]||'',20);
+  const nm1 = rp(partes[2]||'',20);
+  const nm2 = rp(partes[3]||'',20);
 
-  const encabezado = [
-    '01',          // Tipo registro encabezado
-    rp(nitBase, 10),
-    rp(dvNit, 1),
-    razon,
-    periodo,       // AAAAMM
-    d.modo === 'dependiente' ? '1' : '3', // 1=dependiente, 3=independiente
-    '1',           // Modalidad pago (1=normal)
-    '1',           // Naturaleza (1=privado, 2=público)
-    'COP',         // Moneda
-    rp('001', 10)  // Nro planilla
+  // ── Códigos de entidades ──────────────────────────────────────────────────
+  // El valor del select ya tiene el código real (ej: "EPS010", "01-25")
+  const codEPS = rp((p.eps||'').replace('_otro','').split('(')[0].trim(), 6);
+  const afpVal = (p.afp||'').replace('_otro','');
+  // AFP: formato "01-25" = tipo-código → separar
+  const afpParts = afpVal.includes('-') ? afpVal.split('-') : ['01', afpVal];
+  const codAFP  = rp(afpParts[1]||'', 6);
+  const tipoAFP = afpParts[0]||'01';
+  const codARL  = rp((p.arlEntidad||'').replace('_otro','').split('(')[0].trim(), 6);
+  const codCCF  = rp((p.ccfEntidad||'').replace('_otro','').split('(')[0].trim(), 6);
+  const claseRL = d.riesgoARL || d.riesgoARL_ind || '1';
+
+  // ── REGISTRO TIPO 1 — ENCABEZADO ─────────────────────────────────────────
+  // Estructura según Resolución 2388/2016 Anexo Técnico 2
+  const reg1 = [
+    '01',                        // Tipo registro
+    rp(nitBase,10),              // NIT aportante (sin dígito verificación)
+    rp(dvNit,1),                 // Dígito verificación
+    rp(p.nombreTrabajador||'APORTANTE',60), // Razón social o nombre
+    periodo,                     // Período AAAAMM
+    tipoPlanilla,                // Tipo planilla: E, I, Y, A, S, M, N…
+    d.modo==='dependiente'?'1':'3', // Tipo aportante: 1=emp, 3=ind
+    '1',                         // Modalidad: 1=electrónica
+    '1',                         // Naturaleza: 1=privado
+    rp('001',10),                // Número planilla secuencial
+    'COP'                        // Moneda
   ].join(';');
 
-  // ── DETALLE TRABAJADOR (registro tipo 2) ──────────────────────────────────
-  // Campos principales PILA: Tipo_Reg;Tipo_Doc;Num_Doc;Primer_Apellido;Segundo_Apellido;
-  //   Primer_Nombre;Segundo_Nombre;Dias_Salud;IBC_Salud;Valor_Salud;Cod_EPS;
-  //   Dias_Pension;IBC_Pension;Valor_Pension;Cod_AFP;Dias_ARL;IBC_ARL;Valor_ARL;Clase_Riesgo;Cod_ARL;
-  //   Dias_CCF;IBC_CCF;Valor_CCF;Cod_CCF;...
-  const nombrePartes = (p.nombreTrabajador || '').trim().split(' ');
-  const apell1 = rp(nombrePartes[0] || '', 20);
-  const apell2 = rp(nombrePartes[1] || '', 20);
-  const nomb1  = rp(nombrePartes[2] || '', 20);
-  const nomb2  = rp(nombrePartes[3] || '', 20);
-
-  // Códigos de entidades (simplificados — el operador los valida)
-  const codEPS  = rp((p.eps  || '').substring(0,3).toUpperCase(), 6);
-  const codAFP  = rp((p.afp  || '').substring(0,3).toUpperCase(), 6);
-  const codARL  = rp((p.arlEntidad || '').substring(0,3).toUpperCase(), 6);
-  const codCCF  = rp((p.ccfEntidad || '').substring(0,3).toUpperCase(), 6);
-  const claseRiesgo = d.riesgoARL || d.riesgoARL_ind || 'I';
-
-  const detalle = [
-    '02',                      // Tipo registro detalle
-    rp(p.tipoDoc || 'CC', 2), // Tipo documento
-    rp(p.numDoc  || '', 16),   // Número documento
-    apell1, apell2, nomb1, nomb2,
-    lz(dias, 2),               // Días salud
-    mon(ibc, 12),              // IBC salud
-    mon(vSalud, 12),           // Valor salud
-    codEPS,                    // Código EPS
-    lz(dias, 2),               // Días pensión
-    mon(ibc, 12),              // IBC pensión
-    mon(vPension, 12),         // Valor pensión
-    codAFP,                    // Código AFP
-    vARL > 0 ? lz(dias,2) : '00',   // Días ARL
-    vARL > 0 ? mon(ibc,12) : mon(0,12),
-    mon(vARL, 12),             // Valor ARL
-    claseRiesgo,               // Clase riesgo ARL
-    codARL,                    // Código ARL
-    vCCF > 0 ? lz(dias,2) : '00',   // Días CCF
-    vCCF > 0 ? mon(ibc,12) : mon(0,12),
-    mon(vCCF, 12),             // Valor CCF
-    codCCF,                    // Código CCF
-    mon(d.totalGeneral || d.totalMes || 0, 12) // Total aporte
+  // ── REGISTRO TIPO 2 — DETALLE COTIZANTE ──────────────────────────────────
+  const reg2 = [
+    '02',                        // Tipo registro
+    rp(p.tipoDoc||'CC',2),      // Tipo documento
+    rp(p.numDoc||'',16),         // Número documento
+    ap1, ap2, nm1, nm2,          // Nombre desglosado
+    tipoCotizante,               // Tipo cotizante (01, 02, 55, 59…)
+    novedades ? rp(novedades,20) : rp('',20), // Novedades (ING, RET, etc.)
+    lz(dias,2),                  // Días salud
+    mon(ibc),                    // IBC salud
+    mon(vSalud),                 // Valor salud total
+    codEPS,                      // Código EPS
+    lz(dias,2),                  // Días pensión
+    mon(ibc),                    // IBC pensión
+    mon(vPension),               // Valor pensión total
+    codAFP,                      // Código AFP
+    tipoAFP,                     // Tipo AFP (01=régimen prima media Colpensiones, etc.)
+    zd(vARL),                    // Días ARL
+    zi(vARL),                    // IBC ARL
+    mon(vARL),                   // Valor ARL
+    claseRL,                     // Clase riesgo laboral (I…V)
+    codARL,                      // Código ARL
+    zd(vCCF),                    // Días CCF
+    zi(vCCF),                    // IBC CCF
+    mon(vCCF),                   // Valor CCF
+    codCCF,                      // Código CCF
+    mon(vICBF),                  // Valor ICBF (empleadores >10 trabajadores)
+    mon(vSENA),                  // Valor SENA (empleadores >10 trabajadores)
+    mon(total)                   // Total aportes periodo
   ].join(';');
 
-  // ── TOTALES (registro tipo 3) ─────────────────────────────────────────────
-  const total = Math.round(d.totalGeneral || d.totalMes || 0);
-  const pie = [
-    '03',
-    '1',           // Número de registros detalle
-    mon(total, 12) // Total planilla
-  ].join(';');
+  // ── REGISTRO TIPO 3 — PIE / TOTALES ──────────────────────────────────────
+  const reg3 = ['03', '1', mon(total)].join(';');
 
-  const contenido = [encabezado, detalle, pie].join('\r\n');
+  const contenido = [reg1, reg2, reg3].join('\r\n');
+  const nombreArchivo = `PILA_${tipoPlanilla}_${periodo}_${p.numDoc||'SIN_DOC'}.txt`;
 
-  // ── Preview modal + descarga ──────────────────────────────────────────────
-  const nombreArchivo = 'PILA_' + periodo + '_' + (p.numDoc || 'SIN_DOC') + '.txt';
+  // ── Resumen legible para validación ──────────────────────────────────────
+  const fmt = v => '$'+Math.round(v||0).toLocaleString('es-CO');
+  const resumen = [
+    {l:'Período',       v:periodo},
+    {l:'Tipo planilla', v:tipoPlanilla + ' — ' + (SS_PLANILLA_DESC[tipoPlanilla]||'')},
+    {l:'Tipo cotizante',v:tipoCotizante},
+    {l:'Novedades',     v:novedades||'Ninguna'},
+    {l:'Documento',     v:(p.tipoDoc||'CC')+' '+p.numDoc},
+    {l:'Nombre',        v:p.nombreTrabajador||'—'},
+    {l:'Días',          v:dias+' días'},
+    {l:'IBC',           v:fmt(ibc)},
+    {l:'Salud',         v:fmt(vSalud)+' → '+codEPS.trim()},
+    {l:'Pensión',       v:fmt(vPension)+' → '+codAFP.trim()},
+    {l:'ARL',           v:vARL>0?fmt(vARL)+' → '+codARL.trim():'No aplica'},
+    {l:'CCF',           v:vCCF>0?fmt(vCCF)+' → '+codCCF.trim():'No aplica'},
+    {l:'Total planilla',v:fmt(total)},
+  ].map(r=>`<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px"><span style="color:var(--text3)">${r.l}</span><span style="font-weight:700;color:var(--text)">${r.v}</span></div>`).join('');
 
-  // Mostrar preview antes de descargar
-  const previewId = 'ss-pila-preview';
-  let prev = document.getElementById(previewId);
-  if (!prev) {
-    prev = document.createElement('div');
-    prev.id = previewId;
-    prev.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
-    document.body.appendChild(prev);
-  }
-  prev.innerHTML = `
-    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);max-width:600px;width:100%;max-height:85vh;overflow-y:auto;padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+  // ── Modal preview ─────────────────────────────────────────────────────────
+  const pid = 'ss-pila-preview';
+  let prev = document.getElementById(pid);
+  if(!prev){ prev=document.createElement('div'); prev.id=pid; prev.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:flex-end;justify-content:center;font-family:\'Nunito\',sans-serif'; prev.onclick=e=>{if(e.target===prev)prev.remove()}; document.body.appendChild(prev); }
+
+  prev.innerHTML=`
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:20px 20px 0 0;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;padding:22px 20px 32px">
+      <div style="width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
         <div>
-          <div style="font-size:14px;font-weight:800;color:var(--text)">🗂 Archivo PILA generado</div>
+          <div style="font-size:14px;font-weight:800;color:var(--text)">🗂 Planilla PILA lista</div>
           <div style="font-size:10px;color:var(--text3);font-family:'DM Mono',monospace">${nombreArchivo}</div>
         </div>
-        <button onclick="document.getElementById('${previewId}').remove()" style="background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer">✕</button>
+        <button onclick="document.getElementById('${pid}').remove()" style="background:none;border:none;color:var(--text3);font-size:22px;cursor:pointer">✕</button>
       </div>
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:12px;font-family:'DM Mono',monospace;font-size:10px;color:var(--green);word-break:break-all;white-space:pre-wrap;margin-bottom:14px;line-height:1.8">${contenido.replace(/</g,'&lt;')}</div>
-      <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:var(--radius-xs);padding:10px 12px;font-size:10px;color:var(--amber);margin-bottom:14px;line-height:1.6">
-        ⚠️ <strong>Antes de subir al operador:</strong> verifique los códigos de EPS/AFP/ARL/CCF con su operador (Aportes en Línea, SOI, Mi Planilla). Los primeros 3 caracteres se usan como código aproximado — el operador los valida al importar.
+
+      <div style="margin-bottom:14px">${resumen}</div>
+
+      <details style="margin-bottom:14px">
+        <summary style="font-size:11px;color:var(--text3);cursor:pointer;padding:6px 0">Ver archivo plano (.txt)</summary>
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px;font-family:'DM Mono',monospace;font-size:9px;color:var(--green);word-break:break-all;white-space:pre-wrap;margin-top:8px;line-height:1.9">${contenido.replace(/</g,'&lt;')}</div>
+      </details>
+
+      <div style="background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:var(--radius-xs);padding:10px;font-size:11px;color:var(--amber);margin-bottom:16px;line-height:1.6">
+        ⚠️ Verifica los códigos de EPS/AFP/ARL/CCF en tu operador antes de subir. Los códigos varían según el operador (Aportes en Línea, SOI, Mi Planilla). Valida el archivo la primera vez.
       </div>
-      <div style="display:flex;gap:8px">
-        <button onclick="ssPILADescargar('${nombreArchivo}',\`${contenido.replace(/`/g,'\\`')}\`)" style="flex:1;padding:10px;background:linear-gradient(135deg,#4A148C,#6A1B9A);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
+
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button onclick="ssPILADescargar('${nombreArchivo}',\`${contenido.replace(/`/g,'\\`')}\`)" style="padding:13px;background:linear-gradient(135deg,#4A148C,#6A1B9A);border:none;border-radius:var(--radius-xs);color:white;font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
           ⬇ Descargar ${nombreArchivo}
         </button>
-        <button onclick="document.getElementById('${previewId}').remove()" style="padding:10px 16px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text2);font-family:'Nunito',sans-serif;font-size:12px;font-weight:700;cursor:pointer">
-          Cerrar
-        </button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button onclick="window.open('https://www.aportesenlinea.com','_blank')" style="padding:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer">🌐 Aportes en Línea</button>
+          <button onclick="window.open('https://www.miplanilla.com','_blank')" style="padding:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text2);font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;cursor:pointer">🌐 Mi Planilla</button>
+        </div>
+        <button onclick="document.getElementById('${pid}').remove()" style="padding:10px;background:transparent;border:1px solid var(--border2);border-radius:var(--radius-xs);color:var(--text3);font-family:'Nunito',sans-serif;font-size:12px;cursor:pointer">Cerrar</button>
       </div>
     </div>`;
-  prev.style.display = 'flex';
+  prev.style.display='flex';
 }
 
 function ssPILADescargar(nombre, contenido) {
@@ -14215,306 +14469,98 @@ window.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <!-- Landing Page -->
-<div id="landing-page" style="display:none;position:fixed;inset:0;background:#07070f;z-index:99997;overflow-y:auto;font-family:'Nunito',sans-serif;color:#f0edf8">
+<div id="landing-page" style="display:none;position:fixed;inset:0;background:linear-gradient(160deg,#0a0a12 0%,#1a0030 60%,#0a0a18 100%);z-index:99997;overflow-y:auto;font-family:'Nunito',sans-serif;color:#f0edf8">
 
-<style>
-#landing-page *{box-sizing:border-box}
-#landing-page .lp-nav{position:sticky;top:0;z-index:10;display:flex;justify-content:space-between;align-items:center;padding:16px 20px;background:rgba(7,7,15,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(80,80,255,.1)}
-#landing-page .lp-logo{display:flex;align-items:center;gap:10px}
-#landing-page .lp-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:10px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(80,80,255,.4)}
-#landing-page .lp-logo-text{font-size:22px;font-weight:900;letter-spacing:-.03em}
-#landing-page .lp-btn-login{background:rgba(80,80,255,.12);border:1px solid rgba(80,80,255,.35);color:#a0a0ff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s}
-#landing-page .lp-btn-login:hover{background:rgba(80,80,255,.25)}
-#landing-page .lp-hero{text-align:center;padding:52px 20px 0;position:relative;overflow:hidden}
-#landing-page .lp-glow{position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(80,80,255,.18) 0%,transparent 70%);top:-100px;left:50%;transform:translateX(-50%);pointer-events:none}
-#landing-page .lp-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(0,230,120,.1);border:1px solid rgba(0,230,120,.3);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:800;color:#00e678;letter-spacing:.05em;text-transform:uppercase;margin-bottom:22px}
-#landing-page .lp-h1{font-size:clamp(30px,8vw,52px);font-weight:900;line-height:1.05;margin:0 0 18px;letter-spacing:-.03em}
-#landing-page .lp-h1 .grad{background:linear-gradient(90deg,#7070ff,#cc44ff,#ff6ec7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-#landing-page .lp-sub{font-size:15px;color:#8886a8;max-width:320px;margin:0 auto 32px;line-height:1.65}
-#landing-page .lp-cta-primary{display:block;width:100%;max-width:320px;margin:0 auto;background:linear-gradient(135deg,#5050ff,#8800cc);color:white;border:none;padding:17px 32px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 36px rgba(80,80,255,.45);transition:transform .15s,box-shadow .15s;letter-spacing:.01em}
-#landing-page .lp-cta-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(80,80,255,.55)}
-#landing-page .lp-cta-sub{margin-top:11px;font-size:11px;color:#44445a;text-align:center}
-#landing-page .lp-profiles{padding:48px 20px 0;max-width:480px;margin:0 auto}
-#landing-page .lp-section-label{font-size:10px;font-weight:800;color:#44445a;text-transform:uppercase;letter-spacing:.1em;text-align:center;margin-bottom:20px}
-#landing-page .lp-profile-tabs{display:flex;gap:6px;margin-bottom:20px;background:rgba(255,255,255,.04);border-radius:12px;padding:4px}
-#landing-page .lp-ptab{flex:1;padding:9px 6px;border-radius:9px;border:none;background:transparent;color:#6664a0;font-size:12px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s;text-align:center}
-#landing-page .lp-ptab.active{background:rgba(80,80,255,.2);color:#a0a0ff;border:1px solid rgba(80,80,255,.3)}
-#landing-page .lp-profile-card{border-radius:16px;padding:20px;display:none;animation:lpFadeIn .25s ease}
-#landing-page .lp-profile-card.active{display:block}
-@keyframes lpFadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-#landing-page .lp-feat-list{display:flex;flex-direction:column;gap:10px;margin-top:14px}
-#landing-page .lp-feat-row{display:flex;align-items:flex-start;gap:12px}
-#landing-page .lp-feat-ico{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-#landing-page .lp-feat-txt strong{display:block;font-size:13px;font-weight:700;color:#f0edf8;margin-bottom:2px}
-#landing-page .lp-feat-txt span{font-size:11px;color:#7775a0;line-height:1.5}
-#landing-page .lp-pricing{padding:48px 20px 0;max-width:480px;margin:0 auto}
-#landing-page .lp-plans{display:flex;flex-direction:column;gap:12px}
-#landing-page .lp-plan{border-radius:16px;padding:20px;position:relative;overflow:hidden}
-#landing-page .lp-plan-free{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1)}
-#landing-page .lp-plan-personal{background:linear-gradient(135deg,rgba(80,80,255,.12),rgba(136,0,204,.08));border:1px solid rgba(80,80,255,.3)}
-#landing-page .lp-plan-pro{background:linear-gradient(135deg,rgba(0,230,120,.08),rgba(0,180,200,.06));border:1px solid rgba(0,230,120,.3)}
-#landing-page .lp-plan-badge{position:absolute;top:14px;right:14px;background:linear-gradient(135deg,#00e678,#00c8ff);color:#001a0f;font-size:9px;font-weight:900;padding:3px 10px;border-radius:10px;letter-spacing:.05em;text-transform:uppercase}
-#landing-page .lp-plan-name{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#6664a0;margin-bottom:6px}
-#landing-page .lp-plan-price{font-size:28px;font-weight:900;letter-spacing:-.02em;margin-bottom:2px;font-family:'DM Mono','Nunito',monospace}
-#landing-page .lp-plan-period{font-size:11px;color:#6664a0;margin-bottom:14px}
-#landing-page .lp-plan-items{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-#landing-page .lp-plan-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#9896b0;line-height:1.4}
-#landing-page .lp-plan-item .chk{color:#00e678;font-size:13px;flex-shrink:0;margin-top:1px}
-#landing-page .lp-plan-item .dim{color:#44445a}
-#landing-page .lp-plan-btn{width:100%;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;transition:all .2s}
-#landing-page .lp-plan-btn-free{background:transparent;border:1px solid rgba(255,255,255,.12);color:#6664a0}
-#landing-page .lp-plan-btn-personal{background:linear-gradient(135deg,#5050ff,#8800cc);border:none;color:white;box-shadow:0 4px 20px rgba(80,80,255,.3)}
-#landing-page .lp-plan-btn-pro{background:linear-gradient(135deg,#00e678,#00a855);border:none;color:#001a0f;font-weight:800}
-#landing-page .lp-pila-callout{margin:48px 20px 0;max-width:480px;margin-left:auto;margin-right:auto;background:linear-gradient(135deg,rgba(74,20,140,.3),rgba(106,27,154,.15));border:1px solid rgba(150,80,255,.3);border-radius:16px;padding:22px;position:relative;overflow:hidden}
-#landing-page .lp-proof{padding:40px 20px 0;max-width:480px;margin:0 auto}
-#landing-page .lp-proof-cards{display:flex;flex-direction:column;gap:10px}
-#landing-page .lp-proof-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:16px}
-#landing-page .lp-proof-quote{font-size:13px;color:#c0bedd;line-height:1.6;margin-bottom:10px;font-style:italic}
-#landing-page .lp-proof-author{display:flex;align-items:center;gap:8px}
-#landing-page .lp-proof-avatar{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;flex-shrink:0}
-#landing-page .lp-proof-name{font-size:11px;font-weight:700;color:#f0edf8}
-#landing-page .lp-proof-role{font-size:10px;color:#6664a0}
-#landing-page .lp-faq{padding:40px 20px 0;max-width:480px;margin:0 auto}
-#landing-page .lp-faq-item{border-bottom:1px solid rgba(255,255,255,.07);padding:16px 0;cursor:pointer}
-#landing-page .lp-faq-q{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#d0ceea;gap:12px}
-#landing-page .lp-faq-a{font-size:12px;color:#7775a0;line-height:1.6;margin-top:10px;display:none}
-#landing-page .lp-faq-item.open .lp-faq-a{display:block}
-#landing-page .lp-faq-item.open .lp-faq-chevron{transform:rotate(180deg)}
-#landing-page .lp-faq-chevron{transition:transform .2s;flex-shrink:0;color:#44445a}
-#landing-page .lp-footer{padding:40px 20px 56px;text-align:center;border-top:1px solid rgba(255,255,255,.06);margin-top:48px}
-#landing-page .lp-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(80,80,255,.2),transparent);margin:48px 20px 0}
-#landing-page .lp-stats{display:flex;justify-content:center;max-width:480px;margin:32px auto 0;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;overflow:hidden}
-#landing-page .lp-stat{flex:1;padding:18px 8px;text-align:center;border-right:1px solid rgba(255,255,255,.07)}
-#landing-page .lp-stat:last-child{border-right:none}
-#landing-page .lp-stat-val{font-size:22px;font-weight:900;letter-spacing:-.02em;color:#f0edf8;font-family:'DM Mono','Nunito',monospace}
-#landing-page .lp-stat-lbl{font-size:9px;color:#44445a;text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
-</style>
-
-  <!-- NAV -->
-  <div class="lp-nav">
-    <div class="lp-logo">
-      <div class="lp-logo-icon"><span style="font-size:20px;font-weight:900;color:white;line-height:1">C</span></div>
-      <span class="lp-logo-text">Cuadre</span>
-    </div>
-    <button class="lp-btn-login" onclick="landingGoLogin()">Iniciar sesión</button>
-  </div>
-
-  <!-- HERO -->
-  <div class="lp-hero">
-    <div class="lp-glow"></div>
-    <div class="lp-badge">
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-      7 días gratis · sin tarjeta
-    </div>
-    <h1 class="lp-h1">La app financiera<br>que Colombia<br><span class="grad">necesitaba</span></h1>
-    <p class="lp-sub">Presupuesto, deudas, nómina, seguridad social y préstamos — todo desde el celular, sin instalar nada, sincronizado en la nube.</p>
-    <button class="lp-cta-primary" onclick="landingGoRegister()">Probar gratis 7 días →</button>
-    <div class="lp-cta-sub">Sin compromiso · cancela cuando quieras</div>
-  </div>
-
-  <!-- STATS -->
-  <div class="lp-stats">
-    <div class="lp-stat"><div class="lp-stat-val">11</div><div class="lp-stat-lbl">Herramientas</div></div>
-    <div class="lp-stat"><div class="lp-stat-val">1</div><div class="lp-stat-lbl">App · sin instalar</div></div>
-    <div class="lp-stat"><div class="lp-stat-val">100%</div><div class="lp-stat-lbl">Colombia 2026</div></div>
-  </div>
-
-  <div class="lp-divider"></div>
-
-  <!-- PERFILES -->
-  <div class="lp-profiles">
-    <div class="lp-section-label">¿Para quién es Cuadre?</div>
-    <div class="lp-profile-tabs">
-      <button class="lp-ptab active" onclick="lpSetProfile(0,this)">💼 Asalariado</button>
-      <button class="lp-ptab" onclick="lpSetProfile(1,this)">🧾 Independiente</button>
-      <button class="lp-ptab" onclick="lpSetProfile(2,this)">🏦 Prestamista</button>
-    </div>
-    <div class="lp-profile-card active" id="lp-prof-0" style="background:rgba(80,80,255,.06);border:1px solid rgba(80,80,255,.18)">
-      <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Para el que tiene salario fijo y más</div>
-      <div style="font-size:12px;color:#7775a0;line-height:1.5;margin-bottom:16px">Tu salario llega el 15 y el 30, a veces con comisiones. Cuadre te dice exactamente cuánto puedes gastar en cada quincena sin quedar corto.</div>
-      <div class="lp-feat-list">
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(80,80,255,.15)">📊</div><div class="lp-feat-txt"><strong>Presupuesto quincena a quincena</strong><span>Separa lo fijo de lo variable. Ve tu saldo libre real antes de gastar.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(0,230,120,.12)">📄</div><div class="lp-feat-txt"><strong>Lector de volante de pago</strong><span>Sube tu Excel de Sura o Compensar y analiza deducciones, bruto y neto en segundos.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(255,107,107,.12)">💳</div><div class="lp-feat-txt"><strong>Control de deudas</strong><span>Cuánto debes total, cuándo vence cada cuota, cuánto te queda libre.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(245,166,35,.12)">🐷</div><div class="lp-feat-txt"><strong>Bolsillos de ahorro</strong><span>Separa plata para metas con fecha límite y progreso visual.</span></div></div>
+  <!-- Nav -->
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid rgba(80,80,255,.12)">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="width:36px;height:36px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:10px;display:flex;align-items:center;justify-content:center">
+        <span style="font-size:20px;font-weight:900;color:white;line-height:1">C</span>
       </div>
+      <span style="font-size:20px;font-weight:900;letter-spacing:-.02em">Cuadre</span>
     </div>
-    <div class="lp-profile-card" id="lp-prof-1" style="background:rgba(150,80,255,.06);border:1px solid rgba(150,80,255,.18)">
-      <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Para el que trabaja por cuenta propia</div>
-      <div style="font-size:12px;color:#7775a0;line-height:1.5;margin-bottom:16px">Honorarios, prestación de servicios, freelance. Cuadre liquida tus aportes al instante y genera el archivo PILA listo para el operador — sin contador.</div>
-      <div class="lp-feat-list">
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(150,80,255,.15)">🛡️</div><div class="lp-feat-txt"><strong>Liquidador de Seguridad Social</strong><span>IBC automático según Decreto 1273/2018. Salud 12.5% + Pensión 16% con prorrateo por días.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(0,230,120,.12)">🗂</div><div class="lp-feat-txt"><strong>Genera archivo PILA .txt</strong><span>Compatible con Aportes en Línea, SOI y Mi Planilla. Sin instalar software, desde el celular.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(80,80,255,.12)">📋</div><div class="lp-feat-txt"><strong>Historial de aportes</strong><span>Guarda cada liquidación con período, IBC y totales. Todo sincronizado en la nube.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(245,166,35,.12)">🏠</div><div class="lp-feat-txt"><strong>Simulador de vivienda</strong><span>Crédito hipotecario, UVR y Mi Casa Ya. Sabe si clasifica antes de ir al banco.</span></div></div>
+    <button onclick="landingGoLogin()" style="background:rgba(80,80,255,.15);border:1px solid rgba(80,80,255,.4);color:#a0a0ff;padding:8px 16px;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif">Iniciar sesión</button>
+  </div>
+
+  <!-- Hero -->
+  <div style="text-align:center;padding:56px 24px 40px">
+    <div style="display:inline-block;background:rgba(0,230,120,.1);border:1px solid rgba(0,230,120,.3);border-radius:20px;padding:4px 14px;font-size:11px;font-weight:800;color:#00e678;letter-spacing:.06em;text-transform:uppercase;margin-bottom:20px">7 días gratis · sin tarjeta</div>
+    <h1 style="font-size:clamp(28px,7vw,48px);font-weight:900;line-height:1.1;margin:0 0 16px;letter-spacing:-.02em">Tus finanzas,<br><span style="background:linear-gradient(90deg,#7070ff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">bajo control</span></h1>
+    <p style="font-size:16px;color:#9896b0;max-width:340px;margin:0 auto 32px;line-height:1.6">Presupuesto, deudas, ahorros y comisiones — todo en una sola app que funciona desde tu celular sin instalar nada.</p>
+    <button onclick="landingGoRegister()" style="background:linear-gradient(135deg,#5050ff,#8800cc);color:white;border:none;padding:16px 36px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 32px rgba(80,80,255,.4);width:100%;max-width:320px">Probar gratis 7 días →</button>
+    <div style="margin-top:12px;font-size:12px;color:#555570">Sin compromiso · cancela cuando quieras</div>
+  </div>
+
+  <!-- Para quién -->
+  <div style="padding:0 20px 40px">
+    <div style="font-size:11px;font-weight:800;color:#555570;text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:20px">¿Para quién es Cuadre?</div>
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:420px;margin:0 auto">
+
+      <div style="background:rgba(80,80,255,.08);border:1px solid rgba(80,80,255,.18);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">💼</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Asalariados con ingresos mixtos</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Tienes salario fijo más comisiones que cambian cada mes. Cuadre separa lo seguro de lo variable y te dice cuánto puedes gastar realmente en cada quincena.</div>
       </div>
+
+      <div style="background:rgba(0,230,120,.06);border:1px solid rgba(0,230,120,.15);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">🏦</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Personas con deudas o créditos</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Registra todas tus deudas en un solo lugar, ve cuánto debes en total, cuándo vence cada cuota y cuánto te queda libre después de pagar.</div>
+      </div>
+
+      <div style="background:rgba(204,68,255,.06);border:1px solid rgba(204,68,255,.15);border-radius:14px;padding:16px">
+        <div style="font-size:22px;margin-bottom:8px">📋</div>
+        <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Prestamistas informales</div>
+        <div style="font-size:12px;color:#9896b0;line-height:1.5">Lleva el control de tus clientes, cuotas, pagos y mora. Genera estados de cuenta y recibos de pago desde el celular en segundos.</div>
+      </div>
+
     </div>
-    <div class="lp-profile-card" id="lp-prof-2" style="background:rgba(204,68,255,.05);border:1px solid rgba(204,68,255,.2)">
-      <div style="font-size:14px;font-weight:800;color:#f0edf8;margin-bottom:4px">Para el que presta plata y cobra cuotas</div>
-      <div style="font-size:12px;color:#7775a0;line-height:1.5;margin-bottom:16px">Tienes clientes, cuotas por cobrar y plata en la calle. Cuadre reemplaza tu cuaderno, tu Excel y tu grupo de WhatsApp desordenado.</div>
-      <div class="lp-feat-list">
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(204,68,255,.15)">👥</div><div class="lp-feat-txt"><strong>CRM de clientes y cobros</strong><span>Cada cliente con su historial, cuotas, pagos y días en mora. Alertas automáticas.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(37,211,102,.12)">📲</div><div class="lp-feat-txt"><strong>Cobro por WhatsApp</strong><span>Envía recordatorios de pago directo desde la app con el saldo personalizado.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(80,80,255,.12)">💰</div><div class="lp-feat-txt"><strong>Caja y rentabilidad</strong><span>Capital en calle, ganancia real, mora promedio y proyección a 30 días.</span></div></div>
-        <div class="lp-feat-row"><div class="lp-feat-ico" style="background:rgba(0,230,120,.12)">👔</div><div class="lp-feat-txt"><strong>Multi-usuario con roles</strong><span>Admin, cobrador, socio. Cada uno ve solo lo que necesita.</span></div></div>
+  </div>
+
+  <!-- Funciones -->
+  <div style="padding:0 20px 40px">
+    <div style="font-size:11px;font-weight:800;color:#555570;text-transform:uppercase;letter-spacing:.08em;text-align:center;margin-bottom:20px">¿Qué incluye?</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:0 auto">
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">📊</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Presupuesto mensual</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Ingresos, gastos y saldo libre real</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🐷</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Bolsillos de ahorro</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Metas con fecha y proyecciones</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">📄</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Volante de pago</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Sube tu Excel y analiza tu neto</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🏠</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Simulador de vivienda</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Crédito, UVR y Mi Casa Ya</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">💳</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Control de deudas</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Cuotas, mora y estados de cuenta</div>
+      </div>
+      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px">
+        <div style="font-size:18px;margin-bottom:6px">🔒</div>
+        <div style="font-size:12px;font-weight:700;color:#f0edf8">Datos seguros</div>
+        <div style="font-size:11px;color:#555570;margin-top:3px">Sincronizados en la nube</div>
       </div>
     </div>
   </div>
 
-  <div class="lp-divider"></div>
-
-  <!-- CALLOUT PILA -->
-  <div class="lp-pila-callout" style="margin-top:48px">
-    <div style="position:absolute;width:200px;height:200px;background:radial-gradient(circle,rgba(150,80,255,.2),transparent 70%);top:-60px;right:-60px;pointer-events:none"></div>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
-      <div style="width:38px;height:38px;background:linear-gradient(135deg,#4A148C,#6A1B9A);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🗂</div>
-      <div>
-        <div style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#9060cc;margin-bottom:2px">Exclusivo · No lo tiene ninguna otra app</div>
-        <div style="font-size:15px;font-weight:900;color:#f0edf8">Genera tu planilla PILA<br>desde el celular</div>
-      </div>
-    </div>
-    <div style="font-size:12px;color:#a090c0;line-height:1.65;margin-bottom:16px">Si eres independiente, cada mes tienes que liquidar y pagar tus aportes. Cuadre calcula el IBC, proratea por días trabajados, y genera el archivo <strong style="color:#cc88ff">.txt listo para subir</strong> a Aportes en Línea, SOI o Mi Planilla. Sin contador. Sin errores. En menos de 2 minutos.</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-      <span style="background:rgba(150,80,255,.15);border:1px solid rgba(150,80,255,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:#bb88ff">✓ Aportes en Línea</span>
-      <span style="background:rgba(150,80,255,.15);border:1px solid rgba(150,80,255,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:#bb88ff">✓ SOI</span>
-      <span style="background:rgba(150,80,255,.15);border:1px solid rgba(150,80,255,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:#bb88ff">✓ Mi Planilla</span>
-      <span style="background:rgba(150,80,255,.15);border:1px solid rgba(150,80,255,.3);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:700;color:#bb88ff">✓ Prorrateo por días</span>
-    </div>
-    <button class="lp-cta-primary" onclick="landingGoRegister()" style="max-width:100%;font-size:13px;padding:13px">Probar gratis — incluye PILA →</button>
-  </div>
-
-  <div class="lp-divider"></div>
-
-  <!-- PRECIOS -->
-  <div class="lp-pricing">
-    <div class="lp-section-label">Planes y precios</div>
-    <div class="lp-plans">
-      <div class="lp-plan lp-plan-free">
-        <div class="lp-plan-name">Gratis</div>
-        <div class="lp-plan-price" style="color:#9896b0">$0</div>
-        <div class="lp-plan-period">para siempre</div>
-        <div class="lp-plan-items">
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Calculadora de divisas</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Calculadora financiera</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Consejos financieros</span></div>
-          <div class="lp-plan-item"><span class="chk dim">–</span><span class="dim">Sin presupuesto ni bolsillos</span></div>
-          <div class="lp-plan-item"><span class="chk dim">–</span><span class="dim">Sin PILA ni nómina</span></div>
-          <div class="lp-plan-item"><span class="chk dim">–</span><span class="dim">Sin CRM de préstamos</span></div>
-        </div>
-        <button class="lp-plan-btn lp-plan-btn-free" onclick="landingGoRegister()">Empezar gratis</button>
-      </div>
-      <div class="lp-plan lp-plan-personal">
-        <div class="lp-plan-name" style="color:#8888cc">Personal</div>
-        <div class="lp-plan-price" style="color:#a0a0ff">$9.900</div>
-        <div class="lp-plan-period">/ mes · 7 días gratis</div>
-        <div class="lp-plan-items">
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Presupuesto histórico ilimitado</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Bolsillos de ahorro ilimitados</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Lector de volante (Sura, Compensar…)</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Liquidador Seg. Social + archivo PILA</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Simuladores vivienda e inversión</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Control de deudas personal</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Sincronización en la nube</span></div>
-        </div>
-        <button class="lp-plan-btn lp-plan-btn-personal" onclick="landingGoRegister()">Empezar gratis 7 días →</button>
-      </div>
-      <div class="lp-plan lp-plan-pro">
-        <div class="lp-plan-badge">Más popular</div>
-        <div class="lp-plan-name" style="color:#00a855">Pro</div>
-        <div class="lp-plan-price" style="color:#00e678">$24.900</div>
-        <div class="lp-plan-period">/ mes · 7 días gratis</div>
-        <div class="lp-plan-items">
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Todo del plan Personal</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span><strong style="color:#f0edf8">CRM de préstamos</strong> — clientes ilimitados</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Cobros del día, mora y alertas</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Caja, rentabilidad y reportes</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>WhatsApp masivo de cobros</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Multi-usuario (admin, cobrador, socio)</span></div>
-          <div class="lp-plan-item"><span class="chk">✓</span><span>Exportar Excel y PDF</span></div>
-        </div>
-        <button class="lp-plan-btn lp-plan-btn-pro" onclick="landingGoRegister()">Empezar gratis 7 días →</button>
-      </div>
-    </div>
-    <div style="text-align:center;margin-top:14px;font-size:11px;color:#44445a">Todos los planes incluyen 7 días de prueba. Cancela cuando quieras.</div>
-  </div>
-
-  <div class="lp-divider"></div>
-
-  <!-- TESTIMONIOS -->
-  <div class="lp-proof">
-    <div class="lp-section-label">Lo que dicen quienes ya la usan</div>
-    <div class="lp-proof-cards">
-      <div class="lp-proof-card">
-        <div class="lp-proof-quote">"Por fin una app que entiende cómo funciona el pago de nómina en Colombia. El volante de Compensar lo lee perfecto y me dice exactamente cuánto me descontaron."</div>
-        <div class="lp-proof-author"><div class="lp-proof-avatar" style="background:#5050ff">MP</div><div><div class="lp-proof-name">Marcela P.</div><div class="lp-proof-role">Asesora comercial · Bogotá</div></div></div>
-      </div>
-      <div class="lp-proof-card">
-        <div class="lp-proof-quote">"La usaba solo para el presupuesto y descubrí que generaba el archivo PILA. Me ahorró $80.000 mensuales que le pagaba al contador solo para eso."</div>
-        <div class="lp-proof-author"><div class="lp-proof-avatar" style="background:#4A148C">JR</div><div><div class="lp-proof-name">Julio R.</div><div class="lp-proof-role">Independiente · Medellín</div></div></div>
-      </div>
-      <div class="lp-proof-card">
-        <div class="lp-proof-quote">"Tengo 23 clientes y antes usaba un cuaderno. Ahora veo quién debe, les mando WhatsApp y registro el pago en 10 segundos. Nunca más se me pierde un cobro."</div>
-        <div class="lp-proof-author"><div class="lp-proof-avatar" style="background:#00897B">CG</div><div><div class="lp-proof-name">Carlos G.</div><div class="lp-proof-role">Prestamista · Cali</div></div></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="lp-divider"></div>
-
-  <!-- FAQ -->
-  <div class="lp-faq">
-    <div class="lp-section-label">Preguntas frecuentes</div>
-    <div class="lp-faq-item" onclick="lpToggleFaq(this)">
-      <div class="lp-faq-q">¿Mis datos financieros están seguros? <svg class="lp-faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="lp-faq-a">Sí. Cuadre usa Firebase de Google con cifrado en tránsito y en reposo. Tus datos se guardan asociados únicamente a tu cuenta y nadie más puede acceder a ellos. La app también funciona offline con sincronización automática.</div>
-    </div>
-    <div class="lp-faq-item" onclick="lpToggleFaq(this)">
-      <div class="lp-faq-q">¿Funciona sin conexión a internet? <svg class="lp-faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="lp-faq-a">Sí. Cuadre es una PWA que funciona sin internet y sincroniza automáticamente al recuperar conexión. Puedes añadirla a la pantalla de inicio del celular como app nativa, sin pasar por ninguna tienda.</div>
-    </div>
-    <div class="lp-faq-item" onclick="lpToggleFaq(this)">
-      <div class="lp-faq-q">¿El archivo PILA que genera es el oficial? <svg class="lp-faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="lp-faq-a">El archivo sigue el formato estándar PILA Tipo 1 compatible con los principales operadores. Los cálculos aplican la normativa vigente (Decreto 1273/2018, Ley 100/1993). Recomendamos validarlo en el operador la primera vez.</div>
-    </div>
-    <div class="lp-faq-item" onclick="lpToggleFaq(this)">
-      <div class="lp-faq-q">¿Cómo cancelo si no quiero seguir? <svg class="lp-faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="lp-faq-a">Sin complicaciones. Cancelas cuando quieras desde tu perfil. No hay permanencia ni cargos ocultos. Tus datos quedan disponibles en modo lectura después de cancelar.</div>
-    </div>
-    <div class="lp-faq-item" onclick="lpToggleFaq(this)">
-      <div class="lp-faq-q">¿En qué se diferencia del plan Gratis? <svg class="lp-faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg></div>
-      <div class="lp-faq-a">El plan Gratis da acceso a herramientas básicas sin nube. Personal agrega nube, historial ilimitado, PILA y volante. Pro agrega el CRM completo de préstamos, multi-usuario y WhatsApp de cobros.</div>
-    </div>
-  </div>
-
-  <!-- CTA FINAL -->
-  <div style="text-align:center;padding:48px 20px 0;max-width:480px;margin:0 auto">
-    <div style="font-size:22px;font-weight:900;letter-spacing:-.02em;margin-bottom:10px">Empieza hoy.<br><span style="background:linear-gradient(90deg,#7070ff,#cc44ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">7 días sin costo.</span></div>
-    <div style="font-size:13px;color:#6664a0;margin-bottom:24px">Sin tarjeta. Sin permanencia. Sin excusas.</div>
-    <button class="lp-cta-primary" onclick="landingGoRegister()">Crear cuenta gratis →</button>
-    <div style="margin-top:14px;font-size:12px;color:#44445a">¿Ya tienes cuenta? <button onclick="landingGoLogin()" style="background:none;border:none;color:#7070ff;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;text-decoration:underline">Inicia sesión</button></div>
-  </div>
-
-  <!-- FOOTER -->
-  <div class="lp-footer">
-    <div style="font-size:24px;font-weight:900;letter-spacing:-.03em;margin-bottom:6px">Cuadre</div>
-    <div style="font-size:11px;color:#44445a;margin-bottom:20px">La app financiera colombiana · 2026</div>
-    <div style="display:flex;justify-content:center;gap:20px;margin-bottom:16px">
-      <button onclick="landingGoLogin()" style="font-size:11px;color:#44445a;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;padding:0">Iniciar sesión</button>
-      <button onclick="landingGoRegister()" style="font-size:11px;color:#44445a;background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;padding:0">Registrarse</button>
-    </div>
-    <div style="font-size:10px;color:#33334a">© 2026 Cuadre · Hecho en Colombia 🇨🇴</div>
+  <!-- CTA final -->
+  <div style="text-align:center;padding:0 24px 56px">
+    <button onclick="landingGoRegister()" style="background:linear-gradient(135deg,#5050ff,#8800cc);color:white;border:none;padding:16px 36px;border-radius:14px;font-size:16px;font-weight:800;cursor:pointer;font-family:'Nunito',sans-serif;box-shadow:0 8px 32px rgba(80,80,255,.4);width:100%;max-width:320px">Comenzar prueba gratis →</button>
+    <div style="margin-top:14px;font-size:12px;color:#555570">¿Ya tienes cuenta? <button onclick="landingGoLogin()" style="background:none;border:none;color:#7070ff;font-size:12px;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;text-decoration:underline">Inicia sesión aquí</button></div>
   </div>
 
 </div>
-
-<script>
-function lpSetProfile(idx,btn){
-  document.querySelectorAll('#landing-page .lp-ptab').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  for(let i=0;i<3;i++){const c=document.getElementById('lp-prof-'+i);if(c)c.classList.toggle('active',i===idx);}
-}
-function lpToggleFaq(el){el.classList.toggle('open');}
-</script>
 <!-- Login Screen -->
 <div class="login-screen" id="login-screen" style="display:none">
   <div class="login-logo">
