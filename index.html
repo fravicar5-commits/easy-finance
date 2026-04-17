@@ -5307,6 +5307,25 @@ function renderSegSocial(el) {
         </label>
       </div>
       <div id="ss-novedad-info" style="font-size:10px;color:var(--text3);margin-top:4px"></div>
+      <!-- Días de ingreso / retiro (se muestran solo cuando aplica) -->
+      <div id="ss-dias-novedad" style="display:none;margin-top:8px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div id="ss-ing-dias-sec" style="display:none">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--green);display:block;margin-bottom:4px">📅 Día de ingreso</label>
+            <select id="ss-ing-dia" onchange="ssNovedadDiasChange()" style="width:100%;padding:7px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Nunito',sans-serif">
+              <option value="1"  selected>Día 1</option><option value="2">Día 2</option><option value="3">Día 3</option><option value="4">Día 4</option><option value="5">Día 5</option><option value="6">Día 6</option><option value="7">Día 7</option><option value="8">Día 8</option><option value="9">Día 9</option><option value="10">Día 10</option><option value="11">Día 11</option><option value="12">Día 12</option><option value="13">Día 13</option><option value="14">Día 14</option><option value="15">Día 15</option><option value="16">Día 16</option><option value="17">Día 17</option><option value="18">Día 18</option><option value="19">Día 19</option><option value="20">Día 20</option><option value="21">Día 21</option><option value="22">Día 22</option><option value="23">Día 23</option><option value="24">Día 24</option><option value="25">Día 25</option><option value="26">Día 26</option><option value="27">Día 27</option><option value="28">Día 28</option><option value="29">Día 29</option><option value="30">Día 30</option>
+            </select>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px">Cotiza desde este día hasta el 30</div>
+          </div>
+          <div id="ss-ret-dias-sec" style="display:none">
+            <label style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--red);display:block;margin-bottom:4px">📅 Día de retiro</label>
+            <select id="ss-ret-dia" onchange="ssNovedadDiasChange()" style="width:100%;padding:7px 10px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;font-family:'Nunito',sans-serif">
+              <option value="1">Día 1</option><option value="2">Día 2</option><option value="3">Día 3</option><option value="4">Día 4</option><option value="5">Día 5</option><option value="6">Día 6</option><option value="7">Día 7</option><option value="8">Día 8</option><option value="9">Día 9</option><option value="10">Día 10</option><option value="11">Día 11</option><option value="12">Día 12</option><option value="13">Día 13</option><option value="14">Día 14</option><option value="15">Día 15</option><option value="16">Día 16</option><option value="17">Día 17</option><option value="18">Día 18</option><option value="19">Día 19</option><option value="20">Día 20</option><option value="21">Día 21</option><option value="22">Día 22</option><option value="23">Día 23</option><option value="24">Día 24</option><option value="25">Día 25</option><option value="26">Día 26</option><option value="27">Día 27</option><option value="28">Día 28</option><option value="29">Día 29</option><option value="30"  selected>Día 30</option>
+            </select>
+            <div style="font-size:10px;color:var(--text3);margin-top:3px">Cotiza desde el día 1 hasta este día</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Fila 4: Nombre y documento -->
@@ -5565,10 +5584,17 @@ function setSSModo(modo) {
   const periodoSec = document.getElementById('ss-periodo-sec');
   const arlSec     = document.getElementById('ss-arl-sec');
   const indOpciones= document.getElementById('ss-ind-opciones');
-  const activo = 'border:2px solid var(--ef-pink);background:rgba(194,24,91,.12);color:var(--ef-pink2)';
-  const inactivo= 'border:1px solid var(--border2);background:transparent;color:var(--text3)';
-  if(btnD) btnD.style.cssText = btnD.style.cssText.replace(/border:[^;]+;background:[^;]+;color:[^;]+/, modo==='dependiente'?activo:inactivo);
-  if(btnI) btnI.style.cssText = btnI.style.cssText.replace(/border:[^;]+;background:[^;]+;color:[^;]+/, modo==='independiente'?activo:inactivo);
+  // Aplicar estilos activo/inactivo directamente (sin regex sobre cssText)
+  if(btnD){
+    btnD.style.border      = modo==='dependiente' ? '2px solid var(--ef-pink)' : '1px solid var(--border2)';
+    btnD.style.background  = modo==='dependiente' ? 'rgba(194,24,91,.12)'      : 'transparent';
+    btnD.style.color       = modo==='dependiente' ? 'var(--ef-pink2)'           : 'var(--text3)';
+  }
+  if(btnI){
+    btnI.style.border      = modo==='independiente' ? '2px solid var(--ef-pink)' : '1px solid var(--border2)';
+    btnI.style.background  = modo==='independiente' ? 'rgba(194,24,91,.12)'      : 'transparent';
+    btnI.style.color       = modo==='independiente' ? 'var(--ef-pink2)'           : 'var(--text3)';
+  }
   if(integSec)    integSec.style.display    = modo==='dependiente'?'block':'none';
   if(periodoSec)  periodoSec.style.display  = modo==='independiente'?'block':'none';
   if(arlSec)      arlSec.style.display      = modo==='dependiente'?'block':'none';
@@ -5702,12 +5728,47 @@ function ssTipoPlanillaChange(){
 function ssNovedadChange(){
   const ing = document.getElementById('ss-nov-ing')?.checked;
   const ret = document.getElementById('ss-nov-ret')?.checked;
-  const infoEl = document.getElementById('ss-novedad-info');
-  if(!infoEl) return;
-  if(ing && ret) infoEl.textContent='ING+RET: cotiza por los días efectivos del mes.';
-  else if(ing) infoEl.textContent='ING: primer mes — usa planilla A o reporta novedad de ingreso.';
-  else if(ret) infoEl.textContent='RET: último mes — ajusta días cotizados según fecha de retiro.';
-  else infoEl.textContent='';
+  const infoEl       = document.getElementById('ss-novedad-info');
+  const wrapEl       = document.getElementById('ss-dias-novedad');
+  const ingSecEl     = document.getElementById('ss-ing-dias-sec');
+  const retSecEl     = document.getElementById('ss-ret-dias-sec');
+
+  // Mensaje informativo
+  if(infoEl){
+    if(ing && ret) infoEl.textContent='ING+RET: los días se calculan automáticamente según las fechas seleccionadas.';
+    else if(ing)   infoEl.textContent='ING: primer mes — selecciona el día de ingreso para calcular días cotizados.';
+    else if(ret)   infoEl.textContent='RET: último mes — selecciona el día de retiro para calcular días cotizados.';
+    else           infoEl.textContent='';
+  }
+
+  // Mostrar / ocultar secciones de días
+  if(wrapEl)   wrapEl.style.display   = (ing || ret) ? 'block' : 'none';
+  if(ingSecEl) ingSecEl.style.display = ing ? 'block' : 'none';
+  if(retSecEl) retSecEl.style.display = ret ? 'block' : 'none';
+
+  // Calcular y actualizar días automáticamente
+  ssNovedadDiasChange();
+}
+
+function ssNovedadDiasChange(){
+  const ing    = document.getElementById('ss-nov-ing')?.checked;
+  const ret    = document.getElementById('ss-nov-ret')?.checked;
+  const ingDia = parseInt(document.getElementById('ss-ing-dia')?.value) || 1;
+  const retDia = parseInt(document.getElementById('ss-ret-dia')?.value) || 30;
+  let dias = 30;
+  if(ing && ret){
+    // Cotiza desde ingDia hasta retDia
+    dias = Math.max(1, retDia - ingDia + 1);
+  } else if(ing){
+    // Cotiza desde ingDia hasta el 30
+    dias = Math.max(1, 30 - ingDia + 1);
+  } else if(ret){
+    // Cotiza desde el 1 hasta retDia
+    dias = Math.max(1, retDia);
+  }
+  const diasEl = document.getElementById('ss-dias');
+  if(diasEl){ diasEl.value = dias; }
+  calcSegSocial();
 }
 
 function ssSetDias(n){
@@ -5838,20 +5899,16 @@ function calcSegSocial() {
     const periodo = document.getElementById('ss-periodo')?.value||'mensual';
     const periodoMeses = {mensual:1,bimestral:2,trimestral:3,semestral:6,anual:12}[periodo]||1;
 
-    // IBC independiente: Decreto 1273/2018
-    let ibcMes, regla, ibcBase40;
-    if (sal > smmlv * 2) {
-      ibcBase40 = Math.round(sal * 0.40);
-      if (ibcBase40 < smmlv) {
-        ibcMes = smmlv;
-        regla = '40% del ingreso ('+ibcBase40.toLocaleString('es-CO')+') < SMMLV → se toma SMMLV';
-      } else {
-        ibcMes = ibcBase40;
-        regla = '40% de $'+sal.toLocaleString('es-CO')+' (ingreso > 2 SMMLV — Decreto 1273/2018)';
-      }
+    // IBC independiente: Decreto 1273/2018 — SIEMPRE se liquida sobre el 40% del ingreso.
+    // Si ese 40% es inferior al SMMLV vigente, la base es el SMMLV (mínimo obligatorio).
+    let ibcMes, regla;
+    const ibcBase40 = Math.round(sal * 0.40);
+    if (ibcBase40 < smmlv) {
+      ibcMes = smmlv;
+      regla = '40% de $'+sal.toLocaleString('es-CO')+' = $'+ibcBase40.toLocaleString('es-CO')+' < SMMLV → IBC = SMMLV';
     } else {
-      ibcMes = Math.max(sal, smmlv);
-      regla = 'Ingreso ≤ 2 SMMLV → IBC = '+(sal<smmlv?'SMMLV (mínimo)':'ingreso');
+      ibcMes = ibcBase40;
+      regla = '40% de $'+sal.toLocaleString('es-CO')+' (Decreto 1273/2018)';
     }
     ibcMes = Math.min(ibcMes, smmlv * 25);
     const ibc = dias < 30 ? Math.round(ibcMes * factorDias) : ibcMes;
@@ -5902,7 +5959,7 @@ function calcSegSocial() {
       {label:'Ingreso neto aprox.', val:sal-totalMes, color:'var(--green)', sub:'Ingreso − aportes mensuales'},
     ], '', '')
     + _ssNota('Independientes: 12.5% salud + 16% pensión sobre el IBC (Ley 100/1993, Ley 1753/2015). '
-      +'Ingresos > 2 SMMLV: IBC = 40% del ingreso (Decreto 1273/2018). '
+      +'IBC = 40% del ingreso mensual (Decreto 1273/2018); si ese 40% < SMMLV, la base mínima es el SMMLV. '
       +(dias<30?'IBC prorateado '+dias+'/30 días: $'+ibcMes.toLocaleString('es-CO')+' × '+dias+'/30 = $'+ibc.toLocaleString('es-CO')+'. ':'')
       +(incluirARL?'ARL Riesgo '+riesgoARL_ind+': '+(tasaARL_ind*100).toFixed(3)+'%. ':'Sin ARL. ')
       +(incluirCCF?'CCF 4%: afiliación voluntaria. ':'')
