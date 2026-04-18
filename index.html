@@ -10469,265 +10469,168 @@ function renderClienteAnalisis(){
     +renderSimuladorEscenarios()
     +renderDiagnostico()
     +'</div>';
-  // Inicializar slider después de render
-  setTimeout(()=>{ actualizarSimEscenario(); },80);
+  setTimeout(function(){ actualizarSimEscenario(); },80);
 }
 
-// ── ALERTAS INTELIGENTES ──────────────────────────────────────────────────────
 function renderAlertasInteligentes(){
   loadDeudas();
-  const activas=deudas.filter(d=>saldoDeuda(d)>0);
+  const activas=deudas.filter(function(d){return saldoDeuda(d)>0;});
   if(activas.length===0) return '';
-
-  const hoy=new Date(); hoy.setHours(0,0,0,0);
   const alertas=[];
-  const usura=2.13; // tasa máxima legal mensual Colombia
-
-  activas.forEach(d=>{
+  const usura=2.13;
+  activas.forEach(function(d){
     const t=(d.tasa||0)/100;
     const sp=saldoDeuda(d);
     const cuota=getCuotaDeuda(d);
     const seg=calcSeguroDeuda(d);
     const intMes=Math.round(sp*t);
     const abonoCap=Math.max(cuota-seg-intMes,0);
-
-    // Alerta 1: Costo de interés este mes
     if(intMes>0){
-      alertas.push({
-        tipo:'info',
-        ico:'💸',
-        titulo:d.acreedor+' — costo este mes',
+      alertas.push({ico:'💸',titulo:d.acreedor+' — costo este mes',
         msg:'De tu cuota de '+fmt(cuota)+', '+fmt(intMes)+' son intereses y solo '+fmt(abonoCap)+' reducen la deuda.',
-        color:'#00BCD4',bg:'rgba(0,188,212,.08)',bdr:'rgba(0,188,212,.25)'
-      });
+        color:'#00BCD4',bg:'rgba(0,188,212,.08)',bdr:'rgba(0,188,212,.25)'});
     }
-
-    // Alerta 2: Pagando casi solo intereses (abono < 15% de la cuota)
-    if(cuota>0 && abonoCap/cuota < 0.15 && abonoCap>=0){
-      alertas.push({
-        tipo:'warn',
-        ico:'⚠️',
-        titulo:d.acreedor+' — casi solo intereses',
-        msg:'El '+Math.round(abonoCap/cuota*100)+'% de tu cuota abona capital. A este ritmo la deuda tarda mucho en bajar. Considera un abono extraordinario.',
-        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'
-      });
+    if(cuota>0&&abonoCap>=0&&abonoCap/cuota<0.15){
+      alertas.push({ico:'⚠️',titulo:d.acreedor+' — casi solo intereses',
+        msg:'El '+Math.round(abonoCap/cuota*100)+'% de tu cuota abona capital. Considera un abono extraordinario.',
+        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'});
     }
-
-    // Alerta 3: Tasa superior a la legal
-    if((d.tasa||0) > usura){
-      alertas.push({
-        tipo:'error',
-        ico:'🚨',
-        titulo:d.acreedor+' — tasa sobre límite legal',
-        msg:'Tasa '+d.tasa+'%/mes supera el máximo legal de '+usura+'%/mes (usura). Puedes exigir reliquidación.',
-        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'
-      });
+    if((d.tasa||0)>usura){
+      alertas.push({ico:'🚨',titulo:d.acreedor+' — tasa sobre límite legal',
+        msg:'Tasa '+d.tasa+'%/mes supera el máximo legal de '+usura+'%/mes. Puedes exigir reliquidación.',
+        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'});
     }
-
-    // Alerta 4: Mora
     if(enMoraDeuda(d)){
-      alertas.push({
-        tipo:'error',
-        ico:'🔴',
-        titulo:d.acreedor+' — en mora',
+      alertas.push({ico:'🔴',titulo:d.acreedor+' — en mora',
         msg:'Esta deuda está vencida. Cada día acumula intereses de mora. Contacta al acreedor cuanto antes.',
-        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'
-      });
+        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'});
     }
-
-    // Alerta 5: Deuda libre (sin plazo) — riesgo de no terminar
-    if(d.tipocuota==='libre' && sp>0){
-      alertas.push({
-        tipo:'warn',
-        ico:'⏳',
-        titulo:d.acreedor+' — sin plazo definido',
-        msg:'Esta deuda no tiene fecha de vencimiento. Sin un plan de pago fijo puede prolongarse indefinidamente.',
-        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'
-      });
+    if(d.tipocuota==='libre'&&sp>0){
+      alertas.push({ico:'⏳',titulo:d.acreedor+' — sin plazo definido',
+        msg:'Sin fecha de vencimiento, esta deuda puede prolongarse indefinidamente sin un plan fijo.',
+        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'});
     }
   });
-
-  // Alerta global: costo mensual total
-  const costoTotalMes=activas.reduce((s,d)=>{
-    const t=(d.tasa||0)/100;
-    return s+Math.round(saldoDeuda(d)*t);
+  const costoTotalMes=activas.reduce(function(s,d){
+    return s+Math.round(saldoDeuda(d)*(d.tasa||0)/100);
   },0);
   if(costoTotalMes>0){
-    alertas.unshift({
-      tipo:'info',
-      ico:'📊',
-      titulo:'Costo total en intereses este mes',
-      msg:'El conjunto de tus deudas genera '+fmt(costoTotalMes)+' solo en intereses este mes — dinero que no reduce capital.',
-      color:'#9C27B0',bg:'rgba(156,39,176,.08)',bdr:'rgba(156,39,176,.25)'
-    });
+    alertas.unshift({ico:'📊',titulo:'Costo total en intereses este mes',
+      msg:'Tus deudas generan '+fmt(costoTotalMes)+' solo en intereses este mes — dinero que no reduce capital.',
+      color:'#9C27B0',bg:'rgba(156,39,176,.08)',bdr:'rgba(156,39,176,.25)'});
   }
-
   if(alertas.length===0) return '';
-
-  return '<div class="card" style="margin-bottom:12px">'\
-    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">🔔 ALERTAS INTELIGENTES</div>'\
-    +alertas.map(a=>
-      '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 10px;margin-bottom:7px;background:'+a.bg+';border:1px solid '+a.bdr+';border-radius:var(--radius-xs)">'\
-      +'<span style="font-size:18px;flex-shrink:0;line-height:1.2">'+a.ico+'</span>'\
-      +'<div><div style="font-size:12px;font-weight:700;color:'+a.color+';margin-bottom:2px">'+a.titulo+'</div>'\
-      +'<div style="font-size:11px;color:var(--text2);line-height:1.5">'+a.msg+'</div></div>'\
-      +'</div>'
-    ).join('')\
-    +'</div>';
+  var html='<div class="card" style="margin-bottom:12px">';
+  html+='<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">🔔 ALERTAS INTELIGENTES</div>';
+  alertas.forEach(function(a){
+    html+='<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 10px;margin-bottom:7px;background:'+a.bg+';border:1px solid '+a.bdr+';border-radius:var(--radius-xs)">';
+    html+='<span style="font-size:18px;flex-shrink:0;line-height:1.2">'+a.ico+'</span>';
+    html+='<div><div style="font-size:12px;font-weight:700;color:'+a.color+';margin-bottom:2px">'+a.titulo+'</div>';
+    html+='<div style="font-size:11px;color:var(--text2);line-height:1.5">'+a.msg+'</div></div></div>';
+  });
+  html+='</div>';
+  return html;
 }
 
-// ── SIMULADOR DE ESCENARIOS ───────────────────────────────────────────────────
 function renderSimuladorEscenarios(){
   loadDeudas();
-  const activas=deudas.filter(d=>saldoDeuda(d)>0&&d.tipocuota!=='libre');
+  const activas=deudas.filter(function(d){return saldoDeuda(d)>0&&d.tipocuota!=='libre';});
   if(activas.length===0) return '';
-
-  const totalSaldo=activas.reduce((s,d)=>s+saldoDeuda(d),0);
-  const cuotaTotal=activas.reduce((s,d)=>s+getCuotaDeuda(d),0);
-
-  // Calcular meses sin extra
-  function calcMesesLibre(extraMes){
-    // Simula todas las deudas en paralelo con pago extra distribuido por saldo
-    let saldos=activas.map(d=>saldoDeuda(d));
-    const tasas=activas.map(d=>(d.tasa||0)/100);
-    const cuotas=activas.map(d=>getCuotaDeuda(d)-calcSeguroDeuda(d));
-    let meses=0;
-    for(let i=0;i<360;i++){
-      const totalPend=saldos.reduce((s,x)=>s+x,0);
-      if(totalPend<=500) break;
-      // Distribuir extra proporcionalmente al saldo
-      for(let j=0;j<saldos.length;j++){
-        if(saldos[j]<=0) continue;
-        const extraJ=totalPend>0?Math.round(extraMes*(saldos[j]/totalPend)):0;
-        const intJ=saldos[j]*tasas[j];
-        const abonoJ=Math.max(cuotas[j]+extraJ-intJ,0);
-        saldos[j]=Math.max(saldos[j]-abonoJ,0);
-      }
-      meses++;
-    }
-    return meses;
-  }
-
-  const mesesBase=calcMesesLibre(0);
-  const maxExtra=Math.round(cuotaTotal*2/10000)*10000;
-
-  return '<div class="card" style="margin-bottom:12px" id="sim-escenario-card">'\
-    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:4px">🎯 SIMULADOR DE ESCENARIOS</div>'\
-    +'<div style="font-size:11px;color:var(--text2);margin-bottom:14px">¿Cuánto antes terminas si pagas un poco extra cada mes?</div>'\
-    // Slider
-    +'<div style="margin-bottom:14px">'\
-    +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">'\
-    +'<span>Pago extra mensual</span>'\
-    +'<span id="sim-extra-label" style="font-weight:700;color:#00BCD4">$0</span>'\
-    +'</div>'\
-    +'<input type="range" id="sim-extra-slider" min="0" max="'+maxExtra+'" step="10000" value="0" '\
-    +'style="width:100%;accent-color:#00BCD4" oninput="actualizarSimEscenario()">'\
-    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px">'\
-    +'<span>$0</span><span>'+fmt(maxExtra/2)+'</span><span>'+fmt(maxExtra)+'</span>'\
-    +'</div>'\
-    +'</div>'\
-    // Resultado
-    +'<div id="sim-escenario-result" style="background:var(--surface2);border-radius:var(--radius-xs);padding:12px">'\
-    +'<div style="text-align:center;font-size:11px;color:var(--text3)">Mueve el slider para ver el impacto</div>'\
-    +'</div>'\
-    // Botones de escenario rápido
-    +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'\
-    +'<span style="font-size:10px;color:var(--text3);align-self:center">Escenarios:</span>'\
-    +'<button onclick="setSimExtra(50000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$50k</button>'\
-    +'<button onclick="setSimExtra(100000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$100k</button>'\
-    +'<button onclick="setSimExtra(200000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$200k</button>'\
-    +'<button onclick="setSimExtra(500000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$500k</button>'\
-    +'</div>'\
-    +'</div>';
+  const cuotaTotal=activas.reduce(function(s,d){return s+getCuotaDeuda(d);},0);
+  const maxExtra=Math.max(Math.round(cuotaTotal*2/10000)*10000,500000);
+  var html='<div class="card" style="margin-bottom:12px">';
+  html+='<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:4px">🎯 SIMULADOR DE ESCENARIOS</div>';
+  html+='<div style="font-size:11px;color:var(--text2);margin-bottom:14px">¿Cuánto antes terminas si pagas un poco extra cada mes?</div>';
+  html+='<div style="margin-bottom:14px">';
+  html+='<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">';
+  html+='<span>Pago extra mensual</span><span id="sim-extra-label" style="font-weight:700;color:#00BCD4">$0</span></div>';
+  html+='<input type="range" id="sim-extra-slider" min="0" max="'+maxExtra+'" step="10000" value="0" style="width:100%;accent-color:#00BCD4" oninput="actualizarSimEscenario()">';
+  html+='<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px">';
+  html+='<span>$0</span><span>'+fmt(maxExtra/2)+'</span><span>'+fmt(maxExtra)+'</span></div></div>';
+  html+='<div id="sim-escenario-result" style="background:var(--surface2);border-radius:var(--radius-xs);padding:12px">';
+  html+='<div style="text-align:center;font-size:11px;color:var(--text3)">Mueve el slider para ver el impacto</div></div>';
+  html+='<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">';
+  html+='<span style="font-size:10px;color:var(--text3);align-self:center">Escenarios:</span>';
+  html+='<button onclick="setSimExtra(50000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$50k</button>';
+  html+='<button onclick="setSimExtra(100000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$100k</button>';
+  html+='<button onclick="setSimExtra(200000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$200k</button>';
+  html+='<button onclick="setSimExtra(500000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$500k</button>';
+  html+='</div></div>';
+  return html;
 }
 
 function setSimExtra(val){
   const sl=document.getElementById('sim-extra-slider');
-  if(sl){ sl.value=val; actualizarSimEscenario(); }
+  if(sl){sl.value=val;actualizarSimEscenario();}
 }
 
 function actualizarSimEscenario(){
   loadDeudas();
-  const activas=deudas.filter(d=>saldoDeuda(d)>0&&d.tipocuota!=='libre');
+  const activas=deudas.filter(function(d){return saldoDeuda(d)>0&&d.tipocuota!=='libre';});
   if(activas.length===0) return;
-
   const sl=document.getElementById('sim-extra-slider');
   const labelEl=document.getElementById('sim-extra-label');
   const resEl=document.getElementById('sim-escenario-result');
   if(!sl||!resEl) return;
-
   const extra=parseInt(sl.value)||0;
   if(labelEl) labelEl.textContent=fmt(extra);
-
   function calcEscenario(extraMes){
-    let saldos=activas.map(d=>saldoDeuda(d));
-    const tasas=activas.map(d=>(d.tasa||0)/100);
-    const cuotas=activas.map(d=>getCuotaDeuda(d)-calcSeguroDeuda(d));
-    let meses=0; let totalInt=0;
-    for(let i=0;i<360;i++){
-      const totalPend=saldos.reduce((s,x)=>s+x,0);
+    var saldos=activas.map(function(d){return saldoDeuda(d);});
+    var tasas=activas.map(function(d){return (d.tasa||0)/100;});
+    var cuotas=activas.map(function(d){return getCuotaDeuda(d)-calcSeguroDeuda(d);});
+    var meses=0; var totalInt=0;
+    for(var i=0;i<360;i++){
+      var totalPend=saldos.reduce(function(s,x){return s+x;},0);
       if(totalPend<=500) break;
-      for(let j=0;j<saldos.length;j++){
+      for(var j=0;j<saldos.length;j++){
         if(saldos[j]<=0) continue;
-        const extraJ=totalPend>0?Math.round(extraMes*(saldos[j]/totalPend)):0;
-        const intJ=Math.round(saldos[j]*tasas[j]);
+        var extraJ=totalPend>0?Math.round(extraMes*(saldos[j]/totalPend)):0;
+        var intJ=Math.round(saldos[j]*tasas[j]);
         totalInt+=intJ;
-        const abonoJ=Math.max(cuotas[j]+extraJ-intJ,0);
+        var abonoJ=Math.max(cuotas[j]+extraJ-intJ,0);
         saldos[j]=Math.max(saldos[j]-abonoJ,0);
       }
       meses++;
     }
-    return {meses,totalInt};
+    return {meses:meses,totalInt:totalInt};
   }
-
-  const base=calcEscenario(0);
-  const conExtra=calcEscenario(extra);
-
-  const mesesAhorra=Math.max(base.meses-conExtra.meses,0);
-  const intAhorra=Math.max(base.totalInt-conExtra.totalInt,0);
-
-  // Fecha libre
-  const fechaLibre=new Date();
+  var base=calcEscenario(0);
+  var conExtra=calcEscenario(extra);
+  var mesesAhorra=Math.max(base.meses-conExtra.meses,0);
+  var intAhorra=Math.max(base.totalInt-conExtra.totalInt,0);
+  var fechaLibre=new Date();
   fechaLibre.setMonth(fechaLibre.getMonth()+conExtra.meses);
-  const fechaStr=fechaLibre.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
-
-  // Barra de progreso visual (meses)
-  const pctReduccion=base.meses>0?Math.round((mesesAhorra/base.meses)*100):0;
-
-  const colorExtra=extra>0?'#00BCD4':'var(--text3)';
-
-  resEl.innerHTML=
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'\
-    +'<div style="background:var(--surface3);border-radius:var(--radius-xs);padding:8px;text-align:center">'\
-    +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px">SIN EXTRA</div>'\
-    +'<div style="font-size:18px;font-weight:900;color:var(--red);font-family:monospace">'+base.meses+'</div>'\
-    +'<div style="font-size:9px;color:var(--text3)">meses</div>'\
-    +'<div style="font-size:10px;color:var(--red);margin-top:2px">'+fmt(base.totalInt)+' int.</div>'\
-    +'</div>'\
-    +'<div style="background:'+(extra>0?'rgba(0,188,212,.1)':'var(--surface3)')+';border:1px solid '+(extra>0?'rgba(0,188,212,.3)':'transparent')+';border-radius:var(--radius-xs);padding:8px;text-align:center">'\
-    +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px">CON +'+fmt(extra)+'</div>'\
-    +'<div style="font-size:18px;font-weight:900;color:'+colorExtra+';font-family:monospace">'+conExtra.meses+'</div>'\
-    +'<div style="font-size:9px;color:var(--text3)">meses</div>'\
-    +'<div style="font-size:10px;color:'+(extra>0?'var(--green)':'var(--text3)')+';margin-top:2px">'+fmt(conExtra.totalInt)+' int.</div>'\
-    +'</div>'\
-    +'</div>'\
-    // Fecha libre
-    +'<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.2);border-radius:var(--radius-xs);padding:8px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'\
-    +'<div>'\
-    +'<div style="font-size:10px;color:var(--text3)">Libre de deudas en</div>'\
-    +'<div style="font-size:14px;font-weight:800;color:#00BCD4;text-transform:capitalize">'+fechaStr+'</div>'\
-    +'</div>'\
-    +(mesesAhorra>0?'<div style="text-align:right"><div style="font-size:10px;color:var(--text3)">Ahorras</div><div style="font-size:14px;font-weight:800;color:var(--green)">'+mesesAhorra+' mes'+(mesesAhorra!==1?'es':'')+'</div></div>':'')\
-    +'</div>'\
-    // Ahorro en intereses
-    +(intAhorra>0?
-      '<div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:var(--radius-xs);padding:8px 12px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'\
-      +'<span style="color:var(--text2)">Intereses que te ahorras</span>'\
-      +'<span style="font-weight:800;color:var(--green);font-family:monospace">'+fmt(intAhorra)+'</span>'\
-      +'</div>'\
-    :'');
+  var fechaStr=fechaLibre.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+  var colorExtra=extra>0?'#00BCD4':'var(--text3)';
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">';
+  html+='<div style="background:var(--surface3);border-radius:var(--radius-xs);padding:8px;text-align:center">';
+  html+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px">SIN EXTRA</div>';
+  html+='<div style="font-size:18px;font-weight:900;color:var(--red);font-family:monospace">'+base.meses+'</div>';
+  html+='<div style="font-size:9px;color:var(--text3)">meses</div>';
+  html+='<div style="font-size:10px;color:var(--red);margin-top:2px">'+fmt(base.totalInt)+' int.</div></div>';
+  var bgExtra=extra>0?'rgba(0,188,212,.1)':'var(--surface3)';
+  var bdrExtra=extra>0?'1px solid rgba(0,188,212,.3)':'1px solid transparent';
+  html+='<div style="background:'+bgExtra+';border:'+bdrExtra+';border-radius:var(--radius-xs);padding:8px;text-align:center">';
+  html+='<div style="font-size:9px;color:var(--text3);margin-bottom:2px">CON +'+fmt(extra)+'</div>';
+  html+='<div style="font-size:18px;font-weight:900;color:'+colorExtra+';font-family:monospace">'+conExtra.meses+'</div>';
+  html+='<div style="font-size:9px;color:var(--text3)">meses</div>';
+  var colorInt=extra>0?'var(--green)':'var(--text3)';
+  html+='<div style="font-size:10px;color:'+colorInt+';margin-top:2px">'+fmt(conExtra.totalInt)+' int.</div></div></div>';
+  html+='<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.2);border-radius:var(--radius-xs);padding:8px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">';
+  html+='<div><div style="font-size:10px;color:var(--text3)">Libre de deudas en</div>';
+  html+='<div style="font-size:14px;font-weight:800;color:#00BCD4;text-transform:capitalize">'+fechaStr+'</div></div>';
+  if(mesesAhorra>0){
+    html+='<div style="text-align:right"><div style="font-size:10px;color:var(--text3)">Ahorras</div>';
+    html+='<div style="font-size:14px;font-weight:800;color:var(--green)">'+mesesAhorra+' mes'+(mesesAhorra!==1?'es':'')+'</div></div>';
+  }
+  html+='</div>';
+  if(intAhorra>0){
+    html+='<div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:var(--radius-xs);padding:8px 12px;font-size:11px;display:flex;justify-content:space-between;align-items:center">';
+    html+='<span style="color:var(--text2)">Intereses que te ahorras</span>';
+    html+='<span style="font-weight:800;color:var(--green);font-family:monospace">'+fmt(intAhorra)+'</span></div>';
+  }
+  resEl.innerHTML=html;
 }
-
 function renderClienteDashboard(){
   loadDeudas();
   const el=document.getElementById('cliente-content');if(!el) return;
