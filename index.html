@@ -923,7 +923,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       <div class="hc-icon">
         <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v1m0 8v1M9.5 9.5C9.5 8.4 10.6 7.5 12 7.5s2.5.9 2.5 2-.9 1.8-2.5 2c-1.6.2-2.5 1-2.5 2.1 0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2"/></svg>
       </div>
-      <div class="hc-title">Préstamo</div>
+      <div class="hc-title">Negocio</div>
       <div class="hc-sub">Clientes, cobros y caja</div>
     </div>
     <div class="home-card" onclick="goTo('cliente')" style="border-color:rgba(0,188,212,.3);background:linear-gradient(135deg,rgba(0,51,68,.4),rgba(0,96,100,.2))">
@@ -1010,7 +1010,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       </div>
       <div class="sidebar-list" id="sidebar-list"></div>
       <div class="sidebar-footer">
-        <button class="btn-new" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>
+        <button class="btn-new" onclick="openModal(&quot;modal-new&quot;)">+ Registro</button>
         <button class="btn-new-sm" title="Capital" onclick="abrirCapital()"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4z"/></svg></button>
         <button class="btn-new-sm" title="Opciones" onclick="toggleGearMenu(true)"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg></button>
         <button class="btn-new-sm" title="Inicio" onclick="goTo('home')"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>
@@ -1041,7 +1041,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px">
         <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--ef-pink2);margin-bottom:10px;display:flex;align-items:center;gap:6px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="11"/><line x1="10" y1="18" x2="10" y2="11"/><line x1="14" y1="18" x2="14" y2="11"/><line x1="18" y1="18" x2="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg>
-          Modo Prestamista
+          Modo Negocio
         </div>
         <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border)">
           <input type="checkbox" id="notif-cobros-hoy" style="margin-top:2px;accent-color:var(--ef-pink)" onchange="guardarConfigNotif()">
@@ -1201,7 +1201,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     <div class="modal-title">➕ Registrar deuda <button class="modal-close" onclick="closeModal('modal-nueva-deuda')">✕</button></div>
     <div class="fr"><label>¿A quién le debo?</label><input type="text" id="nd-acreedor" placeholder="Nombre del acreedor" oninput="formatNombrePropio('nd-acreedor')"></div>
     <div class="fr"><label>Tipo de acreedor</label>
-      <select id="nd-tipo" onchange="ndToggleSeguro();ndToggleUVR()"><option value="prestamista">Prestamista</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="socio_inv">Socio / Inversionista</option><option value="otro">Otro</option></select>
+      <select id="nd-tipo" onchange="ndToggleSeguro();ndToggleUVR()"><option value="prestamista">Particular</option><option value="banco">Banco / Entidad financiera</option><option value="familiar">Familiar</option><option value="amigo">Amigo</option><option value="socio_inv">Socio / Inversionista</option><option value="otro">Otro</option></select>
     </div>
     <!-- Tipo de crédito — solo banco -->
     <div class="fr" id="nd-tipocredito-wrap" style="display:none">
@@ -1367,7 +1367,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 <!-- Nuevo préstamo -->
 <div class="overlay" id="modal-new">
   <div class="modal">
-    <div class="modal-title">Nuevo préstamo <button class="modal-close" onclick="closeModal('modal-new')">✕</button></div>
+    <div class="modal-title">Nuevo registro <button class="modal-close" onclick="closeModal('modal-new')">✕</button></div>
     <div class="modal-tabs">
       <button class="modal-tab active" id="tab-btn-cot" onclick="switchModalTab('cot')">Cotizar</button>
       <button class="modal-tab" id="tab-btn-form" onclick="switchModalTab('form')">Registrar</button>
@@ -1488,7 +1488,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     </div>
     <div class="form-actions">
       <button class="btn" onclick="closeModal('modal-new')">Cancelar</button>
-      <button class="btn btn-pink" onclick="crearCliente()">Crear préstamo</button>
+      <button class="btn btn-pink" onclick="crearCliente()">Crear registro</button>
     </div>
     </div><!-- /tab-form -->
   </div>
@@ -1497,7 +1497,7 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 <!-- Editar préstamo -->
 <div class="overlay" id="modal-edit">
   <div class="modal">
-    <div class="modal-title">Editar préstamo <button class="modal-close" onclick="closeModal('modal-edit')">✕</button></div>
+    <div class="modal-title">Editar registro <button class="modal-close" onclick="closeModal('modal-edit')">✕</button></div>
     <div class="warn">⚠ Si cambia la fecha, las quincenas se recalculan. Los pagos se conservan.</div>
     <div class="fr"><label>Nombre</label><input type="text" id="e-name" oninput="formatNombrePropio('e-name')"></div>
     <div class="fr"><label>Teléfono</label><input type="tel" id="e-tel"></div>
@@ -2667,7 +2667,7 @@ load();
 function goTo(id){
   // Block invitado from accessing loans/prestamista
   if(currentUser&&currentUser.rol==='invitado'&&id==='loans'){
-    toast('No tienes acceso al Modo Prestamista','error');
+    toast('No tienes acceso al Modo Negocio','error');
     return;
   }
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -3111,8 +3111,8 @@ function generarObservaciones(){
   const _bArrOp3=loadBudgets();
   const bMesActual=_bArrOp3.find(function(b){return b.key===mesKey;});
   const yaRegistrado=bMesActual?(
-    (bMesActual.q1.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Préstamos');}) ||
-    (bMesActual.q2.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Préstamos');})
+    (bMesActual.q1.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Negocio');}) ||
+    (bMesActual.q2.otrosIngresos||[]).some(function(i){return i.nombre&&i.nombre.includes('Cuadre Negocio');})
   ):false;
   if(interesesMes>=10000&&!yaRegistrado){
     obs.cruce.push({
@@ -3150,7 +3150,7 @@ function cuadreAgregarIngresoNegocio(valor){
       q2:{ingresos:[],otrosIngresos:[],gastosFijos:[],gastosVar:[]}};
     arr.push(b);
   }
-  b.q1.otrosIngresos.push({nombre:'Cuadre Préstamos — Intereses del mes',valor:Math.round(valor)});
+  b.q1.otrosIngresos.push({nombre:'Cuadre Negocio — Intereses del mes',valor:Math.round(valor)});
   saveBudgets(arr);
   toast('✓ '+fmt(Math.round(valor))+' agregados al presupuesto como ingreso extra','success',3000);
   renderCuadre();
@@ -3714,7 +3714,7 @@ function renderDashboard(){
     +'<div class="cuadre-logo-icon" style="width:20px;height:20px;background:linear-gradient(135deg,#5050ff,#8800cc);border-radius:6px;display:flex;align-items:center;justify-content:center"><span style="font-size:11px;font-weight:900;color:white;line-height:1">C</span></div>'
     +'Dashboard</div>'
     +'<div class="main-sub">'+fd(today())+' · '+clients.length+' clientes</div></div>'
-    +'<div class="header-actions"><button class="btn btn-pink" onclick="openModal(&quot;modal-new&quot;)">+ Préstamo</button>'
+    +'<div class="header-actions"><button class="btn btn-pink" onclick="openModal(&quot;modal-new&quot;)">+ Registro</button>'
     +'<button class="btn" style="background:#25D366;color:white;border:none;font-size:11px;padding:6px 10px" onclick="enviarResumenWA()">📊 Resumen WA</button>'
     +'</div>'
     +'</div>'
@@ -4530,7 +4530,7 @@ function cotizar() {
     + '<div class="sec-label" style="margin-bottom:6px">Tabla de pagos</div>'
     + schedHTML
     + '<div class="cot-actions">'
-    + '<button class="btn btn-pink" style="flex:1" onclick="cotizarACrear()">→ Crear préstamo</button>'
+    + '<button class="btn btn-pink" style="flex:1" onclick="cotizarACrear()">→ Crear registro</button>'
     + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text=' + waMsg + '" target="_blank">WA</a>'
     + '</div>';
 }
@@ -4586,9 +4586,9 @@ function crearCliente(){
   const cuotaPersonalizada=tipocuota==='fija'&&cpActive;
   const cuotaFijaMonto=cuotaPersonalizada?(parseFloat(document.getElementById('n-cp-cuota')?.value)||0):0;
   clients.push({id,nombre,fecha,monto,tasa,cuotas,tipocuota,metodo,banco,tel,cedula,notas,socio,cuotaPersonalizada:cuotaPersonalizada||undefined,cuotaFijaMonto:cuotaFijaMonto||undefined,meses:calcFechas(fecha)});
-  caja.push({id:Date.now(),cat:'prestamo_salida',tipo:'salida',fecha,valor:monto,metodo,concepto:'Préstamo — '+nombre});
+  caja.push({id:Date.now(),cat:'prestamo_salida',tipo:'salida',fecha,valor:monto,metodo,concepto:'Salida — '+nombre});
   save();closeModal('modal-new');openClient(id);
-  toast('Préstamo creado · Salida registrada en caja');
+  toast('Registro creado · Salida registrada en caja');
 }
 
 // ══ EDITAR ════════════════════════════════════════════════════════════════════
@@ -4642,7 +4642,7 @@ function guardarEdicion(){
   const _eCuotaP=_eTipocuota==='fija'&&_eCpActive;
   const _eCuotaFM=_eCuotaP?(parseFloat(document.getElementById('e-cp-cuota')?.value)||0):0;
   Object.assign(c,{nombre,fecha,monto,tasa,cuotas,tipocuota:_eTipocuota,tel:document.getElementById('e-tel').value.trim(),cedula:(document.getElementById('e-cedula')?document.getElementById('e-cedula').value.trim():c.cedula||''),notas:document.getElementById('e-notas').value.trim(),cuotaPersonalizada:_eCuotaP||undefined,cuotaFijaMonto:_eCuotaFM||undefined});
-  save();closeModal('modal-edit');renderDetail();toast('Préstamo actualizado');
+  save();closeModal('modal-edit');renderDetail();toast('Registro actualizado');
 }
 
 // ══ PREVIEW ═══════════════════════════════════════════════════════════════════
@@ -10177,7 +10177,7 @@ function recuperarDeudasNube(){
 
 function syncDeudasNube(){
   if(!jsonbinEnabled){
-    toast('Conecte primero la nube desde Modo Prestamista → Drive','error',4000);
+    toast('Conecte primero la nube desde Modo Negocio → Drive','error',4000);
     return;
   }
   const dot=document.getElementById('btn-sync-deudas');
@@ -10449,7 +10449,7 @@ function renderDiagnostico(){
           +'</div>';
       }).join('')
       +'<div style="margin-top:8px;font-size:11px;color:var(--text2);background:rgba(156,39,176,.08);border:1px solid rgba(156,39,176,.25);border-radius:var(--radius-xs);padding:8px 10px">'
-      +'ℹ️ Este capital es para su negocio de préstamos. Ver rentabilidad en Modo Prestamista → Reportes → 🏥 Diagnóstico'
+      +'ℹ️ Este capital es para su negocio de préstamos. Ver rentabilidad en Modo Negocio → Reportes → 🏥 Diagnóstico'
       +'</div>'
       +'</div>'
     :'')
@@ -10464,7 +10464,268 @@ function renderDiagnostico(){
 
 function renderClienteAnalisis(){
   const el=document.getElementById('cliente-content');if(!el) return;
-  el.innerHTML='<div style="display:flex;flex-direction:column;gap:0">'+renderDiagnostico()+'</div>';
+  el.innerHTML='<div style="display:flex;flex-direction:column;gap:0">'
+    +renderAlertasInteligentes()
+    +renderSimuladorEscenarios()
+    +renderDiagnostico()
+    +'</div>';
+  // Inicializar slider después de render
+  setTimeout(()=>{ actualizarSimEscenario(); },80);
+}
+
+// ── ALERTAS INTELIGENTES ──────────────────────────────────────────────────────
+function renderAlertasInteligentes(){
+  loadDeudas();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0);
+  if(activas.length===0) return '';
+
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const alertas=[];
+  const usura=2.13; // tasa máxima legal mensual Colombia
+
+  activas.forEach(d=>{
+    const t=(d.tasa||0)/100;
+    const sp=saldoDeuda(d);
+    const cuota=getCuotaDeuda(d);
+    const seg=calcSeguroDeuda(d);
+    const intMes=Math.round(sp*t);
+    const abonoCap=Math.max(cuota-seg-intMes,0);
+
+    // Alerta 1: Costo de interés este mes
+    if(intMes>0){
+      alertas.push({
+        tipo:'info',
+        ico:'💸',
+        titulo:d.acreedor+' — costo este mes',
+        msg:'De tu cuota de '+fmt(cuota)+', '+fmt(intMes)+' son intereses y solo '+fmt(abonoCap)+' reducen la deuda.',
+        color:'#00BCD4',bg:'rgba(0,188,212,.08)',bdr:'rgba(0,188,212,.25)'
+      });
+    }
+
+    // Alerta 2: Pagando casi solo intereses (abono < 15% de la cuota)
+    if(cuota>0 && abonoCap/cuota < 0.15 && abonoCap>=0){
+      alertas.push({
+        tipo:'warn',
+        ico:'⚠️',
+        titulo:d.acreedor+' — casi solo intereses',
+        msg:'El '+Math.round(abonoCap/cuota*100)+'% de tu cuota abona capital. A este ritmo la deuda tarda mucho en bajar. Considera un abono extraordinario.',
+        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'
+      });
+    }
+
+    // Alerta 3: Tasa superior a la legal
+    if((d.tasa||0) > usura){
+      alertas.push({
+        tipo:'error',
+        ico:'🚨',
+        titulo:d.acreedor+' — tasa sobre límite legal',
+        msg:'Tasa '+d.tasa+'%/mes supera el máximo legal de '+usura+'%/mes (usura). Puedes exigir reliquidación.',
+        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'
+      });
+    }
+
+    // Alerta 4: Mora
+    if(enMoraDeuda(d)){
+      alertas.push({
+        tipo:'error',
+        ico:'🔴',
+        titulo:d.acreedor+' — en mora',
+        msg:'Esta deuda está vencida. Cada día acumula intereses de mora. Contacta al acreedor cuanto antes.',
+        color:'#ef5350',bg:'rgba(239,83,80,.1)',bdr:'rgba(239,83,80,.35)'
+      });
+    }
+
+    // Alerta 5: Deuda libre (sin plazo) — riesgo de no terminar
+    if(d.tipocuota==='libre' && sp>0){
+      alertas.push({
+        tipo:'warn',
+        ico:'⏳',
+        titulo:d.acreedor+' — sin plazo definido',
+        msg:'Esta deuda no tiene fecha de vencimiento. Sin un plan de pago fijo puede prolongarse indefinidamente.',
+        color:'#FF9800',bg:'rgba(255,152,0,.1)',bdr:'rgba(255,152,0,.35)'
+      });
+    }
+  });
+
+  // Alerta global: costo mensual total
+  const costoTotalMes=activas.reduce((s,d)=>{
+    const t=(d.tasa||0)/100;
+    return s+Math.round(saldoDeuda(d)*t);
+  },0);
+  if(costoTotalMes>0){
+    alertas.unshift({
+      tipo:'info',
+      ico:'📊',
+      titulo:'Costo total en intereses este mes',
+      msg:'El conjunto de tus deudas genera '+fmt(costoTotalMes)+' solo en intereses este mes — dinero que no reduce capital.',
+      color:'#9C27B0',bg:'rgba(156,39,176,.08)',bdr:'rgba(156,39,176,.25)'
+    });
+  }
+
+  if(alertas.length===0) return '';
+
+  return '<div class="card" style="margin-bottom:12px">'\
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">🔔 ALERTAS INTELIGENTES</div>'\
+    +alertas.map(a=>
+      '<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 10px;margin-bottom:7px;background:'+a.bg+';border:1px solid '+a.bdr+';border-radius:var(--radius-xs)">'\
+      +'<span style="font-size:18px;flex-shrink:0;line-height:1.2">'+a.ico+'</span>'\
+      +'<div><div style="font-size:12px;font-weight:700;color:'+a.color+';margin-bottom:2px">'+a.titulo+'</div>'\
+      +'<div style="font-size:11px;color:var(--text2);line-height:1.5">'+a.msg+'</div></div>'\
+      +'</div>'
+    ).join('')\
+    +'</div>';
+}
+
+// ── SIMULADOR DE ESCENARIOS ───────────────────────────────────────────────────
+function renderSimuladorEscenarios(){
+  loadDeudas();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0&&d.tipocuota!=='libre');
+  if(activas.length===0) return '';
+
+  const totalSaldo=activas.reduce((s,d)=>s+saldoDeuda(d),0);
+  const cuotaTotal=activas.reduce((s,d)=>s+getCuotaDeuda(d),0);
+
+  // Calcular meses sin extra
+  function calcMesesLibre(extraMes){
+    // Simula todas las deudas en paralelo con pago extra distribuido por saldo
+    let saldos=activas.map(d=>saldoDeuda(d));
+    const tasas=activas.map(d=>(d.tasa||0)/100);
+    const cuotas=activas.map(d=>getCuotaDeuda(d)-calcSeguroDeuda(d));
+    let meses=0;
+    for(let i=0;i<360;i++){
+      const totalPend=saldos.reduce((s,x)=>s+x,0);
+      if(totalPend<=500) break;
+      // Distribuir extra proporcionalmente al saldo
+      for(let j=0;j<saldos.length;j++){
+        if(saldos[j]<=0) continue;
+        const extraJ=totalPend>0?Math.round(extraMes*(saldos[j]/totalPend)):0;
+        const intJ=saldos[j]*tasas[j];
+        const abonoJ=Math.max(cuotas[j]+extraJ-intJ,0);
+        saldos[j]=Math.max(saldos[j]-abonoJ,0);
+      }
+      meses++;
+    }
+    return meses;
+  }
+
+  const mesesBase=calcMesesLibre(0);
+  const maxExtra=Math.round(cuotaTotal*2/10000)*10000;
+
+  return '<div class="card" style="margin-bottom:12px" id="sim-escenario-card">'\
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:4px">🎯 SIMULADOR DE ESCENARIOS</div>'\
+    +'<div style="font-size:11px;color:var(--text2);margin-bottom:14px">¿Cuánto antes terminas si pagas un poco extra cada mes?</div>'\
+    // Slider
+    +'<div style="margin-bottom:14px">'\
+    +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px">'\
+    +'<span>Pago extra mensual</span>'\
+    +'<span id="sim-extra-label" style="font-weight:700;color:#00BCD4">$0</span>'\
+    +'</div>'\
+    +'<input type="range" id="sim-extra-slider" min="0" max="'+maxExtra+'" step="10000" value="0" '\
+    +'style="width:100%;accent-color:#00BCD4" oninput="actualizarSimEscenario()">'\
+    +'<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text3);margin-top:2px">'\
+    +'<span>$0</span><span>'+fmt(maxExtra/2)+'</span><span>'+fmt(maxExtra)+'</span>'\
+    +'</div>'\
+    +'</div>'\
+    // Resultado
+    +'<div id="sim-escenario-result" style="background:var(--surface2);border-radius:var(--radius-xs);padding:12px">'\
+    +'<div style="text-align:center;font-size:11px;color:var(--text3)">Mueve el slider para ver el impacto</div>'\
+    +'</div>'\
+    // Botones de escenario rápido
+    +'<div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">'\
+    +'<span style="font-size:10px;color:var(--text3);align-self:center">Escenarios:</span>'\
+    +'<button onclick="setSimExtra(50000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$50k</button>'\
+    +'<button onclick="setSimExtra(100000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$100k</button>'\
+    +'<button onclick="setSimExtra(200000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$200k</button>'\
+    +'<button onclick="setSimExtra(500000)" style="font-size:10px;padding:4px 8px;border-radius:12px;border:1px solid var(--border2);background:var(--surface3);color:var(--text2);cursor:pointer">+$500k</button>'\
+    +'</div>'\
+    +'</div>';
+}
+
+function setSimExtra(val){
+  const sl=document.getElementById('sim-extra-slider');
+  if(sl){ sl.value=val; actualizarSimEscenario(); }
+}
+
+function actualizarSimEscenario(){
+  loadDeudas();
+  const activas=deudas.filter(d=>saldoDeuda(d)>0&&d.tipocuota!=='libre');
+  if(activas.length===0) return;
+
+  const sl=document.getElementById('sim-extra-slider');
+  const labelEl=document.getElementById('sim-extra-label');
+  const resEl=document.getElementById('sim-escenario-result');
+  if(!sl||!resEl) return;
+
+  const extra=parseInt(sl.value)||0;
+  if(labelEl) labelEl.textContent=fmt(extra);
+
+  function calcEscenario(extraMes){
+    let saldos=activas.map(d=>saldoDeuda(d));
+    const tasas=activas.map(d=>(d.tasa||0)/100);
+    const cuotas=activas.map(d=>getCuotaDeuda(d)-calcSeguroDeuda(d));
+    let meses=0; let totalInt=0;
+    for(let i=0;i<360;i++){
+      const totalPend=saldos.reduce((s,x)=>s+x,0);
+      if(totalPend<=500) break;
+      for(let j=0;j<saldos.length;j++){
+        if(saldos[j]<=0) continue;
+        const extraJ=totalPend>0?Math.round(extraMes*(saldos[j]/totalPend)):0;
+        const intJ=Math.round(saldos[j]*tasas[j]);
+        totalInt+=intJ;
+        const abonoJ=Math.max(cuotas[j]+extraJ-intJ,0);
+        saldos[j]=Math.max(saldos[j]-abonoJ,0);
+      }
+      meses++;
+    }
+    return {meses,totalInt};
+  }
+
+  const base=calcEscenario(0);
+  const conExtra=calcEscenario(extra);
+
+  const mesesAhorra=Math.max(base.meses-conExtra.meses,0);
+  const intAhorra=Math.max(base.totalInt-conExtra.totalInt,0);
+
+  // Fecha libre
+  const fechaLibre=new Date();
+  fechaLibre.setMonth(fechaLibre.getMonth()+conExtra.meses);
+  const fechaStr=fechaLibre.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+
+  // Barra de progreso visual (meses)
+  const pctReduccion=base.meses>0?Math.round((mesesAhorra/base.meses)*100):0;
+
+  const colorExtra=extra>0?'#00BCD4':'var(--text3)';
+
+  resEl.innerHTML=
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">'\
+    +'<div style="background:var(--surface3);border-radius:var(--radius-xs);padding:8px;text-align:center">'\
+    +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px">SIN EXTRA</div>'\
+    +'<div style="font-size:18px;font-weight:900;color:var(--red);font-family:monospace">'+base.meses+'</div>'\
+    +'<div style="font-size:9px;color:var(--text3)">meses</div>'\
+    +'<div style="font-size:10px;color:var(--red);margin-top:2px">'+fmt(base.totalInt)+' int.</div>'\
+    +'</div>'\
+    +'<div style="background:'+(extra>0?'rgba(0,188,212,.1)':'var(--surface3)')+';border:1px solid '+(extra>0?'rgba(0,188,212,.3)':'transparent')+';border-radius:var(--radius-xs);padding:8px;text-align:center">'\
+    +'<div style="font-size:9px;color:var(--text3);margin-bottom:2px">CON +'+fmt(extra)+'</div>'\
+    +'<div style="font-size:18px;font-weight:900;color:'+colorExtra+';font-family:monospace">'+conExtra.meses+'</div>'\
+    +'<div style="font-size:9px;color:var(--text3)">meses</div>'\
+    +'<div style="font-size:10px;color:'+(extra>0?'var(--green)':'var(--text3)')+';margin-top:2px">'+fmt(conExtra.totalInt)+' int.</div>'\
+    +'</div>'\
+    +'</div>'\
+    // Fecha libre
+    +'<div style="background:rgba(0,188,212,.08);border:1px solid rgba(0,188,212,.2);border-radius:var(--radius-xs);padding:8px 12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">'\
+    +'<div>'\
+    +'<div style="font-size:10px;color:var(--text3)">Libre de deudas en</div>'\
+    +'<div style="font-size:14px;font-weight:800;color:#00BCD4;text-transform:capitalize">'+fechaStr+'</div>'\
+    +'</div>'\
+    +(mesesAhorra>0?'<div style="text-align:right"><div style="font-size:10px;color:var(--text3)">Ahorras</div><div style="font-size:14px;font-weight:800;color:var(--green)">'+mesesAhorra+' mes'+(mesesAhorra!==1?'es':'')+'</div></div>':'')\
+    +'</div>'\
+    // Ahorro en intereses
+    +(intAhorra>0?
+      '<div style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2);border-radius:var(--radius-xs);padding:8px 12px;font-size:11px;display:flex;justify-content:space-between;align-items:center">'\
+      +'<span style="color:var(--text2)">Intereses que te ahorras</span>'\
+      +'<span style="font-weight:800;color:var(--green);font-family:monospace">'+fmt(intAhorra)+'</span>'\
+      +'</div>'\
+    :'');
 }
 
 function renderClienteDashboard(){
@@ -10694,7 +10955,7 @@ function saldoDeuda(d){
     return Math.round(saldo);
   }
 
-  // VARIABLE: igual que Modo Prestamista
+  // VARIABLE: igual que Modo Negocio
   // Group payments by month (quincena), sum Q1+Q2 per month
   const pagosPorMes={};
   for(const p of (d.pagos||[])){
@@ -11350,7 +11611,7 @@ function estadoCuentaDeuda(did){
     histHTML='<tr><td colspan="5" style="padding:16px;text-align:center;color:#999">Sin pagos registrados</td></tr>';
   }
 
-  const tipoLabel={prestamista:'Prestamista',banco:'Banco / Entidad financiera',familiar:'Familiar',amigo:'Amigo',socio_inv:'Socio / Inversionista',otro:'Otro'};
+  const tipoLabel={prestamista:'Particular',banco:'Banco / Entidad financiera',familiar:'Familiar',amigo:'Amigo',socio_inv:'Socio / Inversionista',otro:'Otro'};
   const cuotaLabel={fija:'Cuota fija (amortización francesa)',variable:'Variable',libre:'Sin plazo fijo'};
 
   const html=`<!DOCTYPE html><html lang="es"><head>
@@ -11577,7 +11838,7 @@ function guardarEdicionDeuda(did){
 
 // ── PAGOS QUINCENALES DEUDAS ─────────────────────────────────────────────────
 function calcQuincenasDeuda(d){
-  // Same logic as calcFechas() in Modo Prestamista
+  // Same logic as calcFechas() in Modo Negocio
   const b=new Date(d.fecha+'T12:00:00');
   const day=b.getDate(), y=b.getFullYear(), m=b.getMonth();
   const cuotas=d.cuotas||12;
@@ -13980,7 +14241,7 @@ function initReminderCheck(){
   // 2. Notificaciones del sistema
   if(Notification.permission==='granted'){
     setTimeout(()=>{
-      // Cobros hoy — Modo Prestamista
+      // Cobros hoy — Modo Negocio
       if(cfg.cobrosHoy){
         try{
           const hoyStr = new Date().toISOString().slice(0,10);
@@ -13995,7 +14256,7 @@ function initReminderCheck(){
           }
         }catch(e){}
       }
-      // Mora — Modo Prestamista
+      // Mora — Modo Negocio
       if(cfg.mora){
         try{
           const enMora = (clients||[]).filter(c=>diasMora&&diasMora(c)>0);
