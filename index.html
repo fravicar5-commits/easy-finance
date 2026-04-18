@@ -2670,8 +2670,11 @@ function goTo(id){
     toast('No tienes acceso al Modo Negocio','error');
     return;
   }
+  // Activar pantalla
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  document.getElementById(id)?.classList.add('active');
+  // Registrar en historial para botón atrás
+  _pushNav(id);
   if(id==='cliente'){
     loadDeudas();
     renderClienteDashboard();
@@ -2702,8 +2705,6 @@ function goTo(id){
   if(id==='loans'){renderSidebar();renderDashboard();}
   if(id==='dayday'){renderDDTab(ddTab);}
   if(id==='cuadre'){loadDeudas();renderCuadre();}
-  // Registrar en historial de navegación para botón atrás
-  if(typeof _pushNav==='function') _pushNav(id);
 }
 
 // ══ HELPERS ═══════════════════════════════════════════════════════════════════
@@ -10218,6 +10219,8 @@ function switchClienteTab(tab,btn){
   clienteTabActual=tab;
   document.querySelectorAll('.cliente-tab').forEach(t=>t.classList.remove('active'));
   if(btn) btn.classList.add('active');
+  // Registrar tab en historial para botón atrás
+  _pushNav('cliente:'+tab);
   renderClienteTab();
 }
 
@@ -14243,6 +14246,11 @@ function _pushNav(id){
   history.pushState({screen:id},'',location.pathname);
 }
 
+function _activateScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id)?.classList.add('active');
+}
+
 window.addEventListener('popstate',function(e){
   // 1. Cerrar overlay flotante de cuota fija si existe
   const cuotaOverlay=document.getElementById('cuota-fija-overlay');
@@ -14265,14 +14273,32 @@ window.addEventListener('popstate',function(e){
   // 4. Navegar a pantalla anterior
   _navHistory.pop();
   const prev=_navHistory[_navHistory.length-1];
-  if(prev&&prev!=='home'){
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    document.getElementById(prev)?.classList.add('active');
-    history.pushState({screen:prev},'',' ');
-  } else {
-    // Estamos en home o sin historial — dejar que el navegador salga normalmente
-    history.back();
+
+  if(!prev||prev==='home'){
+    // Sin historial o ya en home — activar home y dejar que el navegador salga si vuelve a pulsar
+    _activateScreen('home');
+    history.pushState({screen:'home'},'',location.pathname);
+    return;
   }
+
+  // Manejar tabs internas del modo cliente (formato "cliente:tab")
+  if(prev.startsWith('cliente:')){
+    const tab=prev.split(':')[1];
+    _activateScreen('cliente');
+    clienteTabActual=tab;
+    // Sincronizar botones de tab visualmente
+    document.querySelectorAll('.cliente-tab').forEach(function(t){
+      const onclick=t.getAttribute('onclick')||'';
+      t.classList.toggle('active', onclick.includes("'"+tab+"'") || onclick.includes('"'+tab+'"'));
+    });
+    renderClienteTab();
+    history.pushState({screen:prev},'',location.pathname);
+    return;
+  }
+
+  // Pantalla normal
+  _activateScreen(prev);
+  history.pushState({screen:prev},'',location.pathname);
 });
 
 // Registrar navegación en historial
