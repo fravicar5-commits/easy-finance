@@ -296,6 +296,58 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
 .hc-title{font-size:15px;font-weight:700;color:white;margin-bottom:4px}
 .hc-sub{font-size:11px;color:rgba(255,255,255,.45);line-height:1.4}
 .home-version{position:absolute;bottom:14px;font-size:10px;color:rgba(255,255,255,.2);letter-spacing:.1em}
+/* ── ACCESOS RÁPIDOS ── */
+.qa-section{width:100%;max-width:400px;margin-top:20px}
+.qa-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding:0 2px}
+.qa-label{font-size:10px;font-weight:700;color:rgba(255,255,255,.3);letter-spacing:.12em;text-transform:uppercase}
+.qa-config-btn{background:none;border:none;color:rgba(255,255,255,.25);cursor:pointer;padding:2px 4px;border-radius:6px;transition:color .2s;font-size:13px;line-height:1}
+.qa-config-btn:hover{color:rgba(255,255,255,.6)}
+.qa-chips{display:flex;flex-wrap:wrap;gap:8px}
+.qa-chip{display:flex;align-items:center;gap:7px;padding:9px 14px;border-radius:14px;cursor:pointer;transition:all .18s;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);position:relative;overflow:hidden;flex-shrink:0}
+.qa-chip::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .18s}
+.qa-chip:hover::before,.qa-chip:active::before{opacity:1}
+.qa-chip:hover{transform:translateY(-2px)}
+.qa-chip svg{flex-shrink:0;opacity:.85}
+.qa-chip-label{font-size:12px;font-weight:700;font-family:'Nunito',sans-serif;white-space:nowrap}
+/* Colores por chip */
+.qa-chip[data-id="notes"]{border-color:rgba(255,183,77,.25);background:rgba(255,183,77,.07)}
+.qa-chip[data-id="notes"]::before{background:rgba(255,183,77,.12)}
+.qa-chip[data-id="notes"] svg,.qa-chip[data-id="notes"] .qa-chip-label{color:#FFB74D}
+.qa-chip[data-id="segsocial"]{border-color:rgba(129,199,132,.25);background:rgba(129,199,132,.07)}
+.qa-chip[data-id="segsocial"]::before{background:rgba(129,199,132,.12)}
+.qa-chip[data-id="segsocial"] svg,.qa-chip[data-id="segsocial"] .qa-chip-label{color:#81C784}
+.qa-chip[data-id="calc"]{border-color:rgba(100,181,246,.25);background:rgba(100,181,246,.07)}
+.qa-chip[data-id="calc"]::before{background:rgba(100,181,246,.12)}
+.qa-chip[data-id="calc"] svg,.qa-chip[data-id="calc"] .qa-chip-label{color:#64B5F6}
+.qa-chip[data-id="budget"]{border-color:rgba(206,147,216,.25);background:rgba(206,147,216,.07)}
+.qa-chip[data-id="budget"]::before{background:rgba(206,147,216,.12)}
+.qa-chip[data-id="budget"] svg,.qa-chip[data-id="budget"] .qa-chip-label{color:#CE93D8}
+.qa-chip[data-id="converter"]{border-color:rgba(77,208,225,.25);background:rgba(77,208,225,.07)}
+.qa-chip[data-id="converter"]::before{background:rgba(77,208,225,.12)}
+.qa-chip[data-id="converter"] svg,.qa-chip[data-id="converter"] .qa-chip-label{color:#4DD0E1}
+.qa-chip[data-id="simulator"]{border-color:rgba(239,154,154,.25);background:rgba(239,154,154,.07)}
+.qa-chip[data-id="simulator"]::before{background:rgba(239,154,154,.12)}
+.qa-chip[data-id="simulator"] svg,.qa-chip[data-id="simulator"] .qa-chip-label{color:#EF9A9A}
+/* Modal configuración */
+.qa-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9000;align-items:flex-end;justify-content:center}
+.qa-modal-overlay.open{display:flex}
+.qa-modal{background:#1a1a2e;border:1px solid rgba(255,255,255,.12);border-radius:24px 24px 0 0;padding:20px 20px 32px;width:100%;max-width:480px}
+.qa-modal-title{font-size:14px;font-weight:800;color:white;margin-bottom:4px}
+.qa-modal-sub{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:18px}
+.qa-option{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:12px;margin-bottom:6px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.04);cursor:pointer;transition:background .15s}
+.qa-option.selected{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.qa-option-left{display:flex;align-items:center;gap:10px}
+.qa-option-check{width:18px;height:18px;border-radius:5px;border:2px solid rgba(255,255,255,.3);display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+.qa-option.selected .qa-option-check{background:#5050ff;border-color:#5050ff}
+.qa-save-btn{width:100%;padding:13px;background:linear-gradient(135deg,#5050ff,#8800cc);border:none;border-radius:14px;color:white;font-size:14px;font-weight:800;font-family:'Nunito',sans-serif;cursor:pointer;margin-top:14px}
+body.light-mode .qa-chip{border-color:rgba(0,0,0,.1);background:rgba(0,0,0,.04)}
+body.light-mode .qa-label{color:rgba(14,17,23,.3)}
+body.light-mode .qa-config-btn{color:rgba(14,17,23,.3)}
+body.light-mode .qa-modal{background:#f5f5f5}
+body.light-mode .qa-modal-title{color:#111}
+body.light-mode .qa-modal-sub{color:rgba(0,0,0,.5)}
+body.light-mode .qa-option{background:rgba(0,0,0,.03);border-color:rgba(0,0,0,.08)}
+body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:rgba(80,80,255,.3)}
 
 /* ════════════════════════════════
    CUADRE (LOANS) SCREEN
@@ -949,6 +1001,27 @@ body.light-mode .hbw-cat-pill{background:rgba(26,26,46,.06);color:rgba(26,26,46,
     </div>
   </div>
   <div class="home-version">v2.1 · Cuadre</div>
+
+  <!-- ── ACCESOS RÁPIDOS ── -->
+  <div class="qa-section" id="qa-section">
+    <div class="qa-header">
+      <span class="qa-label">Accesos rápidos</span>
+      <button class="qa-config-btn" onclick="qaOpenConfig()" title="Configurar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 4.93 4.93M4.93 19.07A10 10 0 0 0 19.07 19.07M12 2v2M12 20v2M2 12h2M20 12h2"/><path d="m4.93 4.93 1.41 1.41M17.66 17.66l1.41 1.41M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
+    </div>
+    <div class="qa-chips" id="qa-chips"></div>
+  </div>
+
+  <!-- Modal configuración accesos rápidos -->
+  <div class="qa-modal-overlay" id="qa-config-modal" onclick="if(event.target===this)qaCloseConfig()">
+    <div class="qa-modal">
+      <div class="qa-modal-title">Configurar accesos rápidos</div>
+      <div class="qa-modal-sub">Selecciona hasta 4 herramientas</div>
+      <div id="qa-options-list"></div>
+      <button class="qa-save-btn" onclick="qaSaveConfig()">Guardar</button>
+    </div>
+  </div>
   <button id="theme-toggle-btn" onclick="toggleTheme()" style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:white;padding:7px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Nunito',sans-serif;display:flex;align-items:center;gap:5px">🌙 Oscuro</button>
 </div>
 
@@ -14239,6 +14312,108 @@ function checkNotaAlarmas(){
   });
 }
 
+// ── ACCESOS RÁPIDOS (Home) ────────────────────────────────────────────────────
+var QA_ALL = [
+  { id:'notes',     label:'Notas',        dest:'dayday', tab:'notes',
+    color:'#FFB74D',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7.4"/><path d="M2 6h4"/><path d="M2 10h4"/><path d="M2 14h4"/><path d="M2 18h4"/><path d="M21.378 5.626a1 1 0 1 0-3.004-3.004l-5.01 5.012a2 2 0 0 0-.506.854l-.837 2.87a.5.5 0 0 0 .62.62l2.87-.837a2 2 0 0 0 .854-.506z"/></svg>' },
+  { id:'segsocial', label:'Seg. Social',  dest:'dayday', tab:'segsocial',
+    color:'#81C784',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>' },
+  { id:'calc',      label:'Calculadora', dest:'dayday', tab:'calc',
+    color:'#64B5F6',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="8" y2="10"/><line x1="12" y1="10" x2="12" y2="10"/><line x1="16" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/><line x1="8" y1="18" x2="12" y2="18"/><line x1="16" y1="18" x2="16" y2="18"/></svg>' },
+  { id:'budget',    label:'Presupuesto', dest:'dayday', tab:'budget',
+    color:'#CE93D8',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>' },
+  { id:'converter', label:'Divisas',     dest:'dayday', tab:'converter',
+    color:'#4DD0E1',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg>' },
+  { id:'simulator', label:'Simulador',   dest:'dayday', tab:'simulator',
+    color:'#EF9A9A',
+    svg:'<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>' }
+];
+
+var QA_DEFAULT = ['notes','segsocial'];
+
+function qaLoadSelected(){
+  try { return JSON.parse(localStorage.getItem('cuadre_qa_selected')) || QA_DEFAULT; }
+  catch(e){ return QA_DEFAULT; }
+}
+
+function qaRender(){
+  var chips = document.getElementById('qa-chips');
+  var section = document.getElementById('qa-section');
+  if(!chips) return;
+  var selected = qaLoadSelected();
+  if(selected.length === 0){ section.style.display='none'; return; }
+  section.style.display='';
+  chips.innerHTML = '';
+  selected.forEach(function(id){
+    var item = QA_ALL.find(function(x){ return x.id===id; });
+    if(!item) return;
+    var chip = document.createElement('div');
+    chip.className = 'qa-chip';
+    chip.setAttribute('data-id', item.id);
+    chip.innerHTML = item.svg + '<span class="qa-chip-label">'+item.label+'</span>';
+    chip.onclick = function(){
+      goTo(item.dest);
+      setTimeout(function(){
+        var btn = document.querySelector('.dd-tab[onclick*="\''+item.tab+'\'"]');
+        setDDTab(item.tab, btn||null);
+      }, 280);
+    };
+    chips.appendChild(chip);
+  });
+}
+
+function qaOpenConfig(){
+  var selected = qaLoadSelected();
+  var list = document.getElementById('qa-options-list');
+  if(!list) return;
+  list.innerHTML = '';
+  QA_ALL.forEach(function(item){
+    var isSel = selected.indexOf(item.id) !== -1;
+    var div = document.createElement('div');
+    div.className = 'qa-option' + (isSel?' selected':'');
+    div.setAttribute('data-id', item.id);
+    div.innerHTML =
+      '<div class="qa-option-left">'
+      +'<div class="qa-option-check">'
+      +(isSel?'<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>':'')
+      +'</div>'
+      +item.svg.replace('width="15" height="15"','width="16" height="16"').replace('stroke="currentColor"','stroke="'+item.color+'"')
+      +'<span style="font-size:13px;font-weight:700;color:'+(document.body.classList.contains('light-mode')?'#111':'white')+'">'+item.label+'</span>'
+      +'</div>'
+      +'<span style="font-size:10px;color:rgba(255,255,255,.3)">Day to Day</span>';
+    div.onclick = function(){
+      var curSel = qaLoadSelected();
+      var idx = curSel.indexOf(item.id);
+      if(idx !== -1){
+        curSel.splice(idx,1);
+        div.classList.remove('selected');
+        div.querySelector('.qa-option-check').innerHTML='';
+      } else {
+        if(curSel.length >= 4){ toast('Máximo 4 accesos rápidos','warn',2000); return; }
+        curSel.push(item.id);
+        div.classList.add('selected');
+        div.querySelector('.qa-option-check').innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      }
+      localStorage.setItem('cuadre_qa_selected', JSON.stringify(curSel));
+    };
+    list.appendChild(div);
+  });
+  document.getElementById('qa-config-modal').classList.add('open');
+}
+
+function qaCloseConfig(){ document.getElementById('qa-config-modal').classList.remove('open'); }
+
+function qaSaveConfig(){
+  qaCloseConfig();
+  qaRender();
+  toast('Accesos rápidos actualizados','success',1800);
+}
+
 // ── Botón atrás del celular (PWA) ────────────────────────────────────────────
 const _navHistory=[];
 function _pushNav(id){
@@ -14304,6 +14479,7 @@ window.addEventListener('popstate',function(e){
 // Registrar navegación en historial
 // Inicializar historial con home
 _pushNav('home');
+qaRender();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
     navigator.serviceWorker.register('/sw.js')
