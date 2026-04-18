@@ -2806,6 +2806,20 @@ function calcFechas(fechaStr){
 
 // ══ FINANCIAL ═════════════════════════════════════════════════════════════════
 function calcMes(c,idx){
+  // ── ACUERDO FLEXIBLE: saldo congelado sin intereses ──────────────────────
+  if(c.acuerdoFlexible&&c.acuerdoFlexible.activo){
+    const saldoBase=c.acuerdoFlexible.saldoAcordado;
+    let saldo=saldoBase;
+    for(let i=0;i<=idx;i++){
+      const m=c.meses[i];
+      const paid=(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0);
+      const cap=Math.max(saldo-paid,0);
+      if(i===idx) return{saldoIni:saldo,paid,cap,interes:0,newSaldo:cap,cuotaFija:null,esFija:false,esAcuerdo:true};
+      saldo=cap;
+      if(saldo<=0) return null;
+    }
+  }
+  // ── NORMAL ────────────────────────────────────────────────────────────────
   const t=c.tasa/100;
   let saldo=Math.round(c.monto*(1+t));
   const esFija=(c.tipocuota==='fija');
@@ -2851,6 +2865,13 @@ function isLiquidado(c){
 }
 function saldoPendiente(c){
   if(isLiquidado(c)) return 0;
+  // ── ACUERDO FLEXIBLE: saldo congelado sin intereses ──────────────────────
+  if(c.acuerdoFlexible&&c.acuerdoFlexible.activo){
+    const saldoBase=c.acuerdoFlexible.saldoAcordado;
+    const totalPag=c.meses.reduce((s,m)=>s+(m.pq1a||0)+(m.pq1b||0)+(m.pq2a||0)+(m.pq2b||0),0);
+    return Math.max(saldoBase-totalPag,0);
+  }
+  // ── NORMAL ────────────────────────────────────────────────────────────────
   const hoy=new Date();const t=c.tasa/100;
   let s=Math.round(c.monto*(1+t));
   const maxMeses=c.tipocuota==='fija'?c.cuotas:c.meses.length;
@@ -4017,12 +4038,12 @@ function buildMes(c,idx,mes,r){
     +'<div class="stats4">'
     +'<div class="stat"><div class="st-label">Saldo inicio</div><div class="st-val c-blue">'+fmt(r.saldoIni)+'</div></div>'
     +'<div class="stat"><div class="st-label">Total pagado</div><div class="st-val c-green">'+fmt(r.paid)+'</div></div>'
-    +'<div class="stat"><div class="st-label">Saldo capital</div><div class="st-val c-amber">'+fmt(r.cap)+'</div></div>'
-    +'<div class="stat"><div class="st-label">Nuevo interés</div><div class="st-val c-red">'+fmt(r.interes)+'</div></div>'
+    +'<div class="stat"><div class="st-label">Saldo pendiente</div><div class="st-val c-amber">'+fmt(r.cap)+'</div></div>'
+    +(r.esAcuerdo?'<div class="stat"><div class="st-label" style="color:#64B5F6">🤝 Acuerdo</div><div class="st-val" style="color:#64B5F6;font-size:10px">Sin intereses</div></div>':'<div class="stat"><div class="st-label">Nuevo interés</div><div class="st-val c-red">'+fmt(r.interes)+'</div></div>')
     +'</div>'
     +'<div class="nsaldo-box">'
-    +'<div class="st-label">Nuevo saldo → siguiente mes</div>'
-    +'<div class="st-val" style="font-size:15px;color:var(--green)">'+(r.newSaldo===0?'✓ PAGADO':fmt(r.newSaldo))+'</div>'
+    +'<div class="st-label">'+(r.esAcuerdo?'Saldo restante del acuerdo':'Nuevo saldo → siguiente mes')+'</div>'
+    +'<div class="st-val" style="font-size:15px;color:'+(r.esAcuerdo?'#64B5F6':'var(--green)')+'">'+(r.newSaldo===0?'✓ PAGADO':fmt(r.newSaldo))+'</div>'
     +(r.esFija&&r.cuotaFija?'<div class="st-label" style="margin-top:5px">Cuota sugerida</div><div class="st-val" style="color:var(--amber)">'+fmt(r.cuotaFija)+'</div>':'')
     +'</div>'
     +'<div class="sec-label" style="margin-top:10px">Pagos — toque celda para registrar o editar</div>'
