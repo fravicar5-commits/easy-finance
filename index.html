@@ -3933,7 +3933,8 @@ function renderDetail(){
     +'</div></div>'
     +'<div class="content">'
     +(c.socio?'<button class="socio-btn" data-cid="'+c.id+'" onclick="verSocioDistribucion(parseInt(this.dataset.cid))"><span class="socio-btn-ico">💼</span><div class="socio-btn-info"><div class="socio-btn-title">Distribución con socio</div><div class="socio-btn-sub">'+c.socio.nombre+' · '+c.socio.tasa+'% socio / '+c.socio.tasaMia+'% mío</div></div><span style="color:var(--text3)">▶</span></button>':'')
-    +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(mora>0?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
+    +(diasMora(c)>0&&!isLiquidado(c)?'<button class="recovery-btn" style="padding:8px 14px;font-size:12px;flex:1;min-width:160px" data-cid="'+c.id+'" onclick="abrirRecuperacion(parseInt(this.dataset.cid))">🤝 Negociar cartera</button>':'')    +(isLiquidado(c)?'<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:var(--radius-xs);padding:8px 14px;font-size:12px;font-weight:700;color:var(--green)">✓ Préstamo liquidado por negociación</div>':'')    +'<button class="btn btn-red" style="font-size:12px;padding:7px 14px" data-cid="'+c.id+'" onclick="eliminarCliente(parseInt(this.dataset.cid))">🗑 Eliminar</button>'    +'</div>'    +(c.acuerdoFlexible&&c.acuerdoFlexible.activo?'<div style="background:rgba(100,181,246,.08);border:1px solid rgba(100,181,246,.3);border-radius:var(--radius-xs);padding:9px 12px;margin-bottom:8px;font-size:12px;color:#64B5F6;display:flex;align-items:center;gap:8px">🤝 <span><strong>Acuerdo de pago activo</strong> · Saldo congelado: <strong>'+fmt(c.acuerdoFlexible.saldoAcordado)+'</strong> sin intereses</span></div>':'')+
+    +(mora>0&&!(c.acuerdoFlexible&&c.acuerdoFlexible.activo)?'<div class="mora-alert">⚠ <strong>'+mora+' día'+(mora!==1?'s':'')+' en mora.</strong> Saldo: '+fmt(sp)+'</div>':'')
     +'<div class="metrics" style="margin-bottom:10px">'
     +'<div class="mc"><div class="mc-label">Monto</div><div class="mc-value c-blue">'+fmtS(c.monto)+'</div></div>'
     +'<div class="mc"><div class="mc-label">Saldo</div><div class="mc-value c-amber">'+fmtS(sp)+'</div></div>'
@@ -13797,6 +13798,15 @@ function abrirRecuperacion(cid){
     +'<div id="rcustom-wrap" style="display:none;margin-top:8px">'
     +'<input type="number" id="rcustom-val" class="fr" style="width:100%;margin-bottom:4px" placeholder="Ej: 5000000" inputmode="numeric" oninput="updateRecoveryCustom()">'
     +'<div id="rcustom-hint" style="font-size:10px;color:var(--text3)">Mínimo recomendado: '+fmt(capitalRestante)+' (capital pendiente)</div>'
+    +'</div></div>'
+    +'<div class="opt-card" id="ropt-4" onclick="selectRecoveryOpt(4,0)" style="border-color:rgba(100,181,246,.3)">'
+    +'<div class="opt-check" id="rcheck-4"></div>'
+    +'<div class="opt-badge" style="background:rgba(100,181,246,.2);color:#64B5F6">🤝 ACUERDO FLEXIBLE</div>'
+    +'<div class="opt-title" style="color:#64B5F6">Cuotas libres sin intereses</div>'
+    +'<div class="opt-sub">Congela la deuda en un saldo fijo. El cliente paga lo que pueda cada vez — sin intereses adicionales.</div>'
+    +'<div id="racuerdo-wrap" style="display:none;margin-top:10px">'
+    +'<input type="number" id="racuerdo-val" class="fr" style="width:100%;margin-bottom:4px" placeholder="Ej: 1900000" inputmode="numeric" value="'+capitalRestante+'" oninput="updateRecoveryAcuerdo()">'
+    +'<div id="racuerdo-hint" style="font-size:10px;color:#64B5F6">Saldo congelado acordado con el cliente</div>'
     +'</div></div>';
 
   recoveryCtx.selectedVal=opt1;
@@ -13807,7 +13817,7 @@ function abrirRecuperacion(cid){
 }
 
 function selectRecoveryOpt(n,val){
-  [1,2,3].forEach(i=>{
+  [1,2,3,4].forEach(i=>{
     const el=document.getElementById('ropt-'+i);
     if(!el) return;
     el.classList.remove('selected','recommended');
@@ -13821,8 +13831,18 @@ function selectRecoveryOpt(n,val){
     if(ck) ck.textContent='✓';
   }
   document.getElementById('rcustom-wrap').style.display=n===3?'block':'none';
+  const racuerdoWrap=document.getElementById('racuerdo-wrap');
+  if(racuerdoWrap) racuerdoWrap.style.display=n===4?'block':'none';
   recoveryCtx.selectedOpt=n;
   recoveryCtx.selectedVal=val;
+  // Para opción 4 tomar el valor del input si ya tiene algo
+  if(n===4){
+    const v=parseFloat(document.getElementById('racuerdo-val')?.value)||recoveryCtx.capitalRestante;
+    recoveryCtx.selectedVal=v;
+    recoveryCtx.esAcuerdoFlexible=true;
+  } else {
+    recoveryCtx.esAcuerdoFlexible=false;
+  }
 }
 
 function updateRecoveryCustom(){
@@ -13841,6 +13861,20 @@ function updateRecoveryCustom(){
   }
 }
 
+function updateRecoveryAcuerdo(){
+  const v=parseFloat(document.getElementById('racuerdo-val')?.value)||0;
+  recoveryCtx.selectedVal=v;
+  const hint=document.getElementById('racuerdo-hint');
+  if(!hint) return;
+  if(v>0){
+    hint.style.color='#64B5F6';
+    hint.textContent='El cliente pagará cuotas libres hasta cancelar '+fmt(v)+' — sin intereses';
+  } else {
+    hint.style.color='var(--text3)';
+    hint.textContent='Ingresa el saldo acordado con el cliente';
+  }
+}
+
 function recoveryNext(){
   const val=recoveryCtx.selectedVal||0;
   if(!val||val<=0){toast('Seleccione una opción o ingrese un monto','error');return;}
@@ -13848,6 +13882,15 @@ function recoveryNext(){
     const v=parseFloat(document.getElementById('rcustom-val').value)||0;
     if(!v||v<=0){toast('Ingrese el monto acordado','error');return;}
     recoveryCtx.selectedVal=v;
+  }
+  // Opción 4: acuerdo flexible — confirmar directo sin paso 2
+  if(recoveryCtx.selectedOpt===4){
+    const v=parseFloat(document.getElementById('racuerdo-val')?.value)||0;
+    if(!v||v<=0){toast('Ingresa el saldo acordado','error');return;}
+    recoveryCtx.selectedVal=v;
+    recoveryCtx.esAcuerdoFlexible=true;
+    confirmarAcuerdoFlexible();
+    return;
   }
   const v=recoveryCtx.selectedVal;
   const sp=recoveryCtx.sp;
@@ -13876,6 +13919,28 @@ function recoveryNext(){
 function recoveryBack(){
   document.getElementById('recovery-step1').style.display='block';
   document.getElementById('recovery-step2').style.display='none';
+}
+
+function confirmarAcuerdoFlexible(){
+  const{cid,selectedVal}=recoveryCtx;
+  const c=clients.find(x=>x.id===cid);if(!c) return;
+  const saldoAcordado=selectedVal||0;
+  if(!saldoAcordado||saldoAcordado<=0){toast('Saldo inválido','error');return;}
+  const fecha=today();
+  // Marcar el cliente con acuerdo flexible
+  c.acuerdoFlexible={activo:true,saldoAcordado:saldoAcordado,fecha:fecha,saldoPagado:0};
+  // Agregar nota en el mes actual
+  let mesIdx=c.meses.length-1;
+  for(let i=0;i<c.meses.length;i++){
+    const fq2=new Date(c.meses[i].fq2+'T23:59:59');
+    if(fq2>=new Date()){mesIdx=i;break;}
+  }
+  const mes=c.meses[mesIdx];
+  if(!mes.nq1a) mes.nq1a='Acuerdo flexible: saldo congelado en '+fmt(saldoAcordado)+' sin intereses';
+  save();
+  closeModal('modal-recovery');
+  renderDetail();
+  toast('🤝 Acuerdo flexible registrado — saldo: '+fmt(saldoAcordado),'success',3500);
 }
 
 function confirmarRecuperacion(){
