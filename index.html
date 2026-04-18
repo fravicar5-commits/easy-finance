@@ -1301,7 +1301,7 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
       <div class="fr"><label>Cuotas</label><input type="number" id="nd-cuotas" min="1" placeholder="12" oninput="ndCalcTodo()"></div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="fr"><label>Tipo de cuota</label><select id="nd-tipocuota" onchange="ndToggleCuotaPersonalizada()"><option value="fija">Fija</option><option value="variable">Variable</option><option value="libre">Sin plazo fijo</option></select></div>
+      <div class="fr"><label>Tipo de cuota</label><select id="nd-tipocuota" onchange="ndToggleCuotaPersonalizada()"><option value="fija">Fija</option><option value="variable">Variable</option><option value="libre">Sin plazo fijo</option><option value="acuerdo">🤝 Acuerdo de pago (sin intereses)</option></select></div>
       <div class="fr"><label>Fecha del préstamo</label><input type="date" id="nd-fecha" onchange="ndCheckFechaAnterior()"></div>
     </div>
     <!-- Toggle cuota personalizada Modo Cliente -->
@@ -4778,6 +4778,20 @@ function ndToggleCuotaPersonalizada(){
   const cpWrap=document.getElementById('nd-cp-wrap');
   const tipocuota=document.getElementById('nd-tipocuota')?.value;
   if(cpWrap) cpWrap.style.display=(tipocuota==='fija')?'block':'none';
+  // Ocultar tasa y cuotas si es acuerdo de pago
+  const tasaRow=document.getElementById('nd-tasa')?.closest('.fr');
+  const tasaResultRow=document.getElementById('nd-tasa-result');
+  const cuotasRow=document.getElementById('nd-cuotas')?.closest('.fr');
+  const esAcuerdo=(tipocuota==='acuerdo');
+  if(tasaRow) tasaRow.style.display=esAcuerdo?'none':'';
+  if(tasaResultRow) tasaResultRow.style.display='none';
+  if(cuotasRow) cuotasRow.style.display=esAcuerdo?'none':'';
+  if(esAcuerdo){
+    const tasaEl=document.getElementById('nd-tasa');
+    const cuotasEl=document.getElementById('nd-cuotas');
+    if(tasaEl) tasaEl.value='0';
+    if(cuotasEl) cuotasEl.value='0';
+  }
   // Reset toggle if switching away from fija
   if(tipocuota!=='fija'){
     const fields=document.getElementById('nd-cp-fields');
@@ -10912,6 +10926,12 @@ function renderClienteCalendario(){
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function saldoDeuda(d){
+  // ACUERDO DE PAGO: saldo congelado sin intereses, pagos descuentan directo
+  if(d.tipocuota==='acuerdo'){
+    const base=d.saldoAcordado||d.monto;
+    const tp=totalPagadoDeuda(d);
+    return Math.max(base-tp,0);
+  }
   if(d.tipocuota==='libre'){
     const tp=totalPagadoDeuda(d);
     return Math.max(d.monto-tp,0);
@@ -10969,6 +10989,7 @@ function calcSeguroDeuda(d){
 function getCuotaDeuda(d){
   const t=(d.tasa||0)/100;
   const seg=calcSeguroDeuda(d);
+  if(d.tipocuota==='acuerdo') return saldoDeuda(d); // saldo pendiente — cuota libre
   if(d.tipocuota==='libre') return saldoDeuda(d);
   if(d.tipocuota==='fija'&&t>0){
     const cuota=Math.round(d.monto*t*Math.pow(1+t,d.cuotas)/(Math.pow(1+t,d.cuotas)-1));
@@ -11554,6 +11575,65 @@ function guardarDeuda(){
   clienteTabActual='deudas';
   document.querySelectorAll('.cliente-tab').forEach((t,i)=>{t.classList.toggle('active',i===1);});
   toast('Deuda registrada');
+}
+
+function iniciarAcuerdoPago(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);
+  if(!d) return;
+  const saldoActual=saldoDeuda(d);
+  const html=
+    '<div style="padding:4px 0">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">🤝 Acuerdo de pago sin intereses</div>'
+    +'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5">'
+    +'Congela la deuda en un saldo fijo. Desde ese momento cada pago descuenta directo del saldo acordado — sin intereses.'
+    +'</div>'
+    +'<div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:10px 12px;margin-bottom:12px;font-size:12px">'
+    +'<div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="color:var(--text3)">Saldo actual con intereses</span><span style="font-weight:700;color:var(--red);font-family:monospace">'+fmt(saldoActual)+'</span></div>'
+    +'<div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Tasa actual</span><span style="font-weight:700;color:var(--text2)">'+( d.tasa||0)+'%/mes</span></div>'
+    +'</div>'
+    +'<div class="fr" style="margin-bottom:10px">'
+    +'<label>Saldo acordado sin intereses ($)</label>'
+    +'<input type="number" id="acuerdo-saldo-input" inputmode="numeric" placeholder="Ej: 1900000" value="'+saldoActual+'" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;color:var(--text);font-size:14px;font-weight:700;width:100%;box-sizing:border-box">'
+    +'</div>'
+    +'<div class="fr" style="margin-bottom:14px">'
+    +'<label>Notas del acuerdo (opcional)</label>'
+    +'<input type="text" id="acuerdo-notas-input" placeholder="Ej: Acuerdo por fuerza mayor — Jun 2025" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-xs);padding:8px 11px;color:var(--text);font-size:12px;width:100%;box-sizing:border-box">'
+    +'</div>'
+    +'<div style="background:rgba(255,152,0,.08);border:1px solid rgba(255,152,0,.25);border-radius:var(--radius-xs);padding:8px 11px;font-size:10px;color:#FFB300;margin-bottom:14px;line-height:1.5">'
+    +'⚠ Esta acción cambia el tipo de la deuda y congela el saldo. Los pagos anteriores se conservan. No se puede deshacer automáticamente.'
+    +'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +'<button class="btn" style="flex:1;font-size:12px" onclick="closeModal(\'modal-detalle-deuda\')">Cancelar</button>'
+    +'<button class="btn-cyan-solid" style="flex:2;font-size:12px;background:linear-gradient(135deg,rgba(100,181,246,.3),rgba(100,181,246,.15));border-color:rgba(100,181,246,.5);color:#64B5F6" data-did="'+did+'" onclick="confirmarAcuerdoPago(parseInt(this.dataset.did))">✅ Confirmar acuerdo</button>'
+    +'</div>'
+    +'</div>';
+  document.getElementById('detalle-deuda-content').innerHTML=html;
+  openModal('modal-detalle-deuda');
+}
+
+function confirmarAcuerdoPago(did){
+  loadDeudas();
+  const d=deudas.find(x=>x.id===did);
+  if(!d) return;
+  const saldoAcordado=parseFloat(document.getElementById('acuerdo-saldo-input')?.value)||0;
+  if(saldoAcordado<=0){toast('Ingresa el saldo acordado','error');return;}
+  const notasAcuerdo=document.getElementById('acuerdo-notas-input')?.value.trim()||'';
+  const fechaAcuerdo=new Date().toISOString().split('T')[0];
+  // Aplicar cambios a la deuda
+  d.tipocuota='acuerdo';
+  d.saldoAcordado=saldoAcordado;
+  d.tasa=0;
+  d.tasaOriginal=d.tasaOriginal||d.tasa;
+  d.acuerdoFecha=fechaAcuerdo;
+  d.acuerdoNotas=notasAcuerdo||undefined;
+  // Limpiar pagos anteriores para que el saldo acordado sea la base limpia
+  // (conservar pagos pero resetear el cómputo desde el saldo acordado)
+  d.pagos=[];
+  saveDeudas();
+  closeModal('modal-detalle-deuda');
+  renderClienteDeudas();
+  toast('✅ Acuerdo de pago registrado — saldo: '+fmt(saldoAcordado),'success',3000);
 }
 
 function estadoCuentaDeuda(did){
@@ -12460,6 +12540,10 @@ function verDetalleDeuda(did){
     +'<button class="btn" style="font-size:11px;background:rgba(245,166,35,.1);color:#FFB300;border-color:rgba(245,166,35,.3)" data-did="'+d.id+'" onclick="closeModal(\'modal-detalle-deuda\');estadoCuentaDeuda(parseInt(this.dataset.did))">Estado</button>'
     +'<button class="btn" style="font-size:11px;background:rgba(0,188,212,.08);color:#00BCD4;border-color:rgba(0,188,212,.3)" data-did="'+d.id+'" onclick="graficaEvolucionDeuda(parseInt(this.dataset.did))">📈 Gráfica</button>'
     +'</div>'
+    +(d.tipocuota!=='acuerdo'
+      ?'<button class="btn" style="width:100%;font-size:11px;margin-top:6px;background:rgba(100,181,246,.08);color:#64B5F6;border-color:rgba(100,181,246,.3);display:flex;align-items:center;justify-content:center;gap:6px" data-did="'+d.id+'" onclick="iniciarAcuerdoPago(parseInt(this.dataset.did))">🤝 Convertir a acuerdo de pago sin intereses</button>'
+      :'<div style="margin-top:6px;padding:8px 12px;background:rgba(100,181,246,.08);border:1px solid rgba(100,181,246,.3);border-radius:var(--radius-xs);font-size:11px;color:#64B5F6;text-align:center">✅ Acuerdo de pago activo — saldo acordado: '+fmt(d.saldoAcordado||d.monto)+'</div>'
+    )
     +'</div>';
 
   openModal('modal-detalle-deuda');
