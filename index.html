@@ -1966,6 +1966,8 @@ function getBK(){
   return currentUser ? 'ef_budget_'+currentUser.user : BK;
 }
 let clients=[],caja=[],notes=[],pockets=[];
+let currentUser = null;
+let _authListenerRegistered = false;
 let activeId=null,pagoCtx={},navMode='clientes',driveUrl='',autoSync=false;
 const JBIN_URL='https://api.jsonbin.io/v3/b/69b84e1eb7ec241ddc740c01';
 const JBIN_KEY='$2a$10$Y9JyN9HSiMNnfwRKp/ssIeX3BMCcRiIKUYjwhACjBOn4KNjXwoGji';
@@ -9243,9 +9245,6 @@ function pwContactarAdmin(){
   toast('Contacta al administrador para activar tu plan','info',4000);
 }
 // ═════════════════════════════════════════════════════════════════════════════
-let currentUser = null;
-
-let _authListenerRegistered = false;
 function checkLogin(){
   // Solo registrar el listener UNA vez
   if(_authListenerRegistered) return;
