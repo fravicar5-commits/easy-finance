@@ -1962,12 +1962,12 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
 <script>
 // ══ STORAGE ══════════════════════════════════════════════════════════════════
 const SK='ef_clients',CK='ef_caja',DK='ef_drive',NK='ef_notes',PK='ef_pockets',BK='ef_budget';
+let currentUser = null;
+let _authListenerRegistered = false;
 function getBK(){
   return currentUser ? 'ef_budget_'+currentUser.user : BK;
 }
 let clients=[],caja=[],notes=[],pockets=[];
-let currentUser = null;
-let _authListenerRegistered = false;
 let activeId=null,pagoCtx={},navMode='clientes',driveUrl='',autoSync=false;
 const JBIN_URL='https://api.jsonbin.io/v3/b/69b84e1eb7ec241ddc740c01';
 const JBIN_KEY='$2a$10$Y9JyN9HSiMNnfwRKp/ssIeX3BMCcRiIKUYjwhACjBOn4KNjXwoGji';
@@ -4690,30 +4690,6 @@ function cotizar() {
     + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text='+waMsg+'" target="_blank">WA</a>'
     + '</div>';
 }
-
-  if (tipo === 'fija') {
-    const cf = calcCuotaFija(monto, t, cuotas);
-    cuotaQ = Math.round(cf / 2);
-    cuotaLabel = 'por quincena (cuota fija)';
-    totalPagar = Math.round(cf * cuotas);
-    // Build amortization schedule
-    let saldo = monto;
-    for (let i = 0; i < cuotas; i++) {
-      const int = Math.round(saldo * t);
-      const cap = Math.round(cf - int);
-      schedule.push({ mes: i + 1, cuota: Math.round(cf), interes: int, capital: cap, saldo: Math.max(saldo - cap, 0) });
-      saldo = Math.max(saldo - cap, 0);
-      if (saldo <= 0) break;
-    }
-  } else {
-    cuotaQ = interesMes; // variable: pay interest only per quincena
-    cuotaLabel = 'por quincena (solo interés)';
-    totalPagar = interesMes * cuotas + monto;
-    for (let i = 0; i < cuotas; i++) {
-      schedule.push({ mes: i + 1, cuota: interesMes, interes: interesMes, capital: i === cuotas - 1 ? monto : 0, saldo: i === cuotas - 1 ? 0 : monto });
-    }
-  }
-
 
 function cotizarACrear() {
   // Pass values from cotizador to the form tab and switch
