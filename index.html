@@ -1453,7 +1453,7 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
         <div class="cot-field"><label>Tasa mensual (%)</label><input type="number" id="cot-tasa" min="0" max="100" step="0.1" placeholder="10" oninput="cotizar()"></div>
         <div class="cot-field"><label>Cuotas</label><input type="number" id="cot-cuotas" min="1" max="60" placeholder="3" oninput="cotizar()"></div>
         <div class="cot-field"><label>Tipo de cuota</label>
-          <select id="cot-tipo" onchange="cotizarToggleTasa();cotizar()">
+          <select id="cot-tipo" onchange="cotizar()">
             <option value="variable">Variable (saldo libre)</option>
             <option value="fija">Fija (amortización francesa)</option>
             <option value="reduccion">Reducción progresiva (cuotas decrecientes)</option>
@@ -4545,15 +4545,6 @@ function switchModalTab(tab) {
   document.getElementById('tab-btn-form').classList.toggle('active', tab === 'form');
 }
 
-function cotizarToggleTasa(){
-  const tipo=document.getElementById('cot-tipo').value;
-  const tasaField=document.getElementById('cot-tasa')?.closest('.cot-field');
-  if(tasaField){
-    tasaField.style.opacity=tipo==='sininteres'?'0.35':'1';
-    tasaField.style.pointerEvents=tipo==='sininteres'?'none':'';
-  }
-}
-
 function cotizar() {
   const monto   = parseFloat(document.getElementById('cot-monto').value) || 0;
   const tasa    = parseFloat(document.getElementById('cot-tasa').value)  || 0;
@@ -4561,6 +4552,15 @@ function cotizar() {
   const tipo    = document.getElementById('cot-tipo').value;
   const nombre  = document.getElementById('cot-nombre').value.trim() || 'el cliente';
   const el      = document.getElementById('cot-result-area');
+
+  // Opacidad del campo tasa según tipo
+  try {
+    const tasaWrap = document.getElementById('cot-tasa') && document.getElementById('cot-tasa').parentElement;
+    if (tasaWrap) {
+      tasaWrap.style.opacity = tipo === 'sininteres' ? '0.35' : '1';
+      tasaWrap.style.pointerEvents = tipo === 'sininteres' ? 'none' : '';
+    }
+  } catch(e) {}
 
   if (!monto || (!tasa && tipo !== 'sininteres') || !cuotas) {
     el.innerHTML = '<div class="cot-empty">Complete los campos para ver la cotización</div>';
