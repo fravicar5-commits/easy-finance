@@ -1453,9 +1453,11 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
         <div class="cot-field"><label>Tasa mensual (%)</label><input type="number" id="cot-tasa" min="0" max="100" step="0.1" placeholder="10" oninput="cotizar()"></div>
         <div class="cot-field"><label>Cuotas</label><input type="number" id="cot-cuotas" min="1" max="60" placeholder="3" oninput="cotizar()"></div>
         <div class="cot-field"><label>Tipo de cuota</label>
-          <select id="cot-tipo" onchange="cotizar()">
+          <select id="cot-tipo" onchange="cotizarToggleTasa();cotizar()">
             <option value="variable">Variable (saldo libre)</option>
-            <option value="fija">Fija (amortización)</option>
+            <option value="fija">Fija (amortización francesa)</option>
+            <option value="reduccion">Reducción progresiva (cuotas decrecientes)</option>
+            <option value="sininteres">Sin intereses (capital en cuotas iguales)</option>
           </select>
         </div>
       </div>
@@ -1997,11 +1999,9 @@ function loadBudgets(){
 }
 function saveBudgets(arr){
   localStorage.setItem(getBK(),JSON.stringify(arr));
-  // Sincronizar a Firestore incluyendo accesos rápidos para mantener todo en sync
-  if(currentUser&&_fsUid()){
-    const qa=qaLoadSelected();
-    _fsSave({budgets:arr,qa_selected:qa,updatedAt:new Date().toISOString()});
-  }
+  // Solo sincronizar a Firestore si ya hay sesión iniciada (no durante arranque)
+  if(currentUser&&_fsUid()) _fsSave({budgets:arr,updatedAt:new Date().toISOString()});
+
 }
 
 function getBudget(key){
@@ -2620,7 +2620,6 @@ function save(){
     volantes: volanteHistorial,
     segsocial: ssHistorial,
     budgets: loadBudgets(),
-    qa_selected: qaLoadSelected(),
     updatedAt: new Date().toISOString()
   });
 }
@@ -2635,14 +2634,6 @@ function _applyFirestoreData(data){
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
   if(data.segsocial){ssHistorial=data.segsocial;localStorage.setItem(SSK,JSON.stringify(ssHistorial));}
-  // Presupuesto — sincronizar desde nube si existe
-  if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){
-    localStorage.setItem(getBK(),JSON.stringify(data.budgets));
-  }
-  // Accesos rápidos — sincronizar preferencia desde nube
-  if(data.qa_selected&&Array.isArray(data.qa_selected)){
-    localStorage.setItem('cuadre_qa_selected',JSON.stringify(data.qa_selected));
-  }
   // Deudas: buscar siempre por clave propia del usuario primero
   const _dUID = currentUser ? currentUser.user : null;
   const _deudaKeys = Object.keys(data).filter(k=>k.startsWith('deudas_'));
@@ -3957,7 +3948,6 @@ function renderDetail(){
     +'<div class="header-actions hdr-icon-row">'
     +'<button class="hdr-ico-btn" onclick="renderDashboard()" title="Inicio"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></button>'
 
-    +'<button class="hdr-ico-btn" onclick="estadoCuenta('+c.id+')" title="Estado de cuenta"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></button>'
     +'<button class="hdr-ico-btn" data-cid="'+c.id+'" onclick="compartirEstadoEnlace(parseInt(this.dataset.cid))" title="Enlace para el cliente"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></button>'
     +'<button class="hdr-ico-btn hdr-ico-wa" data-cid="'+c.id+'" onclick="abrirWhatsApp(parseInt(this.dataset.cid))" title="WhatsApp"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>'
     +'<button class="hdr-ico-btn" onclick="openEditModal('+c.id+')" title="Editar préstamo"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
@@ -4555,6 +4545,15 @@ function switchModalTab(tab) {
   document.getElementById('tab-btn-form').classList.toggle('active', tab === 'form');
 }
 
+function cotizarToggleTasa(){
+  const tipo=document.getElementById('cot-tipo').value;
+  const tasaField=document.getElementById('cot-tasa')?.closest('.cot-field');
+  if(tasaField){
+    tasaField.style.opacity=tipo==='sininteres'?'0.35':'1';
+    tasaField.style.pointerEvents=tipo==='sininteres'?'none':'';
+  }
+}
+
 function cotizar() {
   const monto   = parseFloat(document.getElementById('cot-monto').value) || 0;
   const tasa    = parseFloat(document.getElementById('cot-tasa').value)  || 0;
@@ -4563,15 +4562,132 @@ function cotizar() {
   const nombre  = document.getElementById('cot-nombre').value.trim() || 'el cliente';
   const el      = document.getElementById('cot-result-area');
 
-  if (!monto || !tasa || !cuotas) {
+  if (!monto || (!tasa && tipo !== 'sininteres') || !cuotas) {
     el.innerHTML = '<div class="cot-empty">Complete los campos para ver la cotización</div>';
     return;
   }
 
   const t = tasa / 100;
   const interesMes = Math.round(monto * t);
-  const saldoInicial = Math.round(monto * (1 + t));
-  let cuotaQ, cuotaLabel, totalPagar, schedule = [];
+  let cuotaQ, cuotaLabel, totalPagar, ganancia, schedule = [];
+
+  if (tipo === 'fija') {
+    // ── Francesa: cuota fija, interés decrece, capital crece ─────────────
+    const cf = calcCuotaFija(monto, t, cuotas);
+    cuotaQ = Math.round(cf / 2);
+    cuotaLabel = 'por quincena (cuota fija)';
+    totalPagar = Math.round(cf * cuotas);
+    let saldo = monto;
+    for (let i = 0; i < cuotas; i++) {
+      const int = Math.round(saldo * t);
+      const cap = Math.round(cf - int);
+      schedule.push({ mes: i+1, cuota: Math.round(cf), interes: int, capital: cap, saldo: Math.max(saldo-cap, 0) });
+      saldo = Math.max(saldo - cap, 0);
+      if (saldo <= 0) break;
+    }
+
+  } else if (tipo === 'reduccion') {
+    // ── Alemana: abono capital fijo, interés decrece, cuota total decrece ─
+    const abonoCapital = Math.round(monto / cuotas);
+    cuotaLabel = 'primera quincena (decrece cada mes)';
+    totalPagar = 0;
+    let saldo = monto;
+    for (let i = 0; i < cuotas; i++) {
+      const int = Math.round(saldo * t);
+      const cuotaMes = abonoCapital + int;
+      const saldoNuevo = Math.max(saldo - abonoCapital, 0);
+      schedule.push({ mes: i+1, cuota: cuotaMes, interes: int, capital: abonoCapital, saldo: saldoNuevo });
+      totalPagar += cuotaMes;
+      saldo = saldoNuevo;
+      if (i === 0) cuotaQ = Math.round(cuotaMes / 2); // primera cuota como referencia
+    }
+    cuotaLabel = '$'+Math.round(schedule[schedule.length-1].cuota/2).toLocaleString('es-CO')+' última · decrece cada mes';
+
+  } else if (tipo === 'sininteres') {
+    // ── Sin intereses: capital ÷ cuotas iguales ───────────────────────────
+    const cuotaMes = Math.round(monto / cuotas);
+    cuotaQ = Math.round(cuotaMes / 2);
+    cuotaLabel = 'por quincena (sin intereses)';
+    totalPagar = cuotaMes * cuotas;
+    let saldo = monto;
+    for (let i = 0; i < cuotas; i++) {
+      const cap = i === cuotas-1 ? saldo : cuotaMes; // last month takes remainder
+      schedule.push({ mes: i+1, cuota: cap, interes: 0, capital: cap, saldo: Math.max(saldo-cap, 0) });
+      saldo = Math.max(saldo - cap, 0);
+    }
+
+  } else {
+    // ── Variable: solo interés por quincena, capital al final ─────────────
+    cuotaQ = interesMes;
+    cuotaLabel = 'por quincena (solo interés)';
+    totalPagar = interesMes * cuotas + monto;
+    for (let i = 0; i < cuotas; i++) {
+      schedule.push({ mes: i+1, cuota: interesMes, interes: interesMes, capital: i === cuotas-1 ? monto : 0, saldo: i === cuotas-1 ? 0 : monto });
+    }
+  }
+
+  ganancia = totalPagar - monto;
+  const usuraWarn = (tasa > 2.13 && tipo !== 'sininteres')
+    ? '<div style="background:rgba(255,107,107,.12);border:1px solid var(--red-bdr);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--red);margin-bottom:10px">⚠ La tasa supera la tasa de usura vigente (≈2.13% mensual)</div>' : '';
+
+  // Etiqueta de ahorro vs fija (para tipos nuevos)
+  let comparativaHTML = '';
+  if (tipo === 'reduccion' && tasa > 0) {
+    const cf = calcCuotaFija(monto, t, cuotas);
+    const totalFija = Math.round(cf * cuotas);
+    const ahorro = totalFija - totalPagar;
+    if (ahorro > 0) comparativaHTML = '<div style="background:rgba(76,175,80,.1);border:1px solid rgba(76,175,80,.3);border-radius:6px;padding:7px 10px;font-size:11px;color:#4CAF50;margin-bottom:10px">💡 Ahorras <strong>$'+ahorro.toLocaleString('es-CO')+'</strong> en intereses vs cuota fija francesa</div>';
+  }
+  if (tipo === 'sininteres') {
+    comparativaHTML = '<div style="background:rgba(100,181,246,.1);border:1px solid rgba(100,181,246,.3);border-radius:6px;padding:7px 10px;font-size:11px;color:#64B5F6;margin-bottom:10px">🤝 Préstamo solidario sin intereses — el cliente paga solo el capital en cuotas iguales</div>';
+  }
+
+  // WhatsApp message
+  const primeraCuota = schedule[0]?.cuota || cuotaQ * 2;
+  const waMsg = 'Hola '+nombre+', aquí va su cotización:%0A%0A'
+    + '💰 Monto: $'+monto.toLocaleString('es-CO')+'%0A'
+    + (tipo!=='sininteres'?'📊 Tasa: '+tasa+'% mensual%0A':'')
+    + '📅 Plazo: '+cuotas+' mes'+(cuotas!==1?'es':'')+' ('+tipo+')%0A'
+    + '💵 Cuota quincenal: $'+(cuotaQ||Math.round(primeraCuota/2)).toLocaleString('es-CO')
+    + (tipo==='reduccion'?' (primera, decrece)':'')+'%0A'
+    + '💳 Total a pagar: $'+totalPagar.toLocaleString('es-CO')+'%0A'
+    + (ganancia>0?'📈 Intereses totales: $'+ganancia.toLocaleString('es-CO')+'%0A':'')
+    + '%0A_Generado por Cuadre_';
+
+  // Schedule HTML — columna cuota en color según tipo
+  const schedHTML = '<div class="cot-schedule">'
+    + '<div class="cot-schedule-row header"><div>Mes</div><div>Cuota</div><div>Interés</div><div>Saldo</div></div>'
+    + schedule.map(r =>
+        '<div class="cot-schedule-row">'
+        + '<div>'+r.mes+'</div>'
+        + '<div>$'+r.cuota.toLocaleString('es-CO')+'</div>'
+        + '<div style="color:'+(r.interes>0?'var(--red)':'var(--green)')+'">$'+r.interes.toLocaleString('es-CO')+'</div>'
+        + '<div style="color:var(--amber)">$'+r.saldo.toLocaleString('es-CO')+'</div>'
+        + '</div>'
+      ).join('')
+    + '</div>';
+
+  el.innerHTML = usuraWarn + comparativaHTML
+    + '<div class="cot-result">'
+    + '<div class="cot-result-main">'
+    + '<div class="cot-result-label">'+(tipo==='reduccion'?'Primera cuota quincenal':'Cuota quincenal')+'</div>'
+    + '<div class="cot-result-value">$'+(cuotaQ||Math.round(schedule[0].cuota/2)).toLocaleString('es-CO')+'</div>'
+    + '<div class="cot-result-sub">'+cuotaLabel+'</div>'
+    + '</div>'
+    + '<div class="cot-breakdown">'
+    + '<div class="cot-bk"><div class="cot-bk-label">Monto</div><div class="cot-bk-val c-blue">$'+monto.toLocaleString('es-CO')+'</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">'+(tipo==='sininteres'?'Interés/mes':'Interés/mes')+'</div><div class="cot-bk-val '+(ganancia===0?'c-green':'c-red')+'">$'+interesMes.toLocaleString('es-CO')+'</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">Total a pagar</div><div class="cot-bk-val c-amber">$'+totalPagar.toLocaleString('es-CO')+'</div></div>'
+    + '<div class="cot-bk"><div class="cot-bk-label">'+(tipo==='sininteres'?'Ahorro cliente':'Su ganancia')+'</div><div class="cot-bk-val c-green">$'+ganancia.toLocaleString('es-CO')+'</div></div>'
+    + '</div>'
+    + '</div>'
+    + '<div class="sec-label" style="margin-bottom:6px">Tabla de pagos</div>'
+    + schedHTML
+    + '<div class="cot-actions">'
+    + '<button class="btn btn-pink" style="flex:1" onclick="cotizarACrear()">→ Crear registro</button>'
+    + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text='+waMsg+'" target="_blank">WA</a>'
+    + '</div>';
+}
 
   if (tipo === 'fija') {
     const cf = calcCuotaFija(monto, t, cuotas);
@@ -4596,52 +4712,6 @@ function cotizar() {
     }
   }
 
-  const ganancia = totalPagar - monto;
-  const usuraWarn = tasa > 2.13 ? '<div style="background:rgba(255,107,107,.12);border:1px solid var(--red-bdr);border-radius:6px;padding:7px 10px;font-size:11px;color:var(--red);margin-bottom:10px">⚠ La tasa supera la tasa de usura vigente (≈2.13% mensual)</div>' : '';
-
-  // WhatsApp message preview
-  const waMsg = 'Hola ' + nombre + ', aquí va su cotización:%0A%0A'
-    + '💰 Monto: $' + monto.toLocaleString('es-CO') + '%0A'
-    + '📊 Tasa: ' + tasa + '% mensual%0A'
-    + '📅 Plazo: ' + cuotas + ' mes' + (cuotas !== 1 ? 'es' : '') + ' (' + tipo + ')%0A'
-    + '💵 Cuota quincenal: $' + cuotaQ.toLocaleString('es-CO') + '%0A'
-    + '💳 Total a pagar: $' + totalPagar.toLocaleString('es-CO') + '%0A%0A'
-    + '_Generado por Cuadre_';
-
-  // Schedule HTML
-  const schedHTML = '<div class="cot-schedule">'
-    + '<div class="cot-schedule-row header"><div>Mes</div><div>Cuota</div><div>Interés</div><div>Saldo</div></div>'
-    + schedule.map(r =>
-        '<div class="cot-schedule-row">'
-        + '<div>' + r.mes + '</div>'
-        + '<div>$' + r.cuota.toLocaleString('es-CO') + '</div>'
-        + '<div style="color:var(--red)">$' + r.interes.toLocaleString('es-CO') + '</div>'
-        + '<div style="color:var(--amber)">$' + r.saldo.toLocaleString('es-CO') + '</div>'
-        + '</div>'
-      ).join('')
-    + '</div>';
-
-  el.innerHTML = usuraWarn
-    + '<div class="cot-result">'
-    + '<div class="cot-result-main">'
-    + '<div class="cot-result-label">Cuota quincenal</div>'
-    + '<div class="cot-result-value">$' + cuotaQ.toLocaleString('es-CO') + '</div>'
-    + '<div class="cot-result-sub">' + cuotaLabel + '</div>'
-    + '</div>'
-    + '<div class="cot-breakdown">'
-    + '<div class="cot-bk"><div class="cot-bk-label">Monto</div><div class="cot-bk-val c-blue">$' + monto.toLocaleString('es-CO') + '</div></div>'
-    + '<div class="cot-bk"><div class="cot-bk-label">Interés/mes</div><div class="cot-bk-val c-red">$' + interesMes.toLocaleString('es-CO') + '</div></div>'
-    + '<div class="cot-bk"><div class="cot-bk-label">Total a pagar</div><div class="cot-bk-val c-amber">$' + totalPagar.toLocaleString('es-CO') + '</div></div>'
-    + '<div class="cot-bk"><div class="cot-bk-label">Su ganancia</div><div class="cot-bk-val c-green">$' + ganancia.toLocaleString('es-CO') + '</div></div>'
-    + '</div>'
-    + '</div>'
-    + '<div class="sec-label" style="margin-bottom:6px">Tabla de pagos</div>'
-    + schedHTML
-    + '<div class="cot-actions">'
-    + '<button class="btn btn-pink" style="flex:1" onclick="cotizarACrear()">→ Crear registro</button>'
-    + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text=' + waMsg + '" target="_blank">WA</a>'
-    + '</div>';
-}
 
 function cotizarACrear() {
   // Pass values from cotizador to the form tab and switch
@@ -4651,13 +4721,18 @@ function cotizarACrear() {
   const tipo   = document.getElementById('cot-tipo').value;
   const nombre = document.getElementById('cot-nombre').value.trim();
 
+  // Mapear tipos nuevos al tipo de cuota del formulario
+  const tipoForm = tipo === 'reduccion' ? 'variable'
+                 : tipo === 'sininteres' ? 'acuerdo'
+                 : tipo; // fija, variable sin cambio
+
   switchModalTab('form');
 
   if (nombre) document.getElementById('n-name').value = nombre;
   document.getElementById('n-monto').value  = monto;
-  document.getElementById('n-tasa').value   = tasa;
+  document.getElementById('n-tasa').value   = tipo === 'sininteres' ? '0' : tasa;
   document.getElementById('n-cuotas').value = cuotas;
-  document.getElementById('n-tipocuota').value = tipo;
+  document.getElementById('n-tipocuota').value = tipoForm;
   document.getElementById('n-fecha').value  = iso();
   prev('n');
   toast('Datos pasados al formulario — complete y guarde', 'info', 3000);
@@ -10755,113 +10830,6 @@ function actualizarSimEscenario(){
   }
   resEl.innerHTML=html;
 }
-function renderClienteProgreso(){
-  loadDeudas();
-  const activas=deudas.filter(function(d){return saldoDeuda(d)>0||totalPagadoDeuda(d)>0;});
-  if(activas.length===0) return '';
-
-  // ── 1. Gráfico de barras: pagos por mes (año actual) ─────────────────────
-  const hoy=new Date();
-  const anio=hoy.getFullYear();
-  const mesesNombres=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-  const pagosPorMes=new Array(12).fill(0);
-
-  activas.forEach(function(d){
-    (d.pagos||[]).forEach(function(p){
-      if(!p.fecha||!p.valor) return;
-      const f=new Date(p.fecha+'T00:00:00');
-      if(f.getFullYear()===anio) pagosPorMes[f.getMonth()]+=p.valor;
-    });
-  });
-
-  const maxBar=Math.max.apply(null,pagosPorMes)||1;
-  const mesActual=hoy.getMonth();
-  const BAR_W=18, BAR_GAP=4, CHART_H=60, LABEL_H=16;
-  const totalW=(BAR_W+BAR_GAP)*12-BAR_GAP;
-
-  var bars='';
-  for(var m=0;m<12;m++){
-    const v=pagosPorMes[m];
-    const barH=Math.max(v>0?Math.round((v/maxBar)*CHART_H):2,2);
-    const x=m*(BAR_W+BAR_GAP);
-    const y=CHART_H-barH;
-    const esMes=m===mesActual;
-    const esFuturo=m>mesActual;
-    const color=esMes?'url(#barGrad)':esFuturo?'rgba(255,255,255,.08)':v>0?'rgba(0,188,212,.5)':'rgba(255,255,255,.06)';
-    bars+='<rect x="'+x+'" y="'+y+'" width="'+BAR_W+'" height="'+barH+'" rx="3" fill="'+color+'"/>';
-    // Label mes
-    bars+='<text x="'+(x+BAR_W/2)+'" y="'+(CHART_H+LABEL_H-2)+'" text-anchor="middle" font-size="8" fill="'+(esMes?'#00BCD4':esFuturo?'rgba(255,255,255,.2)':'rgba(255,255,255,.4)')+'">'+mesesNombres[m]+'</text>';
-    // Valor encima si hay pago
-    if(v>0&&!esFuturo){
-      const label=v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'k':'$'+v;
-      bars+='<text x="'+(x+BAR_W/2)+'" y="'+(y-3)+'" text-anchor="middle" font-size="7" fill="'+(esMes?'#00BCD4':'rgba(0,188,212,.8)')+'">'+label+'</text>';
-    }
-  }
-
-  const svgChart=(
-    '<svg viewBox="0 0 '+totalW+' '+(CHART_H+LABEL_H+4)+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible">'
-    +'<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">'
-    +'<stop offset="0%" stop-color="#00E5D1"/>'
-    +'<stop offset="100%" stop-color="#0097A7"/>'
-    +'</linearGradient></defs>'
-    +bars
-    +'</svg>'
-  );
-
-  const totalPagadoAnio=pagosPorMes.reduce(function(s,v){return s+v;},0);
-  const totalDeuda=activas.reduce(function(s,d){return s+(d.tipocuota==='acuerdo'?(d.saldoAcordado||d.monto):d.monto);},0);
-  const pctAnio=totalDeuda>0?Math.min(Math.round((totalPagadoAnio/totalDeuda)*100),100):0;
-
-  // ── 2. Barras de progreso por deuda ──────────────────────────────────────
-  var deudaBars='';
-  activas.slice(0,5).forEach(function(d){
-    const base=d.tipocuota==='acuerdo'?(d.saldoAcordado||d.monto):d.monto;
-    const pagado=totalPagadoDeuda(d);
-    const pct=base>0?Math.min(Math.round((pagado/base)*100),100):0;
-    const saldo=saldoDeuda(d);
-    const color=pct>=80?'#4CAF50':pct>=50?'#00BCD4':pct>=25?'#FF9800':'#ef5350';
-    deudaBars+=(
-      '<div style="margin-bottom:10px">'
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
-      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+d.acreedor+'</span>'
-      +'<span style="font-size:10px;color:var(--text3)">'+fmt(saldo)+' restante</span>'
-      +'</div>'
-      +'<div style="background:rgba(255,255,255,.07);border-radius:6px;height:8px;overflow:hidden;position:relative">'
-      +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,'+color+','+color+'aa);border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>'
-      +'</div>'
-      +'<div style="display:flex;justify-content:space-between;margin-top:3px">'
-      +'<span style="font-size:9px;color:rgba(255,255,255,.3)">'+fmt(pagado)+' pagado</span>'
-      +'<span style="font-size:9px;font-weight:700;color:'+color+'">'+pct+'%</span>'
-      +'</div>'
-      +'</div>'
-    );
-  });
-
-  return (
-    '<div style="margin-top:14px">'
-    // Gráfico barras
-    +'<div class="card" style="margin-bottom:10px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
-    +'<div>'
-    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em">📊 PAGOS '+anio+'</div>'
-    +'<div style="font-size:10px;color:var(--text3);margin-top:1px">Total pagado este año: <span style="color:#00BCD4;font-weight:700">'+fmt(totalPagadoAnio)+'</span></div>'
-    +'</div>'
-    +'<div style="text-align:right">'
-    +'<div style="font-size:18px;font-weight:900;color:#00BCD4;font-family:monospace">'+pctAnio+'%</div>'
-    +'<div style="font-size:9px;color:var(--text3)">avance total</div>'
-    +'</div>'
-    +'</div>'
-    +svgChart
-    +'</div>'
-    // Progreso por deuda
-    +'<div class="card">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:12px">🎯 PROGRESO POR DEUDA</div>'
-    +deudaBars
-    +'</div>'
-    +'</div>'
-  );
-}
-
 function renderClienteDashboard(){
   loadDeudas();
   const el=document.getElementById('cliente-content');if(!el) return;
@@ -10950,7 +10918,6 @@ function renderClienteDashboard(){
       +'<div class="card" style="max-height:200px;overflow-y:auto">'
       +proximosHTML
       +'</div>'
-      +renderClienteProgreso()
     );
   // Arrancar slider si hay múltiples alertas
   setTimeout(_cdAlertAutoStart,50);
@@ -14701,9 +14668,6 @@ function qaCloseConfig(){ document.getElementById('qa-config-modal').classList.r
 function qaSaveConfig(){
   qaCloseConfig();
   qaRender();
-  // Sincronizar preferencia a Firestore para que todos los dispositivos la vean
-  const sel=qaLoadSelected();
-  if(currentUser&&_fsUid()) _fsSave({qa_selected:sel,updatedAt:new Date().toISOString()});
   toast('Accesos rápidos actualizados','success',1800);
 }
 
