@@ -10900,6 +10900,36 @@ function renderClienteDashboard(){
       +'</div></div>';
   }).join('');
 
+  // ── Gráfico de progreso por deuda (calculado antes del render) ─────────────
+  var progresoHTML = '';
+  if(activas.length > 0){
+    progresoHTML = '<div class="sec-label" style="margin-top:14px">PROGRESO POR DEUDA</div>'
+      + '<div class="card">';
+    activas.forEach(function(d){
+      var total = d.saldoAcordado || d.monto;
+      var pagado = Math.min(totalPagadoDeuda(d), total);
+      var saldo = saldoDeuda(d);
+      var pct = total > 0 ? Math.min(Math.round((pagado / total) * 100), 100) : 0;
+      var mora = enMoraDeuda(d);
+      var barColor = mora ? 'var(--red)' : pct >= 75 ? 'var(--green)' : pct >= 40 ? '#00BCD4' : 'var(--amber)';
+      progresoHTML += '<div style="margin-bottom:14px">'
+        + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+        + '<span style="font-size:12px;font-weight:700;color:var(--text)">' + d.acreedor + '</span>'
+        + '<span style="font-size:10px;font-weight:800;color:' + barColor + '">' + pct + '%</span>'
+        + '</div>'
+        + '<div style="height:8px;border-radius:4px;background:var(--surface3);overflow:hidden;margin-bottom:4px">'
+        + '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:4px;transition:width .4s"></div>'
+        + '</div>'
+        + '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)">'
+        + '<span>Pagado: <span style="color:var(--green);font-family:monospace">' + fmt(pagado) + '</span></span>'
+        + '<span>Saldo: <span style="color:var(--amber);font-family:monospace">' + fmt(saldo) + '</span></span>'
+        + '</div>'
+        + (mora ? '<div style="font-size:9px;color:var(--red);font-weight:700;margin-top:2px">⚠ En mora</div>' : '')
+        + '</div>';
+    });
+    progresoHTML += '</div>';
+  }
+
   el.innerHTML=
     reminderHTML
     +alertaHTML
@@ -10915,34 +10945,7 @@ function renderClienteDashboard(){
       +'<div class="card" style="max-height:200px;overflow-y:auto">'
       +proximosHTML
       +'</div>'
-      // ── Gráfico de progreso por deuda ─────────────────────────────────────
-      +(activas.length>0
-        ? '<div class="sec-label" style="margin-top:14px">PROGRESO POR DEUDA</div>'
-          +'<div class="card">'
-          +activas.map(function(d){
-            const total = d.saldoAcordado || d.monto;
-            const pagado = Math.min(totalPagadoDeuda(d), total);
-            const saldo = saldoDeuda(d);
-            const pct = total > 0 ? Math.min(Math.round((pagado / total) * 100), 100) : 0;
-            const mora = enMoraDeuda(d);
-            const barColor = mora ? 'var(--red)' : pct >= 75 ? 'var(--green)' : pct >= 40 ? '#00BCD4' : 'var(--amber)';
-            return '<div style="margin-bottom:14px">'
-              +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
-              +'<span style="font-size:12px;font-weight:700;color:var(--text)">' + d.acreedor + '</span>'
-              +'<span style="font-size:10px;font-weight:800;color:'+barColor+'">'+pct+'%</span>'
-              +'</div>'
-              +'<div style="height:8px;border-radius:4px;background:var(--surface3);overflow:hidden;margin-bottom:4px">'
-              +'<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:4px;transition:width .4s"></div>'
-              +'</div>'
-              +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3)">'
-              +'<span>Pagado: <span style="color:var(--green);font-family:monospace">'+fmt(pagado)+'</span></span>'
-              +'<span>Saldo: <span style="color:var(--amber);font-family:monospace">'+fmt(saldo)+'</span></span>'
-              +'</div>'
-              +(mora ? '<div style="font-size:9px;color:var(--red);font-weight:700;margin-top:2px">⚠ En mora</div>' : '')
-              +'</div>';
-          }).join('')
-          +'</div>'
-        : '')
+      +progresoHTML
     );
   // Arrancar slider si hay múltiples alertas
   setTimeout(_cdAlertAutoStart,50);
@@ -11073,7 +11076,7 @@ function renderClienteCalendario(){
     const mes=parseInt(parts[1])-1;
     if(anio===anioActual&&mes>=0&&mes<12) proyPorMes[mes]+=p.monto;
   });
-  const maxVal=Math.max(...pagadoPorMes,...proyPorMes,1);
+  const maxVal=Math.max.apply(null, pagadoPorMes.concat(proyPorMes).concat([1]));
   const mesActual=hoy.getMonth();
 
   const barrasHTML=MESES.map(function(nombre,i){
