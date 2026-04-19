@@ -1968,6 +1968,7 @@ function getBK(){
 let clients=[],caja=[],notes=[],pockets=[];
 let currentUser = null;
 let _authListenerRegistered = false;
+const _navHistory=[];
 let activeId=null,pagoCtx={},navMode='clientes',driveUrl='',autoSync=false;
 const JBIN_URL='https://api.jsonbin.io/v3/b/69b84e1eb7ec241ddc740c01';
 const JBIN_KEY='$2a$10$Y9JyN9HSiMNnfwRKp/ssIeX3BMCcRiIKUYjwhACjBOn4KNjXwoGji';
@@ -14759,7 +14760,6 @@ function qaSaveConfig(){
 }
 
 // ── Botón atrás del celular (PWA) ────────────────────────────────────────────
-const _navHistory=[];
 function _pushNav(id){
   if(_navHistory[_navHistory.length-1]!==id) _navHistory.push(id);
   history.pushState({screen:id},'',location.pathname);
