@@ -10755,6 +10755,113 @@ function actualizarSimEscenario(){
   }
   resEl.innerHTML=html;
 }
+function renderClienteProgreso(){
+  loadDeudas();
+  const activas=deudas.filter(function(d){return saldoDeuda(d)>0||totalPagadoDeuda(d)>0;});
+  if(activas.length===0) return '';
+
+  // ── 1. Gráfico de barras: pagos por mes (año actual) ─────────────────────
+  const hoy=new Date();
+  const anio=hoy.getFullYear();
+  const mesesNombres=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  const pagosPorMes=new Array(12).fill(0);
+
+  activas.forEach(function(d){
+    (d.pagos||[]).forEach(function(p){
+      if(!p.fecha||!p.valor) return;
+      const f=new Date(p.fecha+'T00:00:00');
+      if(f.getFullYear()===anio) pagosPorMes[f.getMonth()]+=p.valor;
+    });
+  });
+
+  const maxBar=Math.max.apply(null,pagosPorMes)||1;
+  const mesActual=hoy.getMonth();
+  const BAR_W=18, BAR_GAP=4, CHART_H=60, LABEL_H=16;
+  const totalW=(BAR_W+BAR_GAP)*12-BAR_GAP;
+
+  var bars='';
+  for(var m=0;m<12;m++){
+    const v=pagosPorMes[m];
+    const barH=Math.max(v>0?Math.round((v/maxBar)*CHART_H):2,2);
+    const x=m*(BAR_W+BAR_GAP);
+    const y=CHART_H-barH;
+    const esMes=m===mesActual;
+    const esFuturo=m>mesActual;
+    const color=esMes?'url(#barGrad)':esFuturo?'rgba(255,255,255,.08)':v>0?'rgba(0,188,212,.5)':'rgba(255,255,255,.06)';
+    bars+='<rect x="'+x+'" y="'+y+'" width="'+BAR_W+'" height="'+barH+'" rx="3" fill="'+color+'"/>';
+    // Label mes
+    bars+='<text x="'+(x+BAR_W/2)+'" y="'+(CHART_H+LABEL_H-2)+'" text-anchor="middle" font-size="8" fill="'+(esMes?'#00BCD4':esFuturo?'rgba(255,255,255,.2)':'rgba(255,255,255,.4)')+'">'+mesesNombres[m]+'</text>';
+    // Valor encima si hay pago
+    if(v>0&&!esFuturo){
+      const label=v>=1000000?'$'+(v/1000000).toFixed(1)+'M':v>=1000?'$'+(v/1000).toFixed(0)+'k':'$'+v;
+      bars+='<text x="'+(x+BAR_W/2)+'" y="'+(y-3)+'" text-anchor="middle" font-size="7" fill="'+(esMes?'#00BCD4':'rgba(0,188,212,.8)')+'">'+label+'</text>';
+    }
+  }
+
+  const svgChart=(
+    '<svg viewBox="0 0 '+totalW+' '+(CHART_H+LABEL_H+4)+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;overflow:visible">'
+    +'<defs><linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">'
+    +'<stop offset="0%" stop-color="#00E5D1"/>'
+    +'<stop offset="100%" stop-color="#0097A7"/>'
+    +'</linearGradient></defs>'
+    +bars
+    +'</svg>'
+  );
+
+  const totalPagadoAnio=pagosPorMes.reduce(function(s,v){return s+v;},0);
+  const totalDeuda=activas.reduce(function(s,d){return s+(d.tipocuota==='acuerdo'?(d.saldoAcordado||d.monto):d.monto);},0);
+  const pctAnio=totalDeuda>0?Math.min(Math.round((totalPagadoAnio/totalDeuda)*100),100):0;
+
+  // ── 2. Barras de progreso por deuda ──────────────────────────────────────
+  var deudaBars='';
+  activas.slice(0,5).forEach(function(d){
+    const base=d.tipocuota==='acuerdo'?(d.saldoAcordado||d.monto):d.monto;
+    const pagado=totalPagadoDeuda(d);
+    const pct=base>0?Math.min(Math.round((pagado/base)*100),100):0;
+    const saldo=saldoDeuda(d);
+    const color=pct>=80?'#4CAF50':pct>=50?'#00BCD4':pct>=25?'#FF9800':'#ef5350';
+    deudaBars+=(
+      '<div style="margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text)">'+d.acreedor+'</span>'
+      +'<span style="font-size:10px;color:var(--text3)">'+fmt(saldo)+' restante</span>'
+      +'</div>'
+      +'<div style="background:rgba(255,255,255,.07);border-radius:6px;height:8px;overflow:hidden;position:relative">'
+      +'<div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,'+color+','+color+'aa);border-radius:6px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:space-between;margin-top:3px">'
+      +'<span style="font-size:9px;color:rgba(255,255,255,.3)">'+fmt(pagado)+' pagado</span>'
+      +'<span style="font-size:9px;font-weight:700;color:'+color+'">'+pct+'%</span>'
+      +'</div>'
+      +'</div>'
+    );
+  });
+
+  return (
+    '<div style="margin-top:14px">'
+    // Gráfico barras
+    +'<div class="card" style="margin-bottom:10px">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'
+    +'<div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em">📊 PAGOS '+anio+'</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:1px">Total pagado este año: <span style="color:#00BCD4;font-weight:700">'+fmt(totalPagadoAnio)+'</span></div>'
+    +'</div>'
+    +'<div style="text-align:right">'
+    +'<div style="font-size:18px;font-weight:900;color:#00BCD4;font-family:monospace">'+pctAnio+'%</div>'
+    +'<div style="font-size:9px;color:var(--text3)">avance total</div>'
+    +'</div>'
+    +'</div>'
+    +svgChart
+    +'</div>'
+    // Progreso por deuda
+    +'<div class="card">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:12px">🎯 PROGRESO POR DEUDA</div>'
+    +deudaBars
+    +'</div>'
+    +'</div>'
+  );
+}
+
 function renderClienteDashboard(){
   loadDeudas();
   const el=document.getElementById('cliente-content');if(!el) return;
@@ -10843,6 +10950,7 @@ function renderClienteDashboard(){
       +'<div class="card" style="max-height:200px;overflow-y:auto">'
       +proximosHTML
       +'</div>'
+      +renderClienteProgreso()
     );
   // Arrancar slider si hay múltiples alertas
   setTimeout(_cdAlertAutoStart,50);
