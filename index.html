@@ -1962,12 +1962,12 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
 <script>
 // ══ STORAGE ══════════════════════════════════════════════════════════════════
 const SK='ef_clients',CK='ef_caja',DK='ef_drive',NK='ef_notes',PK='ef_pockets',BK='ef_budget';
-let currentUser = null;
-let _authListenerRegistered = false;
 function getBK(){
   return currentUser ? 'ef_budget_'+currentUser.user : BK;
 }
 let clients=[],caja=[],notes=[],pockets=[];
+let currentUser = null;
+let _authListenerRegistered = false;
 let activeId=null,pagoCtx={},navMode='clientes',driveUrl='',autoSync=false;
 const JBIN_URL='https://api.jsonbin.io/v3/b/69b84e1eb7ec241ddc740c01';
 const JBIN_KEY='$2a$10$Y9JyN9HSiMNnfwRKp/ssIeX3BMCcRiIKUYjwhACjBOn4KNjXwoGji';
@@ -2205,8 +2205,9 @@ function renderBudget(el){
         // ── GASTOS FIJOS ──
         +'<div class="bud-section">'
         +'<div class="bud-section-title">🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos de esta quincena: arriendo, servicios, cuotas, etc.')
-        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button></div>'
-        +(qdata.gastosFijos.map((g,idx)=>budItemRow(g,idx,'gastosFijos','c-amber')).join('')
+        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">' + '+ Agregar</button>'
+        +'<button class="btn" style="font-size:10px;padding:3px 8px;margin-left:4px;background:rgba(0,188,212,.12);color:#00BCD4;border-color:rgba(0,188,212,.3)" onclick="abrirScanFactura()">📷 Escanear</button></div>'
+        +(qdata.gastosFijos.map((g,idx)=>budItemRowServicio(g,idx,'gastosFijos','c-amber')).join('')
           ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos en esta quincena</div>')
         +(qGF>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(qGF)+'</strong></div>':'')
         +'</div>'
@@ -2407,6 +2408,271 @@ function crearNuevoMes(){
   activeBudgetKey=key;activeBudgetQ='q1';
   renderBudget(document.getElementById('dd-content'));
   toast('Mes '+nombre+' creado');
+}
+
+// ══ SERVICIOS PÚBLICOS — EMPRESAS COLOMBIA ════════════════════════════════════
+var SP_EMPRESAS = {
+  energia:[
+    {id:'epm',       label:'EPM',              region:'Antioquia',          url:'https://www.epm.com.co/site/clientes_usuarios/clientesyusuarios/energ%C3%ADa/pagaenl%C3%ADnea.aspx'},
+    {id:'enel',      label:'Enel (Codensa)',    region:'Bogotá/Cundinamarca',url:'https://www.enel.com.co/es/clientes/paga-tu-factura.html'},
+    {id:'emcali',    label:'EMCALI',            region:'Cali/Valle',         url:'https://www.emcali.com.co/web/guest/pagos'},
+    {id:'aire',      label:'Air-e',             region:'Caribe (Atlántico)', url:'https://www.aire.com.co/pagos'},
+    {id:'afinia',    label:'Afinia',            region:'Caribe (Bolívar)',   url:'https://www.afinia.com.co/pagos'},
+    {id:'celsia',    label:'Celsia',            region:'Tolima/Occidente',   url:'https://www.celsia.com/es/clientes/pagos'},
+    {id:'electrohuila',label:'Electrohuila',   region:'Huila/Caquetá',      url:'https://www.electrohuila.com.co/pagos'},
+    {id:'essa',      label:'ESSA',             region:'Santander',          url:'https://www.essa.com.co/pagos'},
+    {id:'ebsa',      label:'EBSA',             region:'Boyacá',             url:'https://www.ebsa.com.co/pagos'},
+  ],
+  agua:[
+    {id:'acueducto_bog',label:'Acueducto Bogotá',region:'Bogotá',           url:'https://www.acueducto.com.co/wps/portal/EAB2/Home/pagos'},
+    {id:'epm_agua',  label:'EPM Agua',          region:'Antioquia',          url:'https://www.epm.com.co/site/clientes_usuarios/clientesyusuarios/agua/pagaenl%C3%ADnea.aspx'},
+    {id:'emcali_agua',label:'EMCALI Acueducto', region:'Cali/Valle',         url:'https://www.emcali.com.co/web/guest/pagos'},
+    {id:'aguas_bog', label:'Aguas de Bogotá',   region:'Bogotá',             url:'https://www.aguasdebogota.com.co'},
+    {id:'triple_a',  label:'Triple A',          region:'Barranquilla',       url:'https://www.aaa.com.co/pagos'},
+    {id:'acuacar',   label:'Acuacar',           region:'Cartagena',          url:'https://www.acuacar.com/pagos'},
+  ],
+  gas:[
+    {id:'vanti',     label:'Vanti (Gas Natural)',region:'Bogotá/Cundinamarca',url:'https://www.vanti.com.co/clientes/pagos'},
+    {id:'epm_gas',   label:'EPM Gas',            region:'Antioquia',          url:'https://www.epm.com.co/site/clientes_usuarios/clientesyusuarios/gas/pagaenl%C3%ADnea.aspx'},
+    {id:'surtigas',  label:'Surtigas',           region:'Caribe',             url:'https://www.surtigas.com.co/pagos'},
+    {id:'alcanos',   label:'Alcanos',            region:'Eje Cafetero',       url:'https://www.alcanos.com.co/pagos'},
+    {id:'llanogas',  label:'Llanogas',           region:'Llanos Orientales',  url:'https://www.llanogas.com.co/pagos'},
+    {id:'gases_occidente',label:'Gases de Occidente',region:'Occidente',     url:'https://www.gasesdeoccidente.com/pagos'},
+  ],
+  internet:[
+    {id:'claro',     label:'Claro',              region:'Nacional',           url:'https://www.claro.com.co/personas/servicios/pagos-y-recargas/'},
+    {id:'movistar',  label:'Movistar',           region:'Nacional',           url:'https://www.movistar.co/es/personas/pagos'},
+    {id:'tigo',      label:'Tigo',               region:'Nacional',           url:'https://www.tigo.com.co/paga-tu-factura'},
+    {id:'etb',       label:'ETB',                region:'Bogotá',             url:'https://www.etb.com.co/hogar/pagos'},
+    {id:'une',       label:'UNE',                region:'Medellín/Antioquia', url:'https://www.une.com.co/pagos'},
+    {id:'directv',   label:'DirecTV',            region:'Nacional',           url:'https://www.directv.com.co/metodo-de-pago'},
+    {id:'wom',       label:'WOM',                region:'Nacional',           url:'https://wom.co/web/pagos'},
+  ]
+};
+
+var SP_TIPO_LABEL = {energia:'⚡ Energía', agua:'💧 Agua', gas:'🔥 Gas', internet:'📶 Internet/TV'};
+
+function budItemRowServicio(item,idx,field,colorClass){
+  var fechaLabel = item.fecha ? '<span style="font-size:10px;color:var(--text3);margin-right:4px">'+fd(item.fecha)+'</span>' : '';
+  var spBadge = '';
+  if(item.sp_empresa){
+    var tipo = item.sp_tipo||'';
+    var tipoLabel = SP_TIPO_LABEL[tipo]||'🔧';
+    var empresa = item.sp_empresa;
+    // Find URL
+    var url = '#';
+    if(SP_EMPRESAS[tipo]){
+      var emp = SP_EMPRESAS[tipo].find(function(e){return e.id===item.sp_empresa_id;});
+      if(emp) url = emp.url;
+    }
+    spBadge = '<a href="'+url+'" target="_blank" style="font-size:9px;padding:2px 6px;border-radius:8px;background:rgba(0,188,212,.12);color:#00BCD4;border:1px solid rgba(0,188,212,.3);text-decoration:none;margin-right:4px;white-space:nowrap" title="Ir a pagar">'+tipoLabel+' '+empresa+' ↗</a>';
+  }
+  return '<div class="bud-item">'
+    +fechaLabel
+    +spBadge
+    +'<span class="bud-item-name">'+item.nombre+'</span>'
+    +'<span class="bud-item-val '+colorClass+'">'+fmt(item.valor)+'</span>'
+    +'<button class="bud-del" style="color:var(--amber);background:rgba(255,167,38,.12)" onclick="editBudItem(\''+field+'\','+idx+')">✏</button>'
+    +'<button class="bud-del" onclick="delBudItem(\''+field+'\','+idx+')">✕</button>'
+    +'</div>';
+}
+
+// ── ESCANER DE FACTURAS CON IA ────────────────────────────────────────────────
+function abrirScanFactura(){
+  // Build modal content
+  var html = '<div style="padding:4px 0">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">📷 Escanear factura de servicio</div>'
+    +'<div style="font-size:11px;color:var(--text2);margin-bottom:14px;line-height:1.5">Toma o sube una foto de tu factura. La IA extrae empresa, contrato, valor y fecha de vencimiento y actualiza tu presupuesto.</div>'
+    // Upload area
+    +'<label for="scan-factura-input" style="display:block;border:2px dashed rgba(0,188,212,.4);border-radius:12px;padding:20px;text-align:center;cursor:pointer;background:rgba(0,188,212,.05);margin-bottom:12px" id="scan-drop-area">'
+    +'<div style="font-size:28px;margin-bottom:6px">📄</div>'
+    +'<div style="font-size:12px;color:#00BCD4;font-weight:700">Toca para seleccionar imagen</div>'
+    +'<div style="font-size:10px;color:var(--text3);margin-top:2px">JPG, PNG o PDF — la factura física o digital</div>'
+    +'</label>'
+    +'<input type="file" id="scan-factura-input" accept="image/*,application/pdf" style="display:none" onchange="procesarFacturaIA(this)">'
+    +'<div id="scan-preview" style="display:none;margin-bottom:12px;text-align:center"><img id="scan-preview-img" style="max-width:100%;max-height:160px;border-radius:8px;border:1px solid var(--border)"></div>'
+    +'<div id="scan-status" style="display:none;padding:10px;border-radius:8px;font-size:12px;margin-bottom:12px"></div>'
+    +'<div id="scan-result-form" style="display:none"></div>'
+    +'<button class="btn" style="width:100%;font-size:12px" onclick="closeModal(\'modal-scan-factura\')">Cerrar</button>'
+    +'</div>';
+
+  // Create modal if not exists
+  if(!document.getElementById('modal-scan-factura')){
+    var overlay = document.createElement('div');
+    overlay.className = 'overlay';
+    overlay.id = 'modal-scan-factura';
+    overlay.innerHTML = '<div class="modal" style="max-height:90vh;overflow-y:auto"><div class="modal-title">Escanear factura <button class="modal-close" onclick="closeModal(\'modal-scan-factura\')">✕</button></div><div id="scan-factura-content"></div></div>';
+    document.body.appendChild(overlay);
+  }
+  document.getElementById('scan-factura-content').innerHTML = html;
+  openModal('modal-scan-factura');
+}
+
+async function procesarFacturaIA(input){
+  var file = input.files[0];
+  if(!file) return;
+
+  // Show preview for images
+  if(file.type.startsWith('image/')){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      document.getElementById('scan-preview-img').src = e.target.result;
+      document.getElementById('scan-preview').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Update drop area label
+  document.getElementById('scan-drop-area').innerHTML = '<div style="font-size:11px;color:var(--text3)">📎 '+file.name+'</div>';
+
+  // Show loading
+  var statusEl = document.getElementById('scan-status');
+  statusEl.style.display = 'block';
+  statusEl.style.background = 'rgba(0,188,212,.08)';
+  statusEl.style.border = '1px solid rgba(0,188,212,.2)';
+  statusEl.style.color = '#00BCD4';
+  statusEl.innerHTML = '🤖 Analizando factura con IA...';
+
+  try {
+    // Convert file to base64
+    var base64 = await new Promise(function(resolve, reject){
+      var r = new FileReader();
+      r.onload = function(){ resolve(r.result.split(',')[1]); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+
+    var mediaType = file.type === 'application/pdf' ? 'application/pdf' : file.type || 'image/jpeg';
+
+    var prompt = 'Analiza esta factura de servicio público colombiano y extrae la siguiente información en JSON (sin markdown, solo el JSON):\n'
+      + '{"empresa": "nombre de la empresa", "tipo_servicio": "energia|agua|gas|internet", "numero_contrato": "número", '
+      + '"valor_total": número_sin_puntos_ni_signos, "fecha_vencimiento": "YYYY-MM-DD", '
+      + '"periodo": "descripción del periodo ej: Marzo 2026", "confianza": "alta|media|baja"}\n'
+      + 'Si no encuentras un campo, usa null. El valor debe ser un número entero en pesos colombianos.';
+
+    var response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [{
+            type: mediaType === 'application/pdf' ? 'document' : 'image',
+            source: {type: 'base64', media_type: mediaType, data: base64}
+          },{
+            type: 'text',
+            text: prompt
+          }]
+        }]
+      })
+    });
+
+    var data = await response.json();
+    var text = (data.content||[]).map(function(b){return b.text||'';}).join('');
+    var clean = text.replace(/```json|```/g,'').trim();
+    var result = JSON.parse(clean);
+
+    mostrarResultadoFactura(result);
+
+  } catch(e) {
+    statusEl.style.background = 'rgba(239,83,80,.08)';
+    statusEl.style.border = '1px solid rgba(239,83,80,.3)';
+    statusEl.style.color = '#ef5350';
+    statusEl.innerHTML = '❌ No se pudo analizar la factura. Intenta con una imagen más clara o ingresa los datos manualmente.';
+    console.error('Scan error:', e);
+  }
+}
+
+function mostrarResultadoFactura(r){
+  var statusEl = document.getElementById('scan-status');
+  var formEl = document.getElementById('scan-result-form');
+
+  if(!r || (!r.empresa && !r.valor_total)){
+    statusEl.style.background = 'rgba(255,152,0,.08)';
+    statusEl.style.border = '1px solid rgba(255,152,0,.3)';
+    statusEl.style.color = '#FF9800';
+    statusEl.innerHTML = '⚠ No se pudo leer la factura con claridad. Sube una imagen más nítida.';
+    return;
+  }
+
+  statusEl.style.background = 'rgba(76,175,80,.08)';
+  statusEl.style.border = '1px solid rgba(76,175,80,.3)';
+  statusEl.style.color = '#4CAF50';
+  statusEl.innerHTML = '✅ Factura analizada correctamente';
+
+  // Find matching company
+  var tipo = r.tipo_servicio || 'energia';
+  var empresasDelTipo = SP_EMPRESAS[tipo] || SP_EMPRESAS.energia;
+  var empresaOpts = empresasDelTipo.map(function(e){
+    var sel = r.empresa && r.empresa.toLowerCase().includes(e.label.toLowerCase().split(' ')[0]) ? ' selected' : '';
+    return '<option value="'+e.id+'"'+sel+'>'+e.label+' ('+e.region+')</option>';
+  }).join('');
+
+  var tipoOpts = Object.keys(SP_TIPO_LABEL).map(function(k){
+    return '<option value="'+k+'"'+(k===tipo?' selected':'')+'>'+SP_TIPO_LABEL[k]+'</option>';
+  }).join('');
+
+  formEl.style.display = 'block';
+  formEl.innerHTML = '<div style="background:var(--surface2);border-radius:var(--radius-xs);padding:12px;margin-bottom:12px">'
+    +'<div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.1em;margin-bottom:10px">DATOS EXTRAÍDOS — CONFIRMA Y AJUSTA</div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Tipo de servicio</label>'
+    +'<select id="sf-tipo" onchange="sfActualizarEmpresas()" style="width:100%;padding:7px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text)">'+tipoOpts+'</select></div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Empresa</label>'
+    +'<select id="sf-empresa" style="width:100%;padding:7px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text)">'+empresaOpts+'</select></div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Número de contrato / cuenta</label>'
+    +'<input id="sf-contrato" type="text" value="'+(r.numero_contrato||'')+'" placeholder="Número en la factura" style="width:100%;padding:7px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);box-sizing:border-box"></div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Valor a pagar ($)</label>'
+    +'<input id="sf-valor" type="number" value="'+(r.valor_total||'')+'" inputmode="numeric" style="width:100%;padding:7px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);box-sizing:border-box"></div>'
+    +'<div class="fr" style="margin-bottom:12px"><label>Fecha de vencimiento</label>'
+    +'<input id="sf-fecha" type="date" value="'+(r.fecha_vencimiento||today())+'" style="width:100%;padding:7px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);box-sizing:border-box"></div>'
+    +'<button class="btn-cyan-solid" style="width:100%;font-size:13px;font-weight:800" onclick="guardarFacturaEnPpto()">💾 Agregar al presupuesto</button>'
+    +'</div>';
+}
+
+function sfActualizarEmpresas(){
+  var tipo = document.getElementById('sf-tipo').value;
+  var sel = document.getElementById('sf-empresa');
+  if(!sel) return;
+  sel.innerHTML = (SP_EMPRESAS[tipo]||[]).map(function(e){
+    return '<option value="'+e.id+'">'+e.label+' ('+e.region+')</option>';
+  }).join('');
+}
+
+function guardarFacturaEnPpto(){
+  var tipo    = document.getElementById('sf-tipo').value;
+  var empId   = document.getElementById('sf-empresa').value;
+  var contrato= document.getElementById('sf-contrato').value.trim();
+  var valor   = parseFloat(document.getElementById('sf-valor').value)||0;
+  var fecha   = document.getElementById('sf-fecha').value;
+
+  if(!valor){toast('Ingresa el valor de la factura','error');return;}
+
+  var emp = (SP_EMPRESAS[tipo]||[]).find(function(e){return e.id===empId;});
+  var empLabel = emp ? emp.label : empId;
+  var nombre = SP_TIPO_LABEL[tipo]+' '+empLabel+(contrato?' #'+contrato:'');
+
+  var arr = loadBudgets();
+  var b = arr.find(function(x){return x.key===activeBudgetKey;});
+  if(!b){toast('No hay un mes activo','error');return;}
+
+  var item = {
+    nombre: nombre,
+    valor: valor,
+    fecha: fecha,
+    sp_tipo: tipo,
+    sp_empresa: empLabel,
+    sp_empresa_id: empId,
+    sp_contrato: contrato,
+    sp_url: emp ? emp.url : '#'
+  };
+
+  b[activeBudgetQ].gastosFijos.push(item);
+  saveBudgets(arr);
+  closeModal('modal-scan-factura');
+  renderBudget(document.getElementById('dd-content'));
+  toast('✅ Factura de '+empLabel+' agregada al presupuesto','success',3000);
 }
 
 function addBudItem(field){
@@ -4690,6 +4956,30 @@ function cotizar() {
     + '<a class="btn" style="background:#25D366;color:white;border:none;text-decoration:none;display:flex;align-items:center;justify-content:center;padding:6px 12px" href="https://wa.me/?text='+waMsg+'" target="_blank">WA</a>'
     + '</div>';
 }
+
+  if (tipo === 'fija') {
+    const cf = calcCuotaFija(monto, t, cuotas);
+    cuotaQ = Math.round(cf / 2);
+    cuotaLabel = 'por quincena (cuota fija)';
+    totalPagar = Math.round(cf * cuotas);
+    // Build amortization schedule
+    let saldo = monto;
+    for (let i = 0; i < cuotas; i++) {
+      const int = Math.round(saldo * t);
+      const cap = Math.round(cf - int);
+      schedule.push({ mes: i + 1, cuota: Math.round(cf), interes: int, capital: cap, saldo: Math.max(saldo - cap, 0) });
+      saldo = Math.max(saldo - cap, 0);
+      if (saldo <= 0) break;
+    }
+  } else {
+    cuotaQ = interesMes; // variable: pay interest only per quincena
+    cuotaLabel = 'por quincena (solo interés)';
+    totalPagar = interesMes * cuotas + monto;
+    for (let i = 0; i < cuotas; i++) {
+      schedule.push({ mes: i + 1, cuota: interesMes, interes: interesMes, capital: i === cuotas - 1 ? monto : 0, saldo: i === cuotas - 1 ? 0 : monto });
+    }
+  }
+
 
 function cotizarACrear() {
   // Pass values from cotizador to the form tab and switch
