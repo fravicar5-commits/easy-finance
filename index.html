@@ -2205,13 +2205,14 @@ function renderBudget(el){
         // ── GASTOS FIJOS ──
         +'<div class="bud-section">'
         +'<div class="bud-section-title">🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos de esta quincena: arriendo, servicios, cuotas, etc.')
-        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">' + '+ Agregar</button>'
-        +'<button class="btn" style="font-size:10px;padding:3px 8px;margin-left:4px;background:rgba(0,188,212,.12);color:#00BCD4;border-color:rgba(0,188,212,.3)" onclick="abrirScanFactura()">📷 Escanear</button></div>'
+        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button>'
+        +' <button class="btn" style="font-size:10px;padding:3px 8px;margin-left:4px;background:rgba(0,188,212,.12);color:#00BCD4;border-color:rgba(0,188,212,.3)" onclick="abrirScanFactura()">📷 Escanear</button>'
+        +'</div>'
+        +renderServiciosFijos()
         +(qdata.gastosFijos.map((g,idx)=>budItemRowServicio(g,idx,'gastosFijos','c-amber')).join('')
-          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin gastos fijos en esta quincena</div>')
+          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin otros gastos fijos</div>')
         +(qGF>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(qGF)+'</strong></div>':'')
         +'</div>'
-
         // ── GASTOS VARIABLES ──
         +'<div class="bud-section">'
         +'<div class="bud-section-title">🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día de esta quincena.')+'</div>'
@@ -2408,6 +2409,150 @@ function crearNuevoMes(){
   activeBudgetKey=key;activeBudgetQ='q1';
   renderBudget(document.getElementById('dd-content'));
   toast('Mes '+nombre+' creado');
+}
+
+// ══ SERVICIOS FIJOS — CONFIG PERSISTENTE ══════════════════════════════════════
+var SP_TIPOS_FIJOS = [
+  { id:'electricidad', label:'Electricidad', ico:'⚡', color:'#FFB74D', empresas:'energia' },
+  { id:'agua',         label:'Agua',         ico:'💧', color:'#4FC3F7', empresas:'agua'   },
+  { id:'gas',          label:'Gas',          ico:'🔥', color:'#EF9A9A', empresas:'gas'    },
+  { id:'internet',     label:'Internet',     ico:'📶', color:'#81C784', empresas:'internet'}
+];
+
+var _spConfig = null;
+
+function spLoadConfig(){
+  if(_spConfig) return _spConfig;
+  try { _spConfig = JSON.parse(localStorage.getItem('cuadre_sp_config')||'{}'); }
+  catch(e){ _spConfig = {}; }
+  return _spConfig;
+}
+
+function spSaveConfig(cfg){
+  _spConfig = cfg;
+  localStorage.setItem('cuadre_sp_config', JSON.stringify(cfg));
+  if(currentUser && _fsUid()) _fsSave({sp_config: cfg, updatedAt: new Date().toISOString()});
+}
+
+function renderServiciosFijos(){
+  var cfg = spLoadConfig();
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">';
+  SP_TIPOS_FIJOS.forEach(function(t){
+    var c = cfg[t.id] || {};
+    var configured = !!(c.empresa_id && c.contrato);
+    var valorRef = c.ultimo_valor ? fmt(c.ultimo_valor) : '—';
+    var empLabel = c.empresa_label || 'Sin configurar';
+    html += '<div onclick="abrirConfigServicio(\''+t.id+'\')" style="'
+      +'background:'+(configured?'rgba(255,255,255,.06)':'rgba(255,255,255,.03)')
+      +';border:1px solid '+(configured?'rgba(255,255,255,.12)':'rgba(255,255,255,.07)')
+      +';border-radius:10px;padding:10px;cursor:pointer;transition:all .18s;position:relative">'
+      // Icono + label
+      +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">'
+      +'<span style="font-size:16px">'+t.ico+'</span>'
+      +'<span style="font-size:11px;font-weight:800;color:'+t.color+'">'+t.label+'</span>'
+      +(configured
+        ?'<span style="margin-left:auto;font-size:9px;background:rgba(76,175,80,.2);color:#81C784;border-radius:6px;padding:1px 5px">✓</span>'
+        :'<span style="margin-left:auto;font-size:9px;background:rgba(255,255,255,.08);color:var(--text3);border-radius:6px;padding:1px 5px">+ Config</span>'
+      )
+      +'</div>'
+      // Empresa
+      +'<div style="font-size:10px;color:var(--text3);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(configured?empLabel:'Toca para configurar')+'</div>'
+      // Valor + botón pagar
+      +(configured
+        ?'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
+         +'<span style="font-size:11px;font-weight:700;color:'+t.color+'">'+valorRef+'</span>'
+         +'<a href="'+( c.url||'#')+'" target="_blank" onclick="event.stopPropagation()" '
+         +'style="font-size:9px;padding:2px 7px;border-radius:8px;background:rgba(0,188,212,.15);color:#00BCD4;border:1px solid rgba(0,188,212,.3);text-decoration:none">Pagar ↗</a>'
+         +'</div>'
+        :'<div style="font-size:10px;color:var(--text3)">Empresa · Contrato</div>'
+      )
+      +'</div>';
+  });
+  html += '</div>';
+  return html;
+}
+
+function abrirConfigServicio(tipoId){
+  var tipo = SP_TIPOS_FIJOS.find(function(t){ return t.id===tipoId; });
+  if(!tipo) return;
+  var cfg = spLoadConfig();
+  var c = cfg[tipoId] || {};
+  var empresas = SP_EMPRESAS[tipo.empresas] || [];
+
+  var empOpts = empresas.map(function(e){
+    return '<option value="'+e.id+'" data-url="'+e.url+'"'+(c.empresa_id===e.id?' selected':'')+'>'+e.label+' — '+e.region+'</option>';
+  }).join('');
+
+  var html = '<div style="padding:4px 0">'
+    +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">'
+    +'<span style="font-size:22px">'+tipo.ico+'</span>'
+    +'<div><div style="font-size:14px;font-weight:800;color:'+tipo.color+'">'+tipo.label+'</div>'
+    +'<div style="font-size:10px;color:var(--text3)">Configura tu empresa y número de contrato</div></div>'
+    +'</div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Empresa prestadora</label>'
+    +'<select id="spc-empresa" style="width:100%;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text)">'+empOpts+'</select></div>'
+    +'<div class="fr" style="margin-bottom:8px"><label>Número de contrato / cuenta</label>'
+    +'<input id="spc-contrato" type="text" value="'+(c.contrato||'')+'" placeholder="Ej: 1234567890" '
+    +'style="width:100%;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);box-sizing:border-box"></div>'
+    +'<div class="fr" style="margin-bottom:14px"><label>Valor del último mes ($) — referencia</label>'
+    +'<input id="spc-valor" type="number" value="'+(c.ultimo_valor||'')+'" inputmode="numeric" placeholder="Ej: 95000" '
+    +'style="width:100%;padding:8px;border-radius:var(--radius-xs);border:1px solid var(--border);background:var(--surface2);color:var(--text);box-sizing:border-box"></div>'
+    +'<div style="background:rgba(0,188,212,.07);border:1px solid rgba(0,188,212,.2);border-radius:8px;padding:8px 10px;font-size:10px;color:#00BCD4;margin-bottom:14px;line-height:1.5">'
+    +'💡 Solo configuras esto una vez. Cada mes el valor de referencia quedará en tus gastos fijos con acceso directo al pago.'
+    +'</div>'
+    +'<div style="display:flex;gap:8px">'
+    +(c.empresa_id?'<button class="btn" style="flex:1;font-size:11px;color:var(--red);border-color:rgba(239,83,80,.3)" onclick="eliminarConfigServicio(\''+tipoId+'\')">🗑 Quitar</button>':'')
+    +'<button class="btn" style="flex:1;font-size:12px" onclick="closeModal(\'modal-sp-config\')">Cancelar</button>'
+    +'<button class="btn-cyan-solid" style="flex:2;font-size:12px" data-tipo="'+tipoId+'" onclick="guardarConfigServicio(\''+tipoId+'\')">💾 Guardar</button>'
+    +'</div></div>';
+
+  if(!document.getElementById('modal-sp-config')){
+    var ov = document.createElement('div');
+    ov.className = 'overlay'; ov.id = 'modal-sp-config';
+    ov.innerHTML = '<div class="modal"><div class="modal-title" id="sp-config-title">Servicio <button class="modal-close" onclick="closeModal(\'modal-sp-config\')">✕</button></div><div id="sp-config-content"></div></div>';
+    document.body.appendChild(ov);
+  }
+  document.getElementById('sp-config-content').innerHTML = html;
+  openModal('modal-sp-config');
+}
+
+function guardarConfigServicio(tipoId){
+  var tipo = SP_TIPOS_FIJOS.find(function(t){ return t.id===tipoId; });
+  if(!tipo) return;
+  var empEl = document.getElementById('spc-empresa');
+  var empId = empEl ? empEl.value : '';
+  var empLabel = empEl ? empEl.options[empEl.selectedIndex].text.split(' — ')[0] : '';
+  var contrato = (document.getElementById('spc-contrato')||{}).value||'';
+  var valor = parseFloat((document.getElementById('spc-valor')||{}).value)||0;
+
+  if(!empId || !contrato){toast('Completa empresa y número de contrato','error'); return;}
+
+  var empresas = SP_EMPRESAS[tipo.empresas]||[];
+  var emp = empresas.find(function(e){ return e.id===empId; });
+  var url = emp ? emp.url : '#';
+
+  var cfg = spLoadConfig();
+  cfg[tipoId] = {
+    empresa_id: empId,
+    empresa_label: empLabel,
+    contrato: contrato,
+    ultimo_valor: valor||null,
+    url: url,
+    actualizado: today()
+  };
+  spSaveConfig(cfg);
+  closeModal('modal-sp-config');
+  renderBudget(document.getElementById('dd-content'));
+  toast('✅ '+tipo.label+' configurado — '+empLabel,'success',2500);
+}
+
+function eliminarConfigServicio(tipoId){
+  var cfg = spLoadConfig();
+  delete cfg[tipoId];
+  spSaveConfig(cfg);
+  closeModal('modal-sp-config');
+  renderBudget(document.getElementById('dd-content'));
+  toast('Servicio eliminado','info',1800);
 }
 
 // ══ SERVICIOS PÚBLICOS — EMPRESAS COLOMBIA ════════════════════════════════════
@@ -2902,6 +3047,9 @@ function _applyFirestoreData(data){
   if(data.pockets){pockets=data.pockets;localStorage.setItem(PK,JSON.stringify(pockets));}
   if(data.volantes){volanteHistorial=data.volantes;localStorage.setItem(VK,JSON.stringify(volanteHistorial));}
   if(data.segsocial){ssHistorial=data.segsocial;localStorage.setItem(SSK,JSON.stringify(ssHistorial));}
+  if(data.budgets&&Array.isArray(data.budgets)&&data.budgets.length>0){localStorage.setItem(getBK(),JSON.stringify(data.budgets));}
+  if(data.qa_selected&&Array.isArray(data.qa_selected)){localStorage.setItem('cuadre_qa_selected',JSON.stringify(data.qa_selected));}
+  if(data.sp_config&&typeof data.sp_config==='object'){localStorage.setItem('cuadre_sp_config',JSON.stringify(data.sp_config));_spConfig=data.sp_config;}
   // Deudas: buscar siempre por clave propia del usuario primero
   const _dUID = currentUser ? currentUser.user : null;
   const _deudaKeys = Object.keys(data).filter(k=>k.startsWith('deudas_'));
