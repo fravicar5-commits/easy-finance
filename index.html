@@ -4957,30 +4957,6 @@ function cotizar() {
     + '</div>';
 }
 
-  if (tipo === 'fija') {
-    const cf = calcCuotaFija(monto, t, cuotas);
-    cuotaQ = Math.round(cf / 2);
-    cuotaLabel = 'por quincena (cuota fija)';
-    totalPagar = Math.round(cf * cuotas);
-    // Build amortization schedule
-    let saldo = monto;
-    for (let i = 0; i < cuotas; i++) {
-      const int = Math.round(saldo * t);
-      const cap = Math.round(cf - int);
-      schedule.push({ mes: i + 1, cuota: Math.round(cf), interes: int, capital: cap, saldo: Math.max(saldo - cap, 0) });
-      saldo = Math.max(saldo - cap, 0);
-      if (saldo <= 0) break;
-    }
-  } else {
-    cuotaQ = interesMes; // variable: pay interest only per quincena
-    cuotaLabel = 'por quincena (solo interés)';
-    totalPagar = interesMes * cuotas + monto;
-    for (let i = 0; i < cuotas; i++) {
-      schedule.push({ mes: i + 1, cuota: interesMes, interes: interesMes, capital: i === cuotas - 1 ? monto : 0, saldo: i === cuotas - 1 ? 0 : monto });
-    }
-  }
-
-
 function cotizarACrear() {
   // Pass values from cotizador to the form tab and switch
   const monto  = document.getElementById('cot-monto').value;
