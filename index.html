@@ -761,6 +761,12 @@ body.light-mode .qa-option.selected{background:rgba(80,80,255,.08);border-color:
 /* Budget */
 .bud-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
 .bud-section-title{font-size:12px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.bud-section-title.collapsible{cursor:pointer;margin-bottom:0;user-select:none}
+.bud-section-title.collapsible:hover{opacity:.85}
+.bud-collapse-arrow{transition:transform .22s;display:inline-block;font-size:11px;margin-left:6px;color:var(--text3)}
+.bud-collapse-arrow.open{transform:rotate(180deg)}
+.bud-collapse-body{overflow:hidden;transition:max-height .25s ease,opacity .2s;max-height:0;opacity:0}
+.bud-collapse-body.open{max-height:1200px;opacity:1}
 .bud-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
 .bud-item:last-child{border-bottom:none}
 .bud-item-name{flex:1;font-size:12px}
@@ -2055,6 +2061,14 @@ function budMonthIngresos(b){return allTotal(b,'ingresos')+allTotal(b,'otrosIngr
 function budMonthGastosFijos(b){return allTotal(b,'gastosFijos');}
 function budMonthGastosVar(b){return allTotal(b,'gastosVar');}
 
+function budToggleSection(id){
+  var body=document.getElementById('bud-body-'+id);
+  var arrow=document.getElementById('bud-arrow-'+id);
+  if(!body||!arrow) return;
+  var open=body.classList.toggle('open');
+  arrow.classList.toggle('open',open);
+}
+
 function renderBudget(el){
   // Ensure we have a budget for the active key
   const b=ensureActiveBudget();
@@ -2097,7 +2111,13 @@ function renderBudget(el){
   const qdata=b[activeBudgetQ];
   const qIngresos=(qdata.ingresos||[]).reduce((s,i)=>s+i.valor,0);
   const qOtros=(qdata.otrosIngresos||[]).reduce((s,i)=>s+i.valor,0);
-  const qGF=(qdata.gastosFijos||[]).reduce((s,i)=>s+i.valor,0);
+  // Gastos fijos: ítems manuales + servicios configurados con valor de referencia
+  const _spCfg=spLoadConfig();
+  const qGF_sp=SP_TIPOS_FIJOS.reduce((s,t)=>{
+    const c=_spCfg[t.id];
+    return s+(c&&c.ultimo_valor?c.ultimo_valor:0);
+  },0);
+  const qGF=(qdata.gastosFijos||[]).reduce((s,i)=>s+i.valor,0)+qGF_sp;
   const qGV=(qdata.gastosVar||[]).reduce((s,i)=>s+i.valor,0);
   const qTI=qIngresos+qOtros;
   const qGT=qGF+qGV;
@@ -2191,31 +2211,38 @@ function renderBudget(el){
       // ── VISTA QUINCENAL ──
       :(
         '<div class="bud-section">'
-        +'<div class="bud-section-title">💵 Ingresos '+(activeBudgetQ==='q1'?'1ª':'2ª')+' quincena'
-        +' <button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'ingresos\')">+ Agregar</button></div>'
+        +'<div class="bud-section-title collapsible" onclick="budToggleSection(\'ing\')" style="margin-bottom:6px">'
+        +'<span>💵 Ingresos '+(activeBudgetQ==='q1'?'1ª':'2ª')+' quincena <span id="bud-arrow-ing" class="bud-collapse-arrow open">▼</span></span>'
+        +'<span style="display:flex;align-items:center;gap:6px"><strong class="c-green">'+fmt(qTI)+'</strong>'
+        +'<button class="btn btn-green" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();addBudItem(\'ingresos\')">+ Agregar</button></span></div>'
+        +'<div id="bud-body-ing" class="bud-collapse-body open">'
         +(qdata.ingresos.map((i,idx)=>budItemRow(i,idx,'ingresos','c-green')).join('')
           ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin ingresos en esta quincena</div>')
-        +'<div class="bud-section-title" style="margin-top:10px">Otros ingresos'
+        +'<div style="font-size:11px;font-weight:700;color:var(--text3);margin:8px 0 4px">Otros ingresos'
         +' <button class="btn" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'otrosIngresos\')">+ Agregar</button></div>'
         +(qdata.otrosIngresos.map((i,idx)=>budItemRow(i,idx,'otrosIngresos','c-green')).join('')
           ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin otros ingresos</div>')
-        +(qTI>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total ingresos esta quincena: <strong class="c-green">'+fmt(qTI)+'</strong></div>':'')
-        +'</div>'
+        +'</div></div>'
 
         // ── GASTOS FIJOS ──
         +'<div class="bud-section">'
-        +'<div class="bud-section-title">🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos de esta quincena: arriendo, servicios, cuotas, etc.')
-        +' <button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="addBudItem(\'gastosFijos\')">+ Agregar</button>'
-        +' <button class="btn" style="font-size:10px;padding:3px 8px;margin-left:4px;background:rgba(0,188,212,.12);color:#00BCD4;border-color:rgba(0,188,212,.3)" onclick="abrirScanFactura()">📷 Escanear</button>'
-        +'</div>'
+        +'<div class="bud-section-title collapsible" onclick="budToggleSection(\'gf\')" style="margin-bottom:6px">'
+        +'<span>🏠 Gastos Fijos '+tip('Gastos fijos','Compromisos fijos: arriendo, servicios, cuotas.')+' <span id="bud-arrow-gf" class="bud-collapse-arrow">▼</span></span>'
+        +'<span style="display:flex;align-items:center;gap:6px"><strong class="c-amber">'+fmt(qGF)+'</strong>'
+        +'<button class="btn btn-amber" style="font-size:10px;padding:3px 8px" onclick="event.stopPropagation();addBudItem(\'gastosFijos\')">+ Agregar</button>'
+        +'<button class="btn" style="font-size:10px;padding:3px 6px;background:rgba(0,188,212,.12);color:#00BCD4;border-color:rgba(0,188,212,.3)" onclick="event.stopPropagation();abrirScanFactura()">📷</button></span></div>'
+        +'<div id="bud-body-gf" class="bud-collapse-body">'
         +renderServiciosFijos()
         +(qdata.gastosFijos.map((g,idx)=>budItemRowServicio(g,idx,'gastosFijos','c-amber')).join('')
-          ||'<div style="font-size:11px;color:var(--text3);padding:6px 0">Sin otros gastos fijos</div>')
-        +(qGF>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos fijos: <strong class="c-amber">'+fmt(qGF)+'</strong></div>':'')
-        +'</div>'
+          ||'<div style="font-size:11px;color:var(--text3);padding:4px 0">Sin otros gastos fijos</div>')
+        +'</div></div>'
+
         // ── GASTOS VARIABLES ──
         +'<div class="bud-section">'
-        +'<div class="bud-section-title">🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día de esta quincena.')+'</div>'
+        +'<div class="bud-section-title collapsible" onclick="budToggleSection(\'gv\')" style="margin-bottom:6px">'
+        +'<span>🎉 Gastos Variables '+tip('Gastos variables','Gastos del día a día.')+' <span id="bud-arrow-gv" class="bud-collapse-arrow open">▼</span></span>'
+        +'<strong class="c-red">'+fmt(qGV)+'</strong></div>'
+        +'<div id="bud-body-gv" class="bud-collapse-body open">'
         +'<div class="expense-input" style="flex-wrap:wrap;gap:5px">'
         +'<select class="gv-cat-select" id="gv-cat">'+GV_CATS.map(c=>'<option value="'+c.id+'">'+c.icon+' '+c.label+'</option>').join('')+'</select>'
         +'<input type="text" id="gv-nombre" placeholder="Concepto (ej: almuerzo)" style="flex:2">'
@@ -2223,9 +2250,9 @@ function renderBudget(el){
         +'<button class="expense-add-btn" onclick="addGastoVar()">+</button>'
         +'</div>'
         +renderGastosVarAgrupados(qdata.gastosVar)
-        +(qGV>0?'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px">Total gastos variables: <strong class="c-red">'+fmt(qGV)+'</strong></div>':'')
-        +'</div>'
+        +'</div></div>'
       ))
+
 
     // ── HISTORIAL ANUAL ──
     +(arr.length>1?'<div class="bud-section">'
